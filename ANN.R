@@ -324,7 +324,7 @@
   cv_64_32.16 <- fun_cross(df_train = df_night_model, df_pred = df_night_pred, k = 10, 
                            num_epochs = 100, batch = 16, layer = 2, units = c(64,32)) 
   
-  
+  save("/master/RData/cv_64_32.16.RData", cv_64_32.16)
   summary(cv_64_32.16[[2]])
   
   ## Resuls & Plot ####
