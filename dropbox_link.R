@@ -33,8 +33,9 @@
   token <- readRDS("token.rds")
   
   ## Workspace runterladen ####
-  drop_download('Master/R/.RData', overwrite = T, dtoken = token)
+  drop_download('Master/R/save.RData', overwrite = T, dtoken = token)
   
+  load("save.RData")
   ## upload WOrkspace ####
   drop_upload('save.RData', 'Master/R/', mode = "overwrite", dtoken = token)
   
