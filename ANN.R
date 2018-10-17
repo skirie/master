@@ -324,8 +324,8 @@
       
       # predict 
       pred_base <- model %>% predict(pred_data)
-      pred_base <- pred_base * (maxs_targets - mins_targets) + mins_targets
-      all_pred_base <- cbind(all_pred_base, pred_base)
+      pred_base_ <- pred_base * (maxs_targets - mins_targets) + mins_targets
+      all_pred_base <- cbind(all_pred_base, pred_base_)
     }
     return(list(all_mae_histories, all_pred_base))
   }
