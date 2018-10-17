@@ -407,7 +407,7 @@
                                      scale = maxs_targets - mins_targets)
       val_targets <- scale(val_targets, center = mins_targets, 
                            scale = maxs_targets - mins_targets)
-      df_pred <- scale(df_pred[, 1:18], center = mins_data, 
+      pred_data <- scale(df_pred[, 1:18], center = mins_data, 
                        scale = maxs_data - mins_data)
 
       history <- model %>% fit(
@@ -420,7 +420,7 @@
       all_mae_histories <- rbind(all_mae_histories, mae_history)
       
       # predict 
-      pred_base <- model %>% predict(df_pred)
+      pred_base <- model %>% predict(pred_data)
       pred_base <- pred_base * (maxs_targets - mins_targets) + mins_targets
       all_pred_base <- cbind(all_pred_base, pred_base)
     }
