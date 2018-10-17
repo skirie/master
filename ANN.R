@@ -352,7 +352,7 @@
       ## Model ####
       if (layer == 1){
         model <- keras_model_sequential() %>% 
-          gru(units = units[1], input_shape = dim(df_train)[[2]]-1) %>% 
+          layer_gru(units = units[1], input_shape = dim(df_train)[[2]]-1) %>% 
           layer_dense(units = 1) 
       } else if (layer == 2){
         model <- keras_model_sequential() %>% 
