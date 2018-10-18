@@ -129,8 +129,8 @@
 #### ------------------------------------- ####
   
   ## CV function ####
-  fun_cross <- function(df_train, df_pred, k = 5, num_epochs = 100, optimizer = "rmsprop", lr = 1e-4, 
-                        batch = 16, layer = 2, units = c(64,32)){
+  fun_cross <- function(df_train, df_pred, k = 5, num_epochs = 100, optimizer = "rmsprop", lr = 1e-4, batch = 16, layer = 2, units = c(64,32)){
+    
     ## NA to 0
     df_train[is.na(df_train)] <- 0
     df_pred[is.na(df_pred)] <- 0
@@ -141,6 +141,16 @@
     
     all_mae_histories <- NULL
     all_pred_base <- NULL
+    
+    ## Callback - early stopping ####
+    callback_list <- list(callback_early_stopping(patience = 2))
+    
+    ## optimizer ####
+    if (optimizer == "rmsprop"){
+      optim_ <- optimizer_rmsprop(lr = lr)  
+    } else if (optimizer == "adam"){
+      optim_ <- optimizer_adam(lr = lr)
+    }
     
     for (i in 1:k) {
       cat("processing fold #", i, "\n")
@@ -166,12 +176,6 @@
           layer_dense(units = 1) 
       } else {
         return("only three layer possible. pls set layer from 1-3")
-      }
-      
-      if (optimizer == "rmsprop"){
-        optim_ <- optimizer_rmsprop(lr = lr)  
-      } else if (optimizer == "adam"){
-        optim_ <- optimizer_adam(lr = lr)
       }
       
       model %>% compile(
@@ -208,7 +212,8 @@
       history <- model %>% fit(
         partial_train_data, partial_train_targets,
         validation_data = list(val_data, val_targets),
-        epochs = num_epochs, batch_size = batch, verbose = 2)
+        epochs = num_epochs, batch_size = batch, verbose = 2,
+        callbacks = callback_list)
       
       # Evaluate the model on the validation data
       mae_history <- history$metrics$val_mean_absolute_error
@@ -219,6 +224,7 @@
       pred_base_ <- pred_base * (maxs_targets - mins_targets) + mins_targets
       all_pred_base <- cbind(all_pred_base, pred_base_)
     }
+    
     return(list(all_mae_histories, all_pred_base))
   }
   
