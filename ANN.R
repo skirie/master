@@ -129,122 +129,8 @@
 #### ------------------------------------- ####
   
   ## CV function ####
-  fun_cross <- function(df_train, df_pred, k = 5, num_epochs = 100, batch = 16, layer = 2, units = c(64,32)){
-    ## Model ####
-    build_model <- function(){
-      if (layer == 1){
-        model <- keras_model_sequential() %>% 
-          layer_dense(units = units[1], activation = "relu", 
-                      input_shape = dim(df_train)[[2]]-1) %>% 
-          layer_dense(units = 1) 
-      } else if (layer == 2){
-        model <- keras_model_sequential() %>% 
-          layer_dense(units = units[1], activation = "relu", 
-                      input_shape = dim(df_train)[[2]]-1) %>% 
-          layer_dense(units = units[2], activation = "relu") %>% 
-          layer_dense(units = 1)
-      } else if (layer == 3){
-        model <- keras_model_sequential() %>% 
-          layer_dense(units = units[1], activation = "relu", 
-                      input_shape = dim(df_train)[[2]]-1) %>% 
-          layer_dense(units = units[2], activation = "relu") %>% 
-          layer_dense(units = units[3], activation = "relu") %>% 
-          layer_dense(units = 1) 
-      } else {
-        return("only three layer possible. pls set layer from 1-3")
-      }
-      
-      model %>% compile(
-        optimizer = "rmsprop", 
-        loss = "mse", 
-        metrics = c("mae"))
-      
-      return(model)
-    }
-    
-    ## NA to 0
-    df_train[is.na(df_train)] <- 0
-    df_pred[is.na(df_pred)] <- 0
-    
-    ## CV loop ####
-    indices <- sample(1:nrow(df_train))
-    folds <- cut(indices, breaks = k, labels = FALSE)
-    
-    all_mae_histories <- NULL
-    all_pred_base <- NULL
-    
-    for (i in 1:k) {
-      cat("processing fold #", i, "\n")
-      # Prepare the validation data: data from partition # k
-      val_indices <- which(folds == i, arr.ind = TRUE) 
-      val_data <- as.matrix(df_train[, 1:18][val_indices,])
-      val_targets <- as.array(df_train[, 19][val_indices])
-      
-      # Prepare the training data: data from all other partitions
-      partial_train_data <- as.matrix(df_train[, 1:18][-val_indices,])
-      partial_train_targets <- as.array(df_train[, 19][-val_indices])
-      
-      # normalize all data
-      mins_data <- apply(partial_train_data, 2, min, na.rm = T)
-      maxs_data <- apply(partial_train_data, 2, max, na.rm = T)
-      mins_targets <- min(partial_train_targets, na.rm = T)
-      maxs_targets <- max(partial_train_targets, na.rm = T)
-      
-      partial_train_data <- scale(partial_train_data, center = mins_data, 
-                                  scale = maxs_data - mins_data)
-      val_data <- scale(val_data, center = mins_data, 
-                        scale = maxs_data - mins_data)
-      partial_train_targets <- scale(partial_train_targets, center = mins_targets, 
-                                     scale = maxs_targets - mins_targets)
-      val_targets <- scale(val_targets, center = mins_targets, 
-                           scale = maxs_targets - mins_targets)
-      df_pred <- scale(df_pred[, 1:18], center = mins_data, 
-                       scale = maxs_data - mins_data)
-      
-      # Train the model (in silent mode, verbose=0)
-      model <-  build_model()
-      
-      history <- model %>% fit(
-        partial_train_data, partial_train_targets,
-        validation_data = list(val_data, val_targets),
-        epochs = num_epochs, batch_size = batch, verbose = 2)
-      
-      # Evaluate the model on the validation data
-      mae_history <- history$metrics$val_mean_absolute_error
-      all_mae_histories <- rbind(all_mae_histories, mae_history)
-      
-      # predict 
-      pred_base <- model %>% predict(df_pred)
-      pred_base <- pred_base * (maxs_targets - mins_targets) + mins_targets
-      all_pred_base <- cbind(all_pred_base, pred_base)
-    }
-    return(list(all_mae_histories, all_pred_base))
-  }
-  
-  ## First random try ####
-  cv_64_32.16 <- fun_cross(df_train = df_night_model, df_pred = df_night_pred, k = 5, 
-                           num_epochs = 100, batch = 16, layer = 2, units = c(64,32)) 
-  cv_64_32.16 <- fun_cross(df_train = df_night_model, df_pred = df_night_pred, k = 10, 
-                           num_epochs = 100, batch = 16, layer = 2, units = c(64,32)) 
-  
-  summary(cv_64_32.16[[2]])
-  
-  ## Resuls & Plot ####
-  results_base_mae <- data.frame(
-    epoch = seq(1:ncol(cv_64_32.16[[1]])),
-    validation_mae = apply(cv_64_32.16[[1]], 2, mean))
-  
-  results_base_mean <- data.frame(
-    epoch = seq(1:dim(cv_64_32.16[[2]])[1]),
-    pred_ = apply(cv_64_32.16[[2]], 1, mean))
-  
-  ggplot(results_base_mae, aes(x = epoch, y = validation_mae)) + geom_smooth()  
-  ggplot(results_base_mean, aes(x = epoch, y = pred_)) + geom_line()  
-  
-  mean((pred_base_lee - as.vector(results_base_mean$pred_))^2, na.rm = T)   
-
-  #### CV function 2 ####
-  fun_cross_2 <- function(df_train, df_pred, k = 5, num_epochs = 100, batch = 16, layer = 2, units = c(64,32)){
+  fun_cross <- function(df_train, df_pred, k = 5, num_epochs = 100, optimizer = "rmsprop", lr = 1e-4, 
+                        batch = 16, layer = 2, units = c(64,32)){
     ## NA to 0
     df_train[is.na(df_train)] <- 0
     df_pred[is.na(df_pred)] <- 0
@@ -282,8 +168,14 @@
         return("only three layer possible. pls set layer from 1-3")
       }
       
+      if (optimizer == "rmsprop"){
+        optim_ <- optimizer_rmsprop(lr = lr)  
+      } else if (optimizer == "adam"){
+        optim_ <- optimizer_adam(lr = lr)
+      }
+      
       model %>% compile(
-        optimizer = "rmsprop", 
+        optimizer = optim_, 
         loss = "mse", 
         metrics = c("mae"))
       
@@ -311,8 +203,8 @@
       val_targets <- scale(val_targets, center = mins_targets, 
                            scale = maxs_targets - mins_targets)
       pred_data <- scale(df_pred[, 1:18], center = mins_data, 
-                       scale = maxs_data - mins_data)
-
+                         scale = maxs_data - mins_data)
+      
       history <- model %>% fit(
         partial_train_data, partial_train_targets,
         validation_data = list(val_data, val_targets),
@@ -330,10 +222,33 @@
     return(list(all_mae_histories, all_pred_base))
   }
   
+  ## First random try ####
+  cv_64_32.16 <- fun_cross(df_train = df_night_model, df_pred = df_night_pred, k = 5, 
+                           num_epochs = 100, batch = 16, layer = 2, units = c(64,32)) 
+  cv_64_32.16 <- fun_cross(df_train = df_night_model, df_pred = df_night_pred, k = 10, 
+                           num_epochs = 100, batch = 16, layer = 2, units = c(64,32)) 
+  
+  summary(cv_64_32.16[[2]])
+  
+  ## Resuls & Plot ####
+  results_base_mae <- data.frame(
+    epoch = seq(1:ncol(cv_64_32.16[[1]])),
+    validation_mae = apply(cv_64_32.16[[1]], 2, mean))
+  
+  results_base_mean <- data.frame(
+    epoch = seq(1:dim(cv_64_32.16[[2]])[1]),
+    pred_ = apply(cv_64_32.16[[2]], 1, mean))
+  
+  ggplot(results_base_mae, aes(x = epoch, y = validation_mae)) + geom_smooth()  
+  ggplot(results_base_mean, aes(x = epoch, y = pred_)) + geom_line()  
+  
+  mean((pred_base_lee - as.vector(results_base_mean$pred_))^2, na.rm = T)   
+
 #### ------------------------------------- ####
   ## First recurrent ANN - a Baseline with all predictors - Crossvalidation
 #### ------------------------------------- ####
   
+  ## fun RNN  ####
   fun_cross_rec <- function(df_train, df_pred, k = 5, num_epochs = 100, batch = 16, layer = 2, units = c(64,32)){
     ## NA to 0
     df_train[is.na(df_train)] <- 0
