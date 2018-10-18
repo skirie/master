@@ -139,11 +139,11 @@
     indices <- sample(1:nrow(df_train))
     folds <- cut(indices, breaks = k, labels = FALSE)
     
-    all_mae_histories <- NULL
+    all_mae_histories <- matrix(NA, nrow = k, ncol = num_epochs) 
     all_pred_base <- NULL
     
     ## Callback - early stopping ####
-    callback_list <- list(callback_early_stopping(patience = 2))
+    callback_list <- list(callback_early_stopping(patience = 4))
     
     ## optimizer ####
     if (optimizer == "rmsprop"){
@@ -217,7 +217,7 @@
       
       # Evaluate the model on the validation data
       mae_history <- history$metrics$val_mean_absolute_error
-      all_mae_histories <- rbind(all_mae_histories, mae_history)
+      all_mae_histories[i,1:length(mae_history)] <- mae_history
       
       # predict 
       pred_base <- model %>% predict(pred_data)
