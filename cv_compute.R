@@ -112,22 +112,45 @@
   
 #### Data frames ####
   results_base_mean <- data.frame(
-    epoch = seq(1:dim(cv_16.16[[2]])[1]),
-    cv_16.16 = apply(cv_16.16[[2]], 1, mean),
-    cv_32.16 = apply(cv_32.16[[2]], 1, mean),
+    epoch = seq(1:dim(cv_8.32[[2]])[1]),
+    cv_8.32 = apply(cv_8.32[[2]], 1, mean),
+    cv_16.32 = apply(cv_16.32[[2]], 1, mean),
+    cv_32.32 = apply(cv_32.32[[2]], 1, mean),
+    cv_48.32 = apply(cv_48.32[[2]], 1, mean),
     cv_64.32 = apply(cv_64.32[[2]], 1, mean),
-    cv_64.16 = apply(cv_64.16[[2]], 1, mean),
-    cv_32_16.8 = apply(cv_32_16.8[[2]], 1, mean),
-    cv_32_16.16 = apply(cv_32_16.16[[2]], 1, mean)) 
+    cv_80.32 = apply(cv_80.32[[2]], 1, mean),
+    cv_96.32 = apply(cv_96.32[[2]], 1, mean),
+    cv_8_4.32 = apply(cv_8_4.32[[2]], 1, mean),
+    cv_16_8.32 = apply(cv_16_8.32[[2]], 1, mean),
+    cv_32_16.32 = apply(cv_32_16.32[[2]], 1, mean),
+    cv_48_24.32 = apply(cv_48_24.32[[2]], 1, mean),
+    cv_64_32.32 = apply(cv_64_32.32[[2]], 1, mean),
+    cv_80_40.32 = apply(cv_80_40.32[[2]], 1, mean),
+    cv_96_48.32 = apply(cv_96_48.32[[2]], 1, mean),
+    cv_16_16.32 = apply(cv_16_16.32[[2]], 1, mean),
+    cv_32_32.32 = apply(cv_32_32.32[[2]], 1, mean),
+    cv_64_64.32 = apply(cv_64_64.32[[2]], 1, mean)) 
   
   results_base_mae <- data.frame(
-    epoch = seq(1:dim(cv_16.16[[1]])[2]),
-    cv_16.16 = apply(cv_16.16[[1]], 2, mean),
-    cv_32.16 = apply(cv_32.16[[1]], 2, mean),
+    epoch = seq(1:dim(cv_8.32[[1]])[2]),
+    cv_8.32 = apply(cv_8.32[[1]], 2, mean),
+    cv_16.32 = apply(cv_16.32[[1]], 2, mean),
+    cv_32.32 = apply(cv_32.32[[1]], 2, mean),
+    cv_48.32 = apply(cv_48.32[[1]], 2, mean),
     cv_64.32 = apply(cv_64.32[[1]], 2, mean),
-    cv_64.16 = apply(cv_64.16[[1]], 2, mean),
-    cv_32_16.8 = apply(cv_32_16.8[[1]], 2, mean),
-    cv_32_16.16 = apply(cv_32_16.16[[1]], 2, mean)) 
+    cv_80.32 = apply(cv_80.32[[1]], 2, mean),
+    cv_96.32 = apply(cv_96.32[[1]], 2, mean),
+    cv_8_4.32 = apply(cv_8_4.32[[1]], 2, mean),
+    cv_16_8.32 = apply(cv_16_8.32[[1]], 2, mean),
+    cv_32_16.32 = apply(cv_32_16.32[[1]], 2, mean),
+    cv_48_24.32 = apply(cv_48_24.32[[1]], 2, mean),
+    cv_64_32.32 = apply(cv_64_32.32[[1]], 2, mean),
+    cv_80_40.32 = apply(cv_80_40.32[[1]], 2, mean),
+    cv_96_48.32 = apply(cv_96_48.32[[1]], 2, mean),
+    cv_16_16.32 = apply(cv_16_16.32[[1]], 2, mean),
+    cv_32_32.32 = apply(cv_32_32.32[[1]], 2, mean),
+    cv_64_64.32 = apply(cv_64_64.32[[1]], 2, mean)) 
+  
   
   save(cv_64_32.8, cv_64_64.16, cv_64_64.32, cv_64_32_16.16, cv_64_32_16.32, cv_16.16, cv_32.16, 
        file = paste0(mypath, "/RData/cv_1.RData"))
@@ -135,6 +158,6 @@
   
   summary(results_base_mean)
   summary(results_base_mae)
-  ggplot(results_base_mae, aes(x = epoch, y = cv_64_64.32)) + geom_smooth()  
-  ggplot(results_base_mean, aes(x = epoch, y = cv_64_32.8)) + geom_line()  
+  ggplot(results_base_mae, aes(x = epoch, y = cv_64_32.32)) + geom_smooth()  
+  ggplot(results_base_mean, aes(x = epoch, y = cv_64_32.32)) + geom_line()  
   
