@@ -179,9 +179,3 @@ fun_model_compute <- function(df_train, params, layer = 2, units = c(64,32)){
 }
 
 #### ####
-
-key <- c(paste0("N_", mat[,1]), paste0("N_", mat[,1], "_", mat[,2]), paste0("N_", mat[,1], "_", mat[,2], "_", mat[,3])) 
-
-
-install.packages("Metrics")
-library(metrics)
