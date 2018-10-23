@@ -1,6 +1,6 @@
 ## Target function
 
-fun_cross_2 <- function(df_train, batchsize = 64, k = 20, epochs = 200, lr = 1e-4){
+fun_cross_2 <- function(df_train, batchsize = 64, k = 5, epochs = 200, lr = 1e-4){
   ## Params ####
   params <- fun_params(batchsize = batchsize, k = k, epochs = epochs, lr = lr)
   ## modelrun
@@ -9,7 +9,7 @@ fun_cross_2 <- function(df_train, batchsize = 64, k = 20, epochs = 200, lr = 1e-
 }
 
 ## Funktion Parameter ####
-fun_params <- function(batchsize = 64, k = 20, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 100, by_ = 12, layer_balance = 0.5){
+fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 100, by_ = 12, layer_balance = 0.5){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
