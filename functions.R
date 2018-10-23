@@ -4,6 +4,7 @@ fun_cross_2 <- function(df_train, batchsize = 64, k = 5, epochs = 200, lr = 1e-4
   df_results <- NULL
   ## modelrun fro different batchsizes
   for (i in 1:length(batchsize)){
+    cat("Models with Batchsize: ", batchsize, "!!", sep = "")
     batchsize <- batchsize[i]
     params <- fun_params(batchsize = batchsize, k = k, epochs = epochs, lr = lr)
     results_ <- fun_model_runs(df_train = df_train, params = params)
@@ -108,11 +109,11 @@ fun_model_runs <- function(df_train, params){
       r2_ <- mean(cv_[[2]])
       time_ <- end_time - start_time
       
-      all_rmse <- cbind(all_rmse, rmse_)
-      all_r2 <- cbind(all_r2, r2_)
-      performance <- cbind(performance, time_)
+      all_rmse <- rbind(all_rmse, rmse_)
+      all_r2 <- rbind(all_r2, r2_)
+      performance <- rbind(performance, time_)
       
-      cat("Complete model: N_", N_[i,1:l], "! Time:", time_, "\n")
+      cat("Complete model: N_", N_[i,1:l], "! Time: ", time_, "\n", sep = "")
     }
   }
   df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, performance = performance)
