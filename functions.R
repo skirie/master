@@ -60,6 +60,8 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr){
     optimizer = optim_, 
     loss = "mse", 
     metrics = c("mae"))
+  
+  return(model)
 }
 
 ## Function model runs ####
@@ -117,6 +119,7 @@ fun_model_compute <- function(df_train, params, units){
   optimizer <- params[["optimizer"]]
   lr <- params[["lr"]]
   layer <- params[["layer"]]
+  batch <- params[["batchsize"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
