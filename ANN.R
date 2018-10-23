@@ -143,7 +143,7 @@
     all_pred_base <- NULL
     
     ## Callback - early stopping ####
-    callback_list <- list(callback_early_stopping(patience = 4))
+    callback_list <- list(callback_early_stopping(patience = 6))
     
     ## optimizer ####
     if (optimizer == "rmsprop"){
