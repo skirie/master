@@ -106,6 +106,8 @@ fun_model_runs <- function(df_train, params){
       all_rmse <- cbind(all_rmse, rmse_)
       all_r2 <- cbind(all_r2, r2_)
       performance <- cbind(performance, time_)
+      
+      cat("Complete model: N_", N_[i,1:l], time_)
     }
   }
   df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, performance = performance)
@@ -191,7 +193,7 @@ fun_model_compute <- function(df_train, params, units){
       history <- model %>% fit(
         partial_train_data, partial_train_targets,
         validation_data = list(val_data, val_targets),
-        epochs = num_epochs, batch_size = batch, verbose = 2,
+        epochs = num_epochs, batch_size = batch, verbose = 0,
         callbacks = callback_list)
       
       # Evaluate the model on the validation data
