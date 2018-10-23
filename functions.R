@@ -93,6 +93,7 @@ fun_model_runs <- function(df_train, params){
   
   ## Model computing
   for (l in 1:layer){
+    params[["layer"]] <- l
     for (i in 1:nrow(N_)){
       start_time <- Sys.time()
       cv_ <- fun_model_compute(df_train = df_train, params = params, units = N_[i,1:l])
@@ -115,7 +116,7 @@ fun_model_runs <- function(df_train, params){
 fun_model_compute <- function(df_train, params, units){
   ## params
   k <- params[["k"]]
-  num_epochs <- params [["epochs"]]
+  num_epochs <- params[["epochs"]]
   optimizer <- params[["optimizer"]]
   lr <- params[["lr"]]
   layer <- params[["layer"]]
