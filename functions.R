@@ -21,10 +21,11 @@ fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop
   params[["Nmax"]] <- Nmax
   params[["by_"]] <- by_
   params[["layer_balance"]] <- layer_balance
+  return(params)
 }
 
 ## Function model build ####
-fun_build_model <- function(layer, optimizer, units, lr){
+fun_build_model <- function(df_train, layer, optimizer, units, lr){
   ## optimizer ####
   if (optimizer == "rmsprop"){
     optim_ <- optimizer_rmsprop(lr = lr)  
@@ -92,7 +93,7 @@ fun_model_runs <- function(df_train, params){
   for (l in 1:layer){
     for (i in 1:nrow(N_)){
       start_time <- Sys.time()
-      cv_ <- fun_cross(df_train = df_train, params = params, units = N_[i,1:l])
+      cv_ <- fun_model_compute(df_train = df_train, params = params, units = N_[i,1:l])
       end_time <- Sys.time()
       
       rmse_ <- mean(cv_[[1]])
@@ -129,7 +130,7 @@ fun_model_compute <- function(df_train, params, units){
   callback_list <- list(callback_early_stopping(patience = 6))
   
   ## Model
-  model <- fun_build_model(layer = layer, optimizer = optimizer, units = units, lr = lr)
+  model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
   
   ## Crossvalidation 2x k-fold crossvalidation
   for (j in 1:2){
