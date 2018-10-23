@@ -1,6 +1,6 @@
 ## Target function
 
-fun_cross_2 <- function(df_train, batchsize = 64, k = 20, epochs = 200, lr = 1e-4){
+fun_cross_2 <- function(df_train, batchsize = 64, k = 5, epochs = 200, lr = 1e-4){
   ## Params ####
   params <- fun_params(batchsize = batchsize, k = k, epochs = epochs, lr = lr)
   ## modelrun
@@ -9,7 +9,7 @@ fun_cross_2 <- function(df_train, batchsize = 64, k = 20, epochs = 200, lr = 1e-
 }
 
 ## Funktion Parameter ####
-fun_params <- function(batchsize = 64, k = 20, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 100, by_ = 12, layer_balance = 0.5){
+fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 100, by_ = 12, layer_balance = 0.5){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -21,10 +21,11 @@ fun_params <- function(batchsize = 64, k = 20, epochs = 200, optimizer = "rmspro
   params[["Nmax"]] <- Nmax
   params[["by_"]] <- by_
   params[["layer_balance"]] <- layer_balance
+  return(params)
 }
 
 ## Function model build ####
-fun_build_model <- function(layer, optimizer, units, lr){
+fun_build_model <- function(df_train, layer, optimizer, units, lr){
   ## optimizer ####
   if (optimizer == "rmsprop"){
     optim_ <- optimizer_rmsprop(lr = lr)  
@@ -59,6 +60,8 @@ fun_build_model <- function(layer, optimizer, units, lr){
     optimizer = optim_, 
     loss = "mse", 
     metrics = c("mae"))
+  
+  return(model)
 }
 
 ## Function model runs ####
@@ -90,9 +93,10 @@ fun_model_runs <- function(df_train, params){
   
   ## Model computing
   for (l in 1:layer){
+    params[["layer"]] <- l
     for (i in 1:nrow(N_)){
       start_time <- Sys.time()
-      cv_ <- fun_cross(df_train = df_train, params = params, units = N_[i,1:l])
+      cv_ <- fun_model_compute(df_train = df_train, params = params, units = N_[i,1:l])
       end_time <- Sys.time()
       
       rmse_ <- mean(cv_[[1]])
@@ -102,6 +106,8 @@ fun_model_runs <- function(df_train, params){
       all_rmse <- cbind(all_rmse, rmse_)
       all_r2 <- cbind(all_r2, r2_)
       performance <- cbind(performance, time_)
+      
+      cat("Complete model: N_", N_[i,1:l], time_)
     }
   }
   df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, performance = performance)
@@ -112,10 +118,11 @@ fun_model_runs <- function(df_train, params){
 fun_model_compute <- function(df_train, params, units){
   ## params
   k <- params[["k"]]
-  num_epochs <- params [["epochs"]]
+  num_epochs <- params[["epochs"]]
   optimizer <- params[["optimizer"]]
   lr <- params[["lr"]]
   layer <- params[["layer"]]
+  batch <- params[["batchsize"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
@@ -129,7 +136,7 @@ fun_model_compute <- function(df_train, params, units){
   callback_list <- list(callback_early_stopping(patience = 6))
   
   ## Model
-  model <- fun_build_model(layer = layer, optimizer = optimizer, units = units, lr = lr)
+  model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
   
   ## Crossvalidation 2x k-fold crossvalidation
   for (j in 1:2){
@@ -138,7 +145,7 @@ fun_model_compute <- function(df_train, params, units){
     folds <- cut(indices, breaks = k, labels = FALSE)
     
     for (i in 1:k) {
-      cat("processing fold #", i, "\n")
+      cat("processing fold #", paste0(j, ".", i), "\n")
       
       # Prepare the validation and test data: data from partition # k
       val_test_indices <- which(folds == i, arr.ind = TRUE) 
@@ -186,7 +193,7 @@ fun_model_compute <- function(df_train, params, units){
       history <- model %>% fit(
         partial_train_data, partial_train_targets,
         validation_data = list(val_data, val_targets),
-        epochs = num_epochs, batch_size = batch, verbose = 2,
+        epochs = num_epochs, batch_size = batch, verbose = 0,
         callbacks = callback_list)
       
       # Evaluate the model on the validation data

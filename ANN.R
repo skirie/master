@@ -15,7 +15,7 @@
   }
   
   ## Packages ####
-  packages <- c("keras", "ggplot2")
+  packages <- c("keras", "ggplot2", "Metrics")
   check.packages(packages) 
   use_condaenv("r-tensorflow")
   
