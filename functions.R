@@ -4,7 +4,7 @@ fun_cross_2 <- function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr 
   df_results <- NULL
   ## modelrun fro different batchsizes
   for (i in 1:length(batchsize)){
-    cat("Models with Batchsize: ", batchsize, "!!", sep = "")
+    cat("Models with Batchsize: ", batchsize[i], "!!", sep = "", "\n")
     batchsize <- batchsize[i]
     params <- fun_params(batchsize = batchsize, k = k, epochs = epochs, lr = lr)
     results_ <- fun_model_runs(df_train = df_train, params = params)
