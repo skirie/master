@@ -1,10 +1,14 @@
 ## Target function
 
 fun_cross_2 <- function(df_train, batchsize = 64, k = 5, epochs = 200, lr = 1e-4){
-  ## Params ####
-  params <- fun_params(batchsize = batchsize, k = k, epochs = epochs, lr = lr)
-  ## modelrun
-  df_results <- fun_model_runs(df_train = df_train, params = params)
+  df_results <- NULL
+  ## modelrun fro different batchsizes
+  for (i in 1:length(batchsize)){
+    batchsize <- batchsize[i]
+    params <- fun_params(batchsize = batchsize, k = k, epochs = epochs, lr = lr)
+    results_ <- fun_model_runs(df_train = df_train, params = params)
+    df_results <- rbind(df_results, results_)
+  }
   return(df_results)
 }
 
@@ -84,11 +88,12 @@ fun_model_runs <- function(df_train, params){
   
   ## key 
   if (layer == 1){
-    key <- c(paste0("N_", N_[,1]))
+    key <- c(paste0("N_", N_[,1]), "_b", params[["batchsize"]])
   } else if (layer == 2){
-    key <- c(paste0("N_", N_[,1]), paste0("N_", N_[,1], "_", N_[,2]))
+    key <- c(paste0("N_", N_[,1]), paste0("N_", N_[,1], "_", N_[,2]), "_b", params[["batchsize"]])
   } else if (layer == 3){
-    key <- c(paste0("N_", N_[,1]), paste0("N_", N_[,1], "_", N_[,2]), paste0("N_", N_[,1], "_", N_[,2], "_", N_[,3])) 
+    key <- c(paste0("N_", N_[,1]), paste0("N_", N_[,1], "_", N_[,2]), paste0("N_", N_[,1], "_", N_[,2], "_", N_[,3]), 
+             "_b", params[["batchsize"]]) 
   }
   
   ## Model computing
@@ -107,7 +112,7 @@ fun_model_runs <- function(df_train, params){
       all_r2 <- cbind(all_r2, r2_)
       performance <- cbind(performance, time_)
       
-      cat("Complete model: N_", N_[i,1:l], time_)
+      cat("Complete model: N_", N_[i,1:l], "! Time:", time_, "\n")
     }
   }
   df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, performance = performance)
