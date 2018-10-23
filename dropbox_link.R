@@ -25,19 +25,19 @@
   mypath <- getwd()
   
 #### Workspace speichern
-  save.image(paste0(mypath, "/save.RData"))
+  save.image(paste0(mypath, "/master/RData/save.RData"))
 
 #### Verbindung zu dropbox aufbauen ####
   #token <- drop_auth()
   #saveRDS(token, file = "token.rds")
-  token <- readRDS("token.rds")
+  token <- readRDS(paste0(mypath,"/master/token.rds"))
   
   ## Workspace runterladen ####
   drop_download('Master/R/save.RData', overwrite = T, dtoken = token)
   
   load("save.RData")
   ## upload WOrkspace ####
-  drop_upload('save.RData', 'Master/R/', mode = "overwrite", dtoken = token)
+  drop_upload(paste0(mypath, "/master/RData/save.RData"), 'Master/R/', mode = "overwrite", dtoken = token)
   
   ## Script runterladen ####
   #drop_download('Master/R/Master_ANN.R', overwrite = T, dtoken = token)
