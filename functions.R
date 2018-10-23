@@ -145,7 +145,7 @@ fun_model_compute <- function(df_train, params, units){
     folds <- cut(indices, breaks = k, labels = FALSE)
     
     for (i in 1:k) {
-      cat("processing fold #", i, "\n")
+      cat("processing fold #", paste0(j, ".", i), "\n")
       
       # Prepare the validation and test data: data from partition # k
       val_test_indices <- which(folds == i, arr.ind = TRUE) 
