@@ -1,21 +1,26 @@
 ## Target function
 
-fun_cross_2 <- function(batchsize = 64, k = 20, epochs = 200, lr = 1e-4){
+fun_cross_2 <- function(df_train, batchsize = 64, k = 20, epochs = 200, lr = 1e-4){
   ## Params ####
   params <- fun_params(batchsize = batchsize, k = k, epochs = epochs, lr = lr)
-  models <- 
-  df_results <- data.frame()
-  
+  ## modelrun
+  df_results <- fun_model_runs(df_train = df_train, params = params)
+  return(df_results)
 }
 
 ## Funktion Parameter ####
-fun_params <- function(batchsize = 64, k = 20, epochs = 200, lr = 1e-4){
+fun_params <- function(batchsize = 64, k = 20, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 100, by_ = 12, layer_balance = 0.5){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
   params[["epochs"]] <- epochs
-  params[["optimizer"]] <- c("rmsprop", "adam")
+  params[["optimizer"]] <- optimizer
   params[["lr"]] <- lr
+  params[["layer"]] <- layer
+  params[["Nmin"]] <- Nmin
+  params[["Nmax"]] <- Nmax
+  params[["by_"]] <- by_
+  params[["layer_balance"]] <- layer_balance
 }
 
 ## Function model build ####
@@ -56,17 +61,25 @@ fun_build_model <- function(layer, optimizer, units, lr){
     metrics = c("mae"))
 }
 
-## Funktion Modelldurchlauf ####
-fun_model_run <- function(Nmin = 8, Nmax = 100, by_ = 12, layer = 2, params = params){
-  # tagret data.frame
-  rsq <- NULL
-  rmse_ <- NULL
+## Function model runs ####
+fun_model_runs <- function(df_train, params){
+  ## params 
+  Nmin <- params[["Nmin"]]
+  Nmax <- params[["Nmax"]]
+  by_ <- params[["by_"]]
+  layer <- params[["layer"]]
+  layer_balance <- params[["layer_balance"]]
   
-  # natrix with Nodes
+  ## tagret data.frame
+  all_r2 <- NULL
+  all_rmse <- NULL
+  performance <- NULL
+  
+  ## matrix with Nodes
   N <- seq(Nmin, Nmax, by_)
-  N_ <- matrix(data = c(N, N*0.5, N*0.25), nrow = length(N), ncol = 3)
+  N_ <- matrix(data = c(N, N*layer_balance, N*layer_balance*layer_balance), nrow = length(N), ncol = 3)
   
-  # key 
+  ## key 
   if (layer == 1){
     key <- c(paste0("N_", N_[,1]))
   } else if (layer == 2){
@@ -75,27 +88,40 @@ fun_model_run <- function(Nmin = 8, Nmax = 100, by_ = 12, layer = 2, params = pa
     key <- c(paste0("N_", N_[,1]), paste0("N_", N_[,1], "_", N_[,2]), paste0("N_", N_[,1], "_", N_[,2], "_", N_[,3])) 
   }
   
+  ## Model computing
   for (l in 1:layer){
     for (i in 1:nrow(N_)){
-      cv_ <- fun_cross(df_train = df_night_model, params = params, layer = layer, units = N_[i,1:l])
-      rmse <- mean(cv_[[1]])
+      start_time <- Sys.time()
+      cv_ <- fun_cross(df_train = df_train, params = params, units = N_[i,1:l])
+      end_time <- Sys.time()
+      
+      rmse_ <- mean(cv_[[1]])
       r2_ <- mean(cv_[[2]])
+      time_ <- end_time - start_time
+      
+      all_rmse <- cbind(all_rmse, rmse_)
+      all_r2 <- cbind(all_r2, r2_)
+      performance <- cbind(performance, time_)
     }
   }
+  df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, performance = performance)
+  return(df_results)
 }
 
-## CV function ####
-fun_model_compute <- function(df_train, params, layer = 2, units = c(64,32)){
-  
+## Function model compute ####
+fun_model_compute <- function(df_train, params, units){
+  ## params
   k <- params[["k"]]
   num_epochs <- params [["epochs"]]
   optimizer <- params[["optimizer"]]
   lr <- params[["lr"]]
+  layer <- params[["layer"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
   
-  #all_mae_histories <- matrix(NA, nrow = k, ncol = num_epochs) 
+  ## empty vectors for Results
+  #all_rme_histories <- matrix(NA, nrow = k, ncol = num_epochs) 
   all_rmse <- NULL
   all_r2 <- NULL
   
