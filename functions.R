@@ -1,6 +1,6 @@
 ## Target function
 
-fun_cross_2 <- function(df_train, batchsize = 64, k = 5, epochs = 200, lr = 1e-4){
+fun_cross_2 <- function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr = 1e-4){
   df_results <- NULL
   ## modelrun fro different batchsizes
   for (i in 1:length(batchsize)){
