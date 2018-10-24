@@ -89,12 +89,12 @@ fun_model_runs <- function(df_train, params){
   
   ## key 
   if (layer == 1){
-    key <- c(paste0("N_", N_[,1]), "_b", params[["batchsize"]])
+    key <- c(paste0("N_", N_[,1], "_b", params[["batchsize"]]))
   } else if (layer == 2){
-    key <- c(paste0("N_", N_[,1]), paste0("N_", N_[,1], "_", N_[,2]), "_b", params[["batchsize"]])
+    key <- c(paste0("N_", N_[,1], "_b", params[["batchsize"]]), paste0("N_", N_[,1], "_", N_[,2], "_b", params[["batchsize"]]))
   } else if (layer == 3){
-    key <- c(paste0("N_", N_[,1]), paste0("N_", N_[,1], "_", N_[,2]), paste0("N_", N_[,1], "_", N_[,2], "_", N_[,3]), 
-             "_b", params[["batchsize"]]) 
+    key <- c(paste0("N_", N_[,1], "_b", params[["batchsize"]]), paste0("N_", N_[,1], "_", N_[,2], "_b", params[["batchsize"]]), 
+             paste0("N_", N_[,1], "_", N_[,2], "_", N_[,3], "_b", params[["batchsize"]])) 
   }
   
   ## Model computing
@@ -209,9 +209,9 @@ fun_model_compute <- function(df_train, params, units){
       # predict and scale back
       pred_test <- model %>% predict(test_data)
       rmse_ <- rmse(test_targets, pred_test)
-      all_rmse <- cbind(all_rmse, rmse_)
+      all_rmse <- rbind(all_rmse, rmse_)
       r2 <- cor(test_targets, pred_test) ^ 2
-      all_r2 <- cbind(all_r2, r2)
+      all_r2 <- rbind(all_r2, r2)
     }
   }
   return(list(all_rmse, all_r2))
