@@ -89,12 +89,12 @@ fun_model_runs <- function(df_train, params){
   
   ## key 
   if (layer == 1){
-    key <- c(paste0("N_", N_[,1], "_b", params[["batchsize"]]))
+    key <- c(paste0("N_", N_[,1], "_b_", params[["batchsize"]]))
   } else if (layer == 2){
-    key <- c(paste0("N_", N_[,1], "_b", params[["batchsize"]]), paste0("N_", N_[,1], "_", N_[,2], "_b", params[["batchsize"]]))
+    key <- c(paste0("N_", N_[,1], "_b_", params[["batchsize"]]), paste0("N_", N_[,1], "_", N_[,2], "_b_", params[["batchsize"]]))
   } else if (layer == 3){
-    key <- c(paste0("N_", N_[,1], "_b", params[["batchsize"]]), paste0("N_", N_[,1], "_", N_[,2], "_b", params[["batchsize"]]), 
-             paste0("N_", N_[,1], "_", N_[,2], "_", N_[,3], "_b", params[["batchsize"]])) 
+    key <- c(paste0("N_", N_[,1], "_b_", params[["batchsize"]]), paste0("N_", N_[,1], "_", N_[,2], "_b_", params[["batchsize"]]), 
+             paste0("N_", N_[,1], "_", N_[,2], "_", N_[,3], "_b_", params[["batchsize"]])) 
   }
   
   ## Model computing
