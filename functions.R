@@ -1,16 +1,23 @@
-## Target function
+#### ------------------------------------------- ####
+#### Functions for modeling trace gas emissions with ANNs ####
+#### ------------------------------------------- ####
 
-fun_cross_2 <- function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr = 1e-4){
-  df_results <- NULL
+## Target function ####
+fun_tagret - function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr = 1e-4){
+  df_results_ms <- NULL
   ## modelrun fro different batchsizes
   for (i in 1:length(batchsize)){
     batchsize_ <- batchsize[i]
     cat("Models with Batchsize: ", batchsize_, "!!", sep = "", "\n")
     params <- fun_params(batchsize = batchsize_, k = k, epochs = epochs, lr = lr)
-    results_ <- fun_model_runs(df_train = df_train, params = params)
-    df_results <- rbind(df_results, results_)
+    results_ <- fun_model_run_ms(df_train = df_train, params = params)
+    df_results_ms <- rbind(df_results_ms, results_)
   }
-  return(df_results)
+  
+  params <- fun_best_model(df_results = df_results_ms, params = params)
+  df_results_pred <- fun_model_run_pa(df_train = df_night_model, params = params)
+  
+  return(df_results, params, df_results_pred)
 }
 
 ## Funktion Parameter ####
@@ -69,8 +76,8 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr){
   return(model)
 }
 
-## Function model runs ####
-fun_model_runs <- function(df_train, params){
+## Function model run model structure ####
+fun_model_run_ms <- function(df_train, params){
   ## params 
   Nmin <- params[["Nmin"]]
   Nmax <- params[["Nmax"]]
@@ -81,6 +88,8 @@ fun_model_runs <- function(df_train, params){
   ## tagret data.frame
   all_r2 <- NULL
   all_rmse <- NULL
+  all_sem <- NULL
+  all_std <- NULL
   performance <- NULL
   
   ## matrix with Nodes
@@ -102,21 +111,25 @@ fun_model_runs <- function(df_train, params){
     params[["layer"]] <- l
     for (i in 1:nrow(N_)){
       start_time <- Sys.time()
-      cv_ <- fun_model_compute(df_train = df_train, params = params, units = N_[i,1:l])
+      cv_ <- fun_model_compute_full(df_train = df_train, params = params, units = N_[i,1:l])
       end_time <- Sys.time()
       
       rmse_ <- mean(cv_[[1]])
       r2_ <- mean(cv_[[2]])
+      std_ <- sd(cv_[[1]])
+      sem_ <- sd(cv_[[1]])/sqrt(length(cv_[[1]]))
       time_ <- end_time - start_time
       
       all_rmse <- rbind(all_rmse, rmse_)
       all_r2 <- rbind(all_r2, r2_)
+      all_std <- rbind(all_std, std_)
+      all_sem <- rbind(all_sem, se_m)
       performance <- rbind(performance, time_)
       
       cat("Complete model: N_", N_[i,1:l], "! Time: ", time_, "\n", sep = "")
     }
   }
-  df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, performance = performance)
+  df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, std = all_std, sem = all_sem, performance = performance)
   return(df_results)
 }
 
@@ -137,7 +150,7 @@ fun_model_compute <- function(df_train, params, units){
   #all_rme_histories <- matrix(NA, nrow = k, ncol = num_epochs) 
   all_rmse <- NULL
   all_r2 <- NULL
-  
+
   ## Callback - early stopping ####
   callback_list <- list(callback_early_stopping(patience = 6))
   
@@ -217,7 +230,7 @@ fun_model_compute <- function(df_train, params, units){
   return(list(all_rmse, all_r2))
 }
 
-#### Function model compute full ####
+## Function model compute full ####
 fun_model_compute_full <- function(df_train, params, units){
   ## params
   k <- params[["k"]]
@@ -253,17 +266,18 @@ fun_model_compute_full <- function(df_train, params, units){
       # Prepare the train, validation and test data: data from partition # k
       val_test_indices <- which(folds == i, arr.ind = TRUE)
       
-      ## different datatype for different number of predictors 
+      ## different datatype (array, matrix) for varying number of predictors 
+      # -> indices are different (array <-> matrix)
       if (ncol(df_train) == 2){
-        val_test_data <- as.array(df_train[, -ncol(df_train)][val_test_indices,])
-        partial_train_data <- as.array(df_train[, -ncol(df_train)][-val_test_indices,])
+        val_test_data <- as.array(df_train[val_test_indices, -ncol(df_train)])
+        partial_train_data <- as.array(df_train[-val_test_indices, -ncol(df_train)])
         
         # min and max for mormalization
         mins_data <- min(partial_train_data, na.rm = T)
         maxs_data <- max(partial_train_data, na.rm = T)
       } else {
-        val_test_data <- as.matrix(df_train[, -ncol(df_train)][val_test_indices,])
-        partial_train_data <- as.matrix(df_train[, -ncol(df_train)][-val_test_indices,])
+        val_test_data <- as.matrix(df_train[val_test_indices, -ncol(df_train)])
+        partial_train_data <- as.matrix(df_train[-val_test_indices, -ncol(df_train)])
         
         # min and max for mormalization
         mins_data <- apply(partial_train_data, 2, min, na.rm = T)
@@ -271,22 +285,30 @@ fun_model_compute_full <- function(df_train, params, units){
       }
       
       ## same for target data
-      val_test_targets <- as.array(df_train[, ncol(df_train)][val_test_indices])
-      partial_train_targets <- as.array(df_train[, ncol(df_train)][-val_test_indices])
+      val_test_targets <- as.array(df_train[val_test_indices, ncol(df_train)])
+      partial_train_targets <- as.array(df_train[-val_test_indices, ncol(df_train)])
       
       # normalize all data
       mins_targets <- min(partial_train_targets, na.rm = T)
       maxs_targets <- max(partial_train_targets, na.rm = T)
       
-      # split val_test into validation and test data
+      # split combined val_test-data into separate validation and test data
       set.seed(i*5)
       vt_indices <- sample(1:nrow(val_test_data))
       vt_folds <- cut(vt_indices, breaks = 2, labels = FALSE)
       
-      val_test_indices_2 <- which(vt_folds == 1, arr.ind = TRUE) 
-      val_data <- val_test_data[val_test_indices_2,]
+      val_test_indices_2 <- which(vt_folds == 1, arr.ind = TRUE)
+      
+      # again split and different indices  (array <-> matrix)
+      if (ncol(df_train) == 2){
+        val_data <- val_test_data[val_test_indices_2]
+        test_data <- val_test_data[-val_test_indices_2]
+      } else {
+        val_data <- val_test_data[val_test_indices_2,]
+        test_data <- val_test_data[-val_test_indices_2,]
+      }
+      
       val_targets <- val_test_targets[val_test_indices_2]
-      test_data <- val_test_data[-val_test_indices_2,]
       test_targets <- val_test_targets[-val_test_indices_2]
       
       # predict = x
@@ -325,6 +347,102 @@ fun_model_compute_full <- function(df_train, params, units){
     }
   }
   return(list(all_rmse, all_r2))
+}
+## Function best model ####
+fun_best_model <- function(df_results, params){
+  # print ordered results
+  print(df_results[order(df_results$rmse),])
+  
+  # model with lowest rmse
+  w_best <- which(df_results$rmse == min(df_results$rmse))
+  
+  # extract layer, nodes and batchsize from key
+  str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_best]), "_")[[1]]))
+  str_ <- str[!is.na(str)]
+  batch_size <- str_[length(str_)]
+  nodes <- str_[-length(str_)]
+  layer <- length(nodes)
+  
+  params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_best,]) 
+  return(params)
+}
+## Function model run predictor analysis ####
+fun_model_run_pa <- function(df_train, params){
+  ## params 
+  params[["layer"]] <- params[["best"]]$layer
+  N <-  params[["best"]]$nodes
+  params[["batchsize"]] <- params[["best"]]$batch_size
+  
+  ## key
+  key <- NULL
+  level <- 1
+  for (i in 18:1){
+    key_ <- as.character(level+c(1:i)/100)
+    key <- c(key,key_)
+    level <- level+1
+  }
+  
+  ## required empty features / target 
+  all_rmse <- vector("list", 18)
+  all_r2 <- vector("list", 18)
+  k <- 18
+  col_ <- colnames(df_night_model)
+  level_ <- NULL
+  pred_ <- NULL
+  best_pred_name <- vector("list", 18)
+  count <- 1
+  
+  ## loop for every predictor composition
+  for (i in c(1:18)){
+    for (j in c(1:k)){
+      # print computed predictor combination      
+      pred_[count] <- paste0(best_pred_name[[i]], "+", col_[j])
+      cat("Predictor Posibility: ", count, "/171. Used predictors:", pred_[count], sep = "", "\n")
+      
+      # choose of one predictor and always Y. Y needs to be at last column position.
+      train_ <- df_night_model[, c(col_[j], col_[length(col_)])]
+      if (i == 1){
+        all_train <- train_
+      } else {
+        all_train <- cbind(best_train, train_)
+      }
+      
+      # compute Model for this predictor composition
+      cv_ <- fun_model_compute_full(df_train = all_train, params = params, units = N)
+      rmse_ <- mean(cv_[[1]])
+      r2_ <- mean(cv_[[2]])
+      all_rmse[[i]] <- c(all_rmse[[i]], rmse_)
+      all_r2[[i]] <- c(all_r2[[i]], r2_)
+      level_ <- rbind(level_, i)
+      
+      count <- count + 1
+    }
+    # best model / predictor
+    w_best <- which(all_rmse[[i]] == min(all_rmse[[i]]))
+    
+    # extract best predictor
+    best_pred <- data.frame("dummy" = df_night_model[, w_best])
+    colnames(best_pred) <- col_[w_best]
+    
+    best_pred_name[i:length(best_pred_name)] <- paste0(best_pred_name[[i]], "+", col_[w_best])
+    
+    # new data.frame with best predictors
+    if (i == 1){
+      best_train <- best_pred
+    } else {
+      best_train <- cbind(best_train, best_pred)
+    }
+    
+    # adjust k and possible predictor pool
+    k <- k-1
+    print(paste0("Level: ", i, "! Predictors: ", best_pred_name[[i]]))
+    col_ <- col_[-w_best]
+  }
+  
+  df_results <- data.frame(key = key, level = level_, predictors = pred_, 
+                           rmse = unlist(all_rmse, use.names=FALSE), r2 = unlist(all_r2, use.names=FALSE))
+  
+  return(df_results)
 }
 #### ####
 
