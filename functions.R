@@ -3,25 +3,32 @@
 #### ------------------------------------------- ####
 
 ## Target function ####
-fun_tagret - function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr = 1e-4){
+fun_tagret - function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr = 1e-4, layer = 2){
   df_results_ms <- NULL
   ## modelrun fro different batchsizes
   for (i in 1:length(batchsize)){
     batchsize_ <- batchsize[i]
     cat("Models with Batchsize: ", batchsize_, "!!", sep = "", "\n")
-    params <- fun_params(batchsize = batchsize_, k = k, epochs = epochs, lr = lr)
+    params <- fun_params(batchsize = batchsize_, k = k, epochs = epochs, lr = lr, layer = layer)
     results_ <- fun_model_run_ms(df_train = df_train, params = params)
     df_results_ms <- rbind(df_results_ms, results_)
   }
+  save(df_results, file = paste0(mypath, "/master/RData/results_model_", layer, "l_", Sys.Date(), ".RData"))
   
-  params <- fun_best_model(df_results = df_results_ms, params = params)
-  df_results_pred <- fun_model_run_pa(df_train = df_night_model, params = params)
+  ## best Model structure
+  params <- fun_best_model(df_results = df_results_ms, params = params, type = "nodes")
   
-  return(df_results, params, df_results_pred)
+  ## Predictoranalysis
+  df_results_pa <- fun_model_run_pa(df_train = df_night_model, params = params)
+  save(df_results_pa, file = paste0(mypath, "/master/RData/results_pred_", Sys.Date(), ".RData"))
+  
+  params <- fun_best_model(df_results = df_results_pa, params = params, type = "pred")
+  
+  return(list(df_results_ms, df_results_pa, params))
 }
 
 ## Funktion Parameter ####
-fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 100, by_ = 12, layer_balance = 0.5){
+fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 100, by_ = 12, layer_balance = 0.5, times_cv = 4){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -33,6 +40,7 @@ fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop
   params[["Nmax"]] <- Nmax
   params[["by_"]] <- by_
   params[["layer_balance"]] <- layer_balance
+  params[["times_cv"]] <- times_cv
   return(params)
 }
 
@@ -239,6 +247,7 @@ fun_model_compute_full <- function(df_train, params, units){
   lr <- params[["lr"]]
   layer <- params[["layer"]]
   batch <- params[["batchsize"]]
+  times_cv <- params[["times_cv"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
@@ -254,8 +263,8 @@ fun_model_compute_full <- function(df_train, params, units){
   ## Model
   model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
   
-  ## Crossvalidation 2x k-fold crossvalidation
-  for (j in 1:2){
+  ## Crossvalidation j times k-fold crossvalidation
+  for (j in 1:times_cv){
     set.seed(j*5)
     indices <- sample(1:nrow(df_train))
     folds <- cut(indices, breaks = k, labels = FALSE)
@@ -382,7 +391,7 @@ fun_best_model <- function(df_results, params, type){
     nodes <- str_[-length(str_)]
     layer <- length(nodes)
     
-    params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_best,])   
+    params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_best,]) 
   } else if(type == "pred"){
     str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best,]) 
@@ -391,8 +400,8 @@ fun_best_model <- function(df_results, params, type){
     w_best_12 <- which(df_results$rmse[df_results$level <= 12] == min(df_results$rmse[df_results$level <= 12]))
     str_7 <- strsplit(as.character(df_results$predictors[w_best_7]), "+", fixed = TRUE)[[1]][-1]
     str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
-    params[["best_preds_7"]] <- list("predictors" = str_full, "str_7" = df_results[w_best_7,]) 
-    params[["best_preds_12"]] <- list("predictors" = str_full, "str_12" = df_results[w_best_12,]) 
+    params[["best_preds_7"]] <- list("predictors" = str_7, "model" = df_results[w_best_7,]) 
+    params[["best_preds_12"]] <- list("predictors" = str_12, "model" = df_results[w_best_12,])
   }
   return(params)
 }
