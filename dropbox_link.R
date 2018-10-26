@@ -21,7 +21,8 @@
 #### Daten einladen ####
   ## path 
   
-  #setwd("E:/Uni/05_Masterarbeit/Auswertung") 
+  #setwd("E:/Uni/05_Masterarbeit/Auswertung")
+  setwd("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/Auswertung")
   mypath <- getwd()
   
 #### Workspace speichern
@@ -33,9 +34,9 @@
   token <- readRDS(paste0(mypath,"/master/token.rds"))
   
   ## Workspace runterladen ####
-  drop_download('Master/R/save.RData', overwrite = T, dtoken = token)
+  drop_download('Master/R/save.RData', paste0(mypath, "/master/RData/save.RData"), overwrite = T, dtoken = token)
   
-  load("save.RData")
+  load(paste0(mypath, "/master/RData/save.RData"))
   ## upload WOrkspace ####
   drop_upload(paste0(mypath, "/master/RData/save.RData"), 'Master/R/', mode = "overwrite", dtoken = token)
   
