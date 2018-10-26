@@ -366,6 +366,37 @@ fun_best_model <- function(df_results, params){
   params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_best,]) 
   return(params)
 }
+## Function best model NEW ####
+fun_best_model <- function(df_results, params, type){
+  # print ordered results
+  print(df_results[order(df_results$rmse),][1:10,])
+  
+  # model with lowest rmse
+  w_best <- which(df_results$rmse == min(df_results$rmse))
+  
+  # extract layer, nodes and batchsize from key
+  if (type == "nodes"){
+    str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_best]), "_")[[1]]))
+    str_ <- str[!is.na(str)]
+    batch_size <- str_[length(str_)]
+    nodes <- str_[-length(str_)]
+    layer <- length(nodes)
+    
+    params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_best,])   
+  } else if(type == "pred"){
+    str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
+    params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best,]) 
+    
+    w_best_7 <- which(df_results$rmse[df_results$level <= 7] == min(df_results$rmse[df_results$level <= 7]))
+    w_best_12 <- which(df_results$rmse[df_results$level <= 12] == min(df_results$rmse[df_results$level <= 12]))
+    str_7 <- strsplit(as.character(df_results$predictors[w_best_7]), "+", fixed = TRUE)[[1]][-1]
+    str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
+    params[["best_preds_7"]] <- list("predictors" = str_full, "str_7" = df_results[w_best_7,]) 
+    params[["best_preds_12"]] <- list("predictors" = str_full, "str_12" = df_results[w_best_12,]) 
+  }
+  return(params)
+}
+
 ## Function model run predictor analysis ####
 fun_model_run_pa <- function(df_train, params){
   ## params 
