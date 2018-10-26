@@ -3,9 +3,10 @@
 #### ------------------------------------------- ####
 
 ## Target function ####
-fun_tagret - function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr = 1e-4, layer = 2){
+fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2){
   df_results_ms <- NULL
-  ## modelrun fro different batchsizes
+  ## best Model structure 
+  ## modelrun for different batchsizes
   for (i in 1:length(batchsize)){
     batchsize_ <- batchsize[i]
     cat("Models with Batchsize: ", batchsize_, "!!", sep = "", "\n")
@@ -13,18 +14,32 @@ fun_tagret - function(df_train, batchsize = c(32,64), k = 5, epochs = 200, lr = 
     results_ <- fun_model_run_ms(df_train = df_train, params = params)
     df_results_ms <- rbind(df_results_ms, results_)
   }
-  save(df_results, file = paste0(mypath, "/master/RData/results_model_", layer, "l_", Sys.Date(), ".RData"))
+  save(df_results_ms, file = paste0(mypath, "/master/RData/results_model_", layer, "l_", Sys.Date(), ".RData"))
   
-  ## best Model structure
+  ## best Model
   params <- fun_best_model(df_results = df_results_ms, params = params, type = "nodes")
   
   ## Predictoranalysis
-  df_results_pa <- fun_model_run_pa(df_train = df_night_model, params = params)
+  df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
   save(df_results_pa, file = paste0(mypath, "/master/RData/results_pred_", Sys.Date(), ".RData"))
   
   params <- fun_best_model(df_results = df_results_pa, params = params, type = "pred")
   
-  return(list(df_results_ms, df_results_pa, params))
+  ## best model structur for best predictor composition ####
+  df_train_best <- df_train[,c(params$best_preds_full$predictors, colnames(df_train)[ncol(df_train)])]
+  df_results_pa_ms <- NULL
+  ## best Model structure 
+  ## modelrun for different batchsizes
+  for (i in 1:length(batchsize)){
+    batchsize_ <- batchsize[i]
+    cat("Models with Batchsize: ", batchsize_, "!!", sep = "", "\n")
+    results_2 <- fun_model_run_ms(df_train = df_train_best, params = params)
+    df_results_pa_ms <- rbind(df_results_pa_ms, results_2)
+  }
+  
+  save(df_results_pa_ms, file = paste0(mypath, "/master/RData/results_pa_ms_", Sys.Date(), ".RData"))
+  
+  return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
 
 ## Funktion Parameter ####
