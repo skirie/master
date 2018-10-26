@@ -146,7 +146,7 @@ fun_model_run_ms <- function(df_train, params){
       all_rmse <- rbind(all_rmse, rmse_)
       all_r2 <- rbind(all_r2, r2_)
       all_std <- rbind(all_std, std_)
-      all_sem <- rbind(all_sem, se_m)
+      all_sem <- rbind(all_sem, sem_)
       performance <- rbind(performance, time_)
       
       cat("Complete model: N_", N_[i,1:l], "! Time: ", time_, "\n", sep = "")
