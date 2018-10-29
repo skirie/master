@@ -79,7 +79,7 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr){
       layer_dense(units = units[1], activation = "relu", 
                   input_shape = dim(df_train)[[2]]-1) %>% 
       layer_dense(units = units[2], activation = "relu") %>% 
-      layer_dense(units = 1)
+      layer_dense(units = 1) # No activation. Chollet et al. p. 78
   } else if (layer == 3){
     model <- keras_model_sequential() %>% 
       layer_dense(units = units[1], activation = "relu", 
@@ -396,7 +396,7 @@ fun_best_model <- function(df_results, params, type){
   print(df_results[order(df_results$rmse),][1:10,])
   
   # model with lowest rmse
-  w_best <- which(df_results$rmse == min(df_results$rmse))
+  w_best <- which(df_results$rmse == min(df_results$rmse, na.rm = T))
   
   # extract layer, nodes and batchsize from key
   if (type == "nodes"){
@@ -411,8 +411,8 @@ fun_best_model <- function(df_results, params, type){
     str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best,]) 
     
-    w_best_7 <- which(df_results$rmse[df_results$level <= 7] == min(df_results$rmse[df_results$level <= 7]))
-    w_best_12 <- which(df_results$rmse[df_results$level <= 12] == min(df_results$rmse[df_results$level <= 12]))
+    w_best_7 <- which(df_results$rmse[df_results$level <= 7] == min(df_results$rmse[df_results$level <= 7], na.rm = T))
+    w_best_12 <- which(df_results$rmse[df_results$level <= 12] == min(df_results$rmse[df_results$level <= 12], na.rm = T))
     str_7 <- strsplit(as.character(df_results$predictors[w_best_7]), "+", fixed = TRUE)[[1]][-1]
     str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_7"]] <- list("predictors" = str_7, "model" = df_results[w_best_7,]) 
