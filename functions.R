@@ -60,7 +60,7 @@ fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop
 }
 
 ## Function model build ####
-fun_build_model <- function(df_train, layer, optimizer, units, lr){
+fun_build_model <- function(df_train, layer, optimizer, units, lr, ){
   ## optimizer ####
   if (optimizer == "rmsprop"){
     optim_ <- optimizer_rmsprop(lr = lr)  
@@ -72,18 +72,18 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr){
   if (layer == 1){
     model <- keras_model_sequential() %>% 
       layer_dense(units = units[1], activation = "relu", 
-                  input_shape = dim(df_train)[[2]]-1) %>% 
+                  input_shape = ncol(df_train)-1) %>% 
       layer_dense(units = 1) 
   } else if (layer == 2){
     model <- keras_model_sequential() %>% 
       layer_dense(units = units[1], activation = "relu", 
-                  input_shape = dim(df_train)[[2]]-1) %>% 
+                  input_shape = ncol(df_train)-1) %>% 
       layer_dense(units = units[2], activation = "relu") %>% 
       layer_dense(units = 1) # No activation. Chollet et al. p. 78
   } else if (layer == 3){
     model <- keras_model_sequential() %>% 
       layer_dense(units = units[1], activation = "relu", 
-                  input_shape = dim(df_train)[[2]]-1) %>% 
+                  input_shape = ncol(df_train)-1) %>% 
       layer_dense(units = units[2], activation = "relu") %>% 
       layer_dense(units = units[3], activation = "relu") %>% 
       layer_dense(units = 1) 
@@ -441,7 +441,7 @@ fun_model_run_pa <- function(df_train, params){
   all_rmse <- vector("list", 18)
   all_r2 <- vector("list", 18)
   k <- 18
-  col_ <- colnames(df_night_model)
+  col_ <- colnames(df_train)
   level_ <- NULL
   pred_ <- NULL
   best_pred_name <- vector("list", 18)
@@ -455,7 +455,7 @@ fun_model_run_pa <- function(df_train, params){
       cat("Predictor Posibility: ", count, "/171. Used predictors:", pred_[count], sep = "", "\n")
       
       # choose of one predictor and always Y. Y needs to be at last column position.
-      train_ <- df_night_model[, c(col_[j], col_[length(col_)])]
+      train_ <- df_train[, c(col_[j], col_[length(col_)])]
       if (i == 1){
         all_train <- train_
       } else {
@@ -476,7 +476,7 @@ fun_model_run_pa <- function(df_train, params){
     w_best <- which(all_rmse[[i]] == min(all_rmse[[i]]))
     
     # extract best predictor
-    best_pred <- data.frame("dummy" = df_night_model[, w_best])
+    best_pred <- data.frame("dummy" = df_train[, w_best])
     colnames(best_pred) <- col_[w_best]
     
     best_pred_name[i:length(best_pred_name)] <- paste0(best_pred_name[[i]], "+", col_[w_best])
