@@ -60,7 +60,7 @@ fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop
 }
 
 ## Function model build ####
-fun_build_model <- function(df_train, layer, optimizer, units, lr, ){
+fun_build_model <- function(df_train, layer, optimizer, units, lr){
   ## optimizer ####
   if (optimizer == "rmsprop"){
     optim_ <- optimizer_rmsprop(lr = lr)  
