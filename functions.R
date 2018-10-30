@@ -71,21 +71,21 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr){
   ## Model ####
   if (layer == 1){
     model <- keras_model_sequential() %>% 
-      layer_dense(units = units[1], activation = "relu", 
+      layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
                   input_shape = ncol(df_train)-1) %>% 
       layer_dense(units = 1) 
   } else if (layer == 2){
     model <- keras_model_sequential() %>% 
-      layer_dense(units = units[1], activation = "relu", 
+      layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
                   input_shape = ncol(df_train)-1) %>% 
-      layer_dense(units = units[2], activation = "relu") %>% 
+      layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
       layer_dense(units = 1) # No activation. Chollet et al. p. 78
   } else if (layer == 3){
     model <- keras_model_sequential() %>% 
-      layer_dense(units = units[1], activation = "relu", 
+      layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
                   input_shape = ncol(df_train)-1) %>% 
-      layer_dense(units = units[2], activation = "relu") %>% 
-      layer_dense(units = units[3], activation = "relu") %>% 
+      layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
+      layer_dense(units = units[3], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
       layer_dense(units = 1) 
   } else {
     return("only three layer possible. pls set layer from 1-3")
@@ -254,15 +254,19 @@ fun_model_compute <- function(df_train, params, units){
 }
 
 ## Function model compute full ####
-fun_model_compute_full <- function(df_train, params, units){
+fun_model_compute_full <- function(df_train, params, units, type = "full"){
   ## params
+  if (type == "pred"){
+    times_cv <- 2
+  } else {
+    times_cv <- params[["times_cv"]]
+  }
   k <- params[["k"]]
   num_epochs <- params[["epochs"]]
   optimizer <- params[["optimizer"]]
   lr <- params[["lr"]]
   layer <- params[["layer"]]
   batch <- params[["batchsize"]]
-  times_cv <- params[["times_cv"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
@@ -431,24 +435,24 @@ fun_model_run_pa <- function(df_train, params){
   ## key
   key <- NULL
   level <- 1
-  for (i in 18:1){
+  for (i in ncol(df_train)-1:1){
     key_ <- as.character(level+c(1:i)/100)
     key <- c(key,key_)
     level <- level+1
   }
   
   ## required empty features / target 
-  all_rmse <- vector("list", 18)
-  all_r2 <- vector("list", 18)
-  k <- 18
+  all_rmse <- vector("list", ncol(df_train)-1)
+  all_r2 <- vector("list", ncol(df_train)-1)
+  k <- ncol(df_train)-1
   col_ <- colnames(df_train)
   level_ <- NULL
   pred_ <- NULL
-  best_pred_name <- vector("list", 18)
+  best_pred_name <- vector("list", ncol(df_train)-1)
   count <- 1
   
   ## loop for every predictor composition
-  for (i in c(1:18)){
+  for (i in c(1:ncol(df_train)-1)){
     for (j in c(1:k)){
       # print computed predictor combination      
       pred_[count] <- paste0(best_pred_name[[i]], "+", col_[j])
