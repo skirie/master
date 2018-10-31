@@ -5,16 +5,19 @@
 ## Target function ####
 fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, optimizer = "rmsprop", path){
   df_results_ms <- NULL
+  all_mae_history <- NULL
   ## best Model structure 
   ## modelrun for different batchsizes
   for (i in 1:length(batchsize)){
     batchsize_ <- batchsize[i]
     cat("Models with Batchsize: ", batchsize_, "!!", sep = "", "\n")
     params <- fun_params(batchsize = batchsize_, k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
-    results_ <- fun_model_run_ms(df_train = df_train, params = params)
+    results_ <- fun_model_run_ms(df_train = df_train, params = params)[[1]]
+    mae_history <- fun_model_run_ms(df_train = df_train, params = params)[[2]]
     df_results_ms <- rbind(df_results_ms, results_)
+    all_mae_history <- rbind(all_mae_history, mae_history)
   }
-  save(df_results_ms, file = paste0(path, "/master/RData/results_model_", layer, "l_", Sys.Date(), ".RData"))
+  save(df_results_ms, all_mae_history, file = c(paste0(path, "/master/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
   
   ## best Model
   params <- fun_best_model(df_results = df_results_ms, params = params, type = "nodes")
@@ -110,10 +113,11 @@ fun_model_run_ms <- function(df_train, params){
   
   ## tagret data.frame
   all_r2 <- NULL
-  all_rmse <- NULL
+  all_mse <- NULL
   all_sem <- NULL
   all_std <- NULL
   performance <- NULL
+  all_mae_history <- NULL
   
   ## matrix with Nodes
   N <- seq(Nmin, Nmax, by_)
@@ -137,23 +141,27 @@ fun_model_run_ms <- function(df_train, params){
       cv_ <- fun_model_compute_full(df_train = df_train, params = params, units = N_[i,1:l])
       end_time <- Sys.time()
       
-      rmse_ <- mean(cv_[[1]])
+      mse_ <- mean(cv_[[1]])
       r2_ <- mean(cv_[[2]])
       std_ <- sd(cv_[[1]])
       sem_ <- sd(cv_[[1]])/sqrt(length(cv_[[1]]))
       time_ <- end_time - start_time
+      mae_history <- apply(cv_[[3]], 2, mean)
       
-      all_rmse <- rbind(all_rmse, rmse_)
+      all_mse <- rbind(all_mse, mse_)
       all_r2 <- rbind(all_r2, r2_)
       all_std <- rbind(all_std, std_)
       all_sem <- rbind(all_sem, sem_)
       performance <- rbind(performance, time_)
+      all_mae_history <- rbind(all_mae_history, mae_history)
       
       cat("Complete model: N_", N_[i,1:l], "! Time: ", time_, "\n", sep = "")
     }
   }
-  df_results <- data.frame(key = key, rmse = all_rmse, r2 = all_r2, std = all_std, sem = all_sem, performance = performance)
-  return(df_results)
+  df_results <- data.frame(key = key, mse = all_mse, r2 = all_r2, std = all_std, sem = all_sem, performance = performance)
+  rownames(all_mae_history) <- key
+  
+  return(liste(df_results, all_mae_history))
 }
 
 ## Function model compute ####
@@ -272,8 +280,8 @@ fun_model_compute_full <- function(df_train, params, units, type = "full"){
   df_train[is.na(df_train)] <- 0
   
   ## empty vectors for Results
-  #all_rme_histories <- matrix(NA, nrow = k, ncol = num_epochs) 
-  all_rmse <- NULL
+  all_rme_histories <- NULL
+  all_mse <- NULL
   all_r2 <- NULL
   
   ## Callback - early stopping ####
@@ -363,18 +371,20 @@ fun_model_compute_full <- function(df_train, params, units, type = "full"){
         callbacks = callback_list)
       
       # Evaluate the model on the validation data
-      #mae_history <- history$metrics$val_mean_absolute_error
-      #all_mae_histories[i,1:length(mae_history)] <- mae_history
+      mae_history <- history$metrics$val_mean_absolute_error
+      mae_history_ <- rep(NA, num_epochs)
+      mae_history_[1:length(mae_history)] <- mae_history
+      all_mae_histories <- rbind(all_mae_histories, mae_history_)
       
       # predict and scale back
       pred_test <- model %>% predict(test_data)
-      rmse_ <- rmse(test_targets, pred_test)
-      all_rmse <- rbind(all_rmse, rmse_)
+      mse_ <- mse(test_targets, pred_test)
+      all_mse <- rbind(all_mse, mse_)
       r2 <- cor(test_targets, pred_test) ^ 2
       all_r2 <- rbind(all_r2, r2)
     }
   }
-  return(list(all_rmse, all_r2))
+  return(list(all_rmse, all_r2, all_mae_histories))
 }
 ## Function best model ####
 fun_best_model <- function(df_results, params){
@@ -397,21 +407,27 @@ fun_best_model <- function(df_results, params){
 ## Function best model NEW ####
 fun_best_model <- function(df_results, params, type){
   # print ordered results
+  print("Best Models")
   print(df_results[order(df_results$rmse),][1:10,])
-  
-  # model with lowest rmse
-  w_best <- which(df_results$rmse == min(df_results$rmse, na.rm = T))
+  print("Best Performance")
+  print(df_results[order(df_results$performance),][1:10,])
   
   # extract layer, nodes and batchsize from key
   if (type == "nodes"){
-    str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_best]), "_")[[1]]))
+    # models with MSE < lowest mse + sem | One standard error rule
+    w_best <- which(df_results$rmse^2 < min(df_results$rmse, na.rm = T)^2 + df_results$sem[which(df_results$rmse == min(df_results$rmse, na.rm = T))])
+    w_perf <- w_best[which(df_results$performance[w_best] == min(df_results$performance[w_best], na.rm = T))]
+    
+    str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_perf]), "_")[[1]]))
     str_ <- str[!is.na(str)]
     batch_size <- str_[length(str_)]
     nodes <- str_[-length(str_)]
     layer <- length(nodes)
     
-    params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_best,]) 
+    params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_perf,]) 
   } else if(type == "pred"){
+    w_best <- which(df_results$rmse == min(df_results$rmse, na.rm = T))
+    
     str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best,]) 
     
