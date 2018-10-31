@@ -26,7 +26,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
   df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
   params <- fun_best_model(df_results = df_results_pa, params = params, type = "pred")
   
-  save(df_results_pa, file = paste0(path, "/master/RData/results_pred_", Sys.Date(), ".RData"))
+  save(df_results_pa, params, file = paste0(path, "/master/RData/results_pred_", Sys.Date(), ".RData"))
   
   ## best model structur for best predictor composition ####
   df_train_best <- df_train[,c(params$best_preds_full$predictors, colnames(df_train)[ncol(df_train)])]
