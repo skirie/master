@@ -32,8 +32,8 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
   ## best Model structure 
   ## modelrun for different batchsizes
   for (i in 1:length(batchsize)){
-    batchsize_ <- batchsize[i]
-    cat("PA-Models with Batchsize: ", batchsize_, "!!", sep = "", "\n")
+    params[["batchsize"]] <- batchsize[i]
+    cat("PA-Models with Batchsize: ", batchsize[i], "!!", sep = "", "\n")
     results_2 <- fun_model_run_ms(df_train = df_train_best, params = params)
     df_results_pa_ms <- rbind(df_results_pa_ms, results_2)
   }
