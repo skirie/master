@@ -164,103 +164,6 @@ fun_model_run_ms <- function(df_train, params){
   return(liste(df_results, all_mae_history))
 }
 
-## Function model compute ####
-fun_model_compute <- function(df_train, params, units){
-  ## params
-  k <- params[["k"]]
-  num_epochs <- params[["epochs"]]
-  optimizer <- params[["optimizer"]]
-  lr <- params[["lr"]]
-  layer <- params[["layer"]]
-  batch <- params[["batchsize"]]
-  
-  ## NA to 0
-  df_train[is.na(df_train)] <- 0
-  
-  ## empty vectors for Results
-  #all_rme_histories <- matrix(NA, nrow = k, ncol = num_epochs) 
-  all_rmse <- NULL
-  all_r2 <- NULL
-
-  ## Callback - early stopping ####
-  callback_list <- list(callback_early_stopping(patience = 6))
-  
-  ## Model
-  model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
-  
-  ## Crossvalidation 2x k-fold crossvalidation
-  for (j in 1:2){
-    set.seed(j*5)
-    indices <- sample(1:nrow(df_train))
-    folds <- cut(indices, breaks = k, labels = FALSE)
-    
-    for (i in 1:k) {
-      cat("processing fold #", paste0(j, ".", i), "\n")
-      
-      # Prepare the validation and test data: data from partition # k
-      val_test_indices <- which(folds == i, arr.ind = TRUE) 
-      val_test_data <- as.matrix(df_train[, 1:18][val_test_indices,])
-      val_test_targets <- as.array(df_train[, 19][val_test_indices])
-      
-      # split into validation and test data
-      set.seed(i*5)
-      vt_indices <- sample(1:nrow(val_test_data))
-      vt_folds <- cut(vt_indices, breaks = 2, labels = FALSE)
-      
-      val_test_indices_2 <- which(vt_folds == 1, arr.ind = TRUE) 
-      val_data <- as.matrix(val_test_data[val_test_indices_2,])
-      val_targets <- as.array(val_test_targets[val_test_indices_2])
-      test_data <- as.matrix(val_test_data[-val_test_indices_2,])
-      test_targets <- as.array(val_test_targets[-val_test_indices_2])
-      
-      # Prepare the training data: data from all other partitions
-      partial_train_data <- as.matrix(df_train[, 1:18][-val_test_indices,])
-      partial_train_targets <- as.array(df_train[, 19][-val_test_indices])
-      
-      # normalize all data
-      mins_data <- apply(partial_train_data, 2, min, na.rm = T)
-      maxs_data <- apply(partial_train_data, 2, max, na.rm = T)
-      mins_targets <- min(partial_train_targets, na.rm = T)
-      maxs_targets <- max(partial_train_targets, na.rm = T)
-      
-      # predict = x
-      partial_train_data <- scale(partial_train_data, center = mins_data, 
-                                  scale = maxs_data - mins_data)
-      val_data <- scale(val_data, center = mins_data, 
-                        scale = maxs_data - mins_data)
-      test_data <- scale(test_data, center = mins_data, 
-                         scale = maxs_data - mins_data)
-      
-      # target = y
-      partial_train_targets <- scale(partial_train_targets, center = mins_targets, 
-                                     scale = maxs_targets - mins_targets)
-      val_targets <- scale(val_targets, center = mins_targets, 
-                           scale = maxs_targets - mins_targets)
-      test_targets <- scale(test_targets, center = mins_targets, 
-                           scale = maxs_targets - mins_targets)
-      
-      # fit model
-      history <- model %>% fit(
-        partial_train_data, partial_train_targets,
-        validation_data = list(val_data, val_targets),
-        epochs = num_epochs, batch_size = batch, verbose = 0,
-        callbacks = callback_list)
-      
-      # Evaluate the model on the validation data
-      #mae_history <- history$metrics$val_mean_absolute_error
-      #all_mae_histories[i,1:length(mae_history)] <- mae_history
-      
-      # predict and scale back
-      pred_test <- model %>% predict(test_data)
-      rmse_ <- rmse(test_targets, pred_test)
-      all_rmse <- rbind(all_rmse, rmse_)
-      r2 <- cor(test_targets, pred_test) ^ 2
-      all_r2 <- rbind(all_r2, r2)
-    }
-  }
-  return(list(all_rmse, all_r2))
-}
-
 ## Function model compute full ####
 fun_model_compute_full <- function(df_train, params, units, type = "full"){
   ## params
@@ -269,6 +172,7 @@ fun_model_compute_full <- function(df_train, params, units, type = "full"){
   } else {
     times_cv <- params[["times_cv"]]
   }
+  
   k <- params[["k"]]
   num_epochs <- params[["epochs"]]
   optimizer <- params[["optimizer"]]
@@ -384,38 +288,20 @@ fun_model_compute_full <- function(df_train, params, units, type = "full"){
       all_r2 <- rbind(all_r2, r2)
     }
   }
-  return(list(all_rmse, all_r2, all_mae_histories))
-}
-## Function best model ####
-fun_best_model <- function(df_results, params){
-  # print ordered results
-  print(df_results[order(df_results$rmse),])
-  
-  # model with lowest rmse
-  w_best <- which(df_results$rmse == min(df_results$rmse))
-  
-  # extract layer, nodes and batchsize from key
-  str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_best]), "_")[[1]]))
-  str_ <- str[!is.na(str)]
-  batch_size <- str_[length(str_)]
-  nodes <- str_[-length(str_)]
-  layer <- length(nodes)
-  
-  params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_best,]) 
-  return(params)
+  return(list(all_mse, all_r2, all_mae_histories))
 }
 ## Function best model NEW ####
 fun_best_model <- function(df_results, params, type){
   # print ordered results
   print("Best Models")
-  print(df_results[order(df_results$rmse),][1:10,])
+  print(df_results[order(df_results$mse),][1:10,])
   print("Best Performance")
   print(df_results[order(df_results$performance),][1:10,])
   
   # extract layer, nodes and batchsize from key
   if (type == "nodes"){
     # models with MSE < lowest mse + sem | One standard error rule
-    w_best <- which(df_results$rmse^2 < min(df_results$rmse, na.rm = T)^2 + df_results$sem[which(df_results$rmse == min(df_results$rmse, na.rm = T))])
+    w_best <- which(df_results$mse < min(df_results$mse, na.rm = T) + df_results$sem[which(df_results$mse == min(df_results$mse, na.rm = T))])
     w_perf <- w_best[which(df_results$performance[w_best] == min(df_results$performance[w_best], na.rm = T))]
     
     str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_perf]), "_")[[1]]))
@@ -426,13 +312,13 @@ fun_best_model <- function(df_results, params, type){
     
     params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_perf,]) 
   } else if(type == "pred"){
-    w_best <- which(df_results$rmse == min(df_results$rmse, na.rm = T))
+    w_best <- which(df_results$mse == min(df_results$mse, na.rm = T))
     
     str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best,]) 
     
-    w_best_7 <- which(df_results$rmse[df_results$level <= 7] == min(df_results$rmse[df_results$level <= 7], na.rm = T))
-    w_best_12 <- which(df_results$rmse[df_results$level <= 12] == min(df_results$rmse[df_results$level <= 12], na.rm = T))
+    w_best_7 <- which(df_results$mse[df_results$level <= 7] == min(df_results$mse[df_results$level <= 7], na.rm = T))
+    w_best_12 <- which(df_results$mse[df_results$level <= 12] == min(df_results$mse[df_results$level <= 12], na.rm = T))
     str_7 <- strsplit(as.character(df_results$predictors[w_best_7]), "+", fixed = TRUE)[[1]][-1]
     str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_7"]] <- list("predictors" = str_7, "model" = df_results[w_best_7,]) 
