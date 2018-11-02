@@ -280,7 +280,7 @@ fun_model_compute_full <- function(df_train, params, units, type = "full"){
   df_train[is.na(df_train)] <- 0
   
   ## empty vectors for Results
-  all_rme_histories <- NULL
+  all_mae_histories <- NULL
   all_mse <- NULL
   all_r2 <- NULL
   
