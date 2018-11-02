@@ -6,7 +6,7 @@
 fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, optimizer = "rmsprop", path){
   df_results_ms <- NULL
   all_mae_history <- NULL
-  ## best Model structure 
+  ## Best Model structure (Layers & Nodes)
   ## modelrun for different batchsizes
   for (i in 1:length(batchsize)){
     batchsize_ <- batchsize[i]
@@ -19,7 +19,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
   }
   save(df_results_ms, all_mae_history, file = c(paste0(path, "/master/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
   
-  ## best Model
+  ## Best Model (Layers & Nodes)
   params <- fun_best_model(df_results = df_results_ms, params = params, type = "nodes")
   
   ## Predictoranalysis
@@ -135,10 +135,13 @@ fun_model_run_ms <- function(df_train, params){
   
   ## Model computing
   for (l in 1:layer){
-    params[["layer"]] <- l
     for (i in 1:nrow(N_)){
       start_time <- Sys.time()
-      cv_ <- fun_model_compute_full(df_train = df_train, params = params, units = N_[i,1:l])
+      ## create Model
+      model <- fun_build_model(df_train = df_train, layer = l, optimizer = params[["optimizer"]], 
+                               units = N_[i,1:l], lr = params[["lr"]])
+      
+      cv_ <- fun_model_compute_full(df_train = df_train, params = params, model = model)
       end_time <- Sys.time()
       
       mse_ <- mean(cv_[[1]])
@@ -165,7 +168,7 @@ fun_model_run_ms <- function(df_train, params){
 }
 
 ## Function model compute full ####
-fun_model_compute_full <- function(df_train, params, units, type = "full"){
+fun_model_compute_full <- function(df_train, params, type = "full", model){
   ## params
   if (type == "pred"){
     times_cv <- 2
@@ -175,9 +178,9 @@ fun_model_compute_full <- function(df_train, params, units, type = "full"){
   
   k <- params[["k"]]
   num_epochs <- params[["epochs"]]
-  optimizer <- params[["optimizer"]]
-  lr <- params[["lr"]]
-  layer <- params[["layer"]]
+  #optimizer <- params[["optimizer"]]
+  #lr <- params[["lr"]]
+  #layer <- params[["layer"]]
   batch <- params[["batchsize"]]
   
   ## NA to 0
@@ -192,7 +195,7 @@ fun_model_compute_full <- function(df_train, params, units, type = "full"){
   callback_list <- list(callback_early_stopping(patience = 6))
   
   ## Model
-  model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
+  #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
   
   ## Crossvalidation j times k-fold crossvalidation
   for (j in 1:times_cv){
@@ -344,7 +347,7 @@ fun_model_run_pa <- function(df_train, params){
   }
   
   ## required empty features / target 
-  all_rmse <- vector("list", ncol(df_train)-1)
+  all_mse <- vector("list", ncol(df_train)-1)
   all_r2 <- vector("list", ncol(df_train)-1)
   k <- ncol(df_train)-1
   col_ <- colnames(df_train)
@@ -352,6 +355,10 @@ fun_model_run_pa <- function(df_train, params){
   pred_ <- NULL
   best_pred_name <- vector("list", ncol(df_train)-1)
   count <- 1
+  
+  ## create Model 
+  model <- fun_build_model(df_train = df_train, layer = params[["best"]]$layer, optimizer = params[["optimizer"]], 
+                           units = N, lr = params[["lr"]])
   
   ## loop for every predictor composition
   for (i in c(1:ncol(df_train)-1)){
@@ -369,17 +376,17 @@ fun_model_run_pa <- function(df_train, params){
       }
       
       # compute Model for this predictor composition
-      cv_ <- fun_model_compute_full(df_train = all_train, params = params, units = N)
-      rmse_ <- mean(cv_[[1]])
+      cv_ <- fun_model_compute_full(df_train = all_train, params = params, model = model)
+      mse_ <- mean(cv_[[1]])
       r2_ <- mean(cv_[[2]])
-      all_rmse[[i]] <- c(all_rmse[[i]], rmse_)
+      all_mse[[i]] <- c(all_mse[[i]], mse_)
       all_r2[[i]] <- c(all_r2[[i]], r2_)
       level_ <- rbind(level_, i)
       
       count <- count + 1
     }
     # best model / predictor
-    w_best <- which(all_rmse[[i]] == min(all_rmse[[i]]))
+    w_best <- which(all_mse[[i]] == min(all_mse[[i]]))
     
     # extract best predictor
     best_pred <- data.frame("dummy" = df_train[, w_best])
@@ -401,7 +408,7 @@ fun_model_run_pa <- function(df_train, params){
   }
   
   df_results <- data.frame(key = key, level = level_, predictors = pred_, 
-                           rmse = unlist(all_rmse, use.names=FALSE), r2 = unlist(all_r2, use.names=FALSE))
+                           mse = unlist(all_mse, use.names=FALSE), r2 = unlist(all_r2, use.names=FALSE))
   
   return(df_results)
 }
