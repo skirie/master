@@ -6,14 +6,17 @@
 fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, optimizer = "rmsprop", path){
   df_results_ms <- NULL
   all_mae_history <- NULL
+  params <- fun_params(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
+  
   ## Best Model structure (Layers & Nodes)
   ## modelrun for different batchsizes
   for (i in 1:length(batchsize)){
-    batchsize_ <- batchsize[i]
-    cat("Models with Batchsize: ", batchsize_, "!!", sep = "", "\n")
-    params <- fun_params(batchsize = batchsize_, k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
-    results_ <- fun_model_run_ms(df_train = df_train, params = params)[[1]]
-    mae_history <- fun_model_run_ms(df_train = df_train, params = params)[[2]]
+    params[["batchsize"]] <- batchsize[i]
+    cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
+    
+    results_ms <- fun_model_run_ms(df_train = df_train, params = params)
+    results_ <- results_ms[[1]]
+    mae_history <- results_ms[[2]]
     df_results_ms <- rbind(df_results_ms, results_)
     all_mae_history <- rbind(all_mae_history, mae_history)
   }
@@ -22,13 +25,13 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
   ## Best Model (Layers & Nodes)
   params <- fun_best_model(df_results = df_results_ms, params = params, type = "nodes")
   
-  ## Predictoranalysis
+  ## Predictoranalysis - Best Predictor Subset
   df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
   params <- fun_best_model(df_results = df_results_pa, params = params, type = "pred")
   
   save(df_results_pa, params, file = paste0(path, "/master/RData/results_pred_", Sys.Date(), ".RData"))
   
-  ## best model structur for best predictor composition ####
+  ## best model structur for best predictor Subset ####
   df_train_best <- df_train[,c(params$best_preds_full$predictors, colnames(df_train)[ncol(df_train)])]
   df_results_pa_ms <- NULL
   
@@ -37,6 +40,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
   for (i in 1:length(batchsize)){
     params[["batchsize"]] <- batchsize[i]
     cat("PA-Models with Batchsize: ", batchsize[i], "!!", sep = "", "\n")
+    
     results_2 <- fun_model_run_ms(df_train = df_train_best, params = params)
     df_results_pa_ms <- rbind(df_results_pa_ms, results_2)
   }
