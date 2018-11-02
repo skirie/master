@@ -63,7 +63,7 @@ fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop
 }
 
 ## Function model build ####
-fun_build_model <- function(df_train, layer, optimizer, units, lr){
+fun_build_model <- function(df_train, layer, optimizer, units, lr, dropout){
   ## optimizer ####
   if (optimizer == "rmsprop"){
     optim_ <- optimizer_rmsprop(lr = lr)  
@@ -71,27 +71,57 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr){
     optim_ <- optimizer_adam(lr = lr)
   }
   
-  ## Model ####
-  if (layer == 1){
-    model <- keras_model_sequential() %>% 
-      layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
-                  input_shape = ncol(df_train)-1) %>% 
-      layer_dense(units = 1) 
-  } else if (layer == 2){
-    model <- keras_model_sequential() %>% 
-      layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
-                  input_shape = ncol(df_train)-1) %>% 
-      layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
-      layer_dense(units = 1) # No activation. Chollet et al. p. 78
-  } else if (layer == 3){
-    model <- keras_model_sequential() %>% 
-      layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
-                  input_shape = ncol(df_train)-1) %>% 
-      layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
-      layer_dense(units = units[3], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
-      layer_dense(units = 1) 
+  if (is.numeric(dropout)){
+    if (layer == 1){
+      model <- keras_model_sequential() %>% 
+        layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
+                    input_shape = ncol(df_train)-1) %>%
+        layer_dropout(rate = dropout) %>% 
+        layer_dense(units = 1) 
+    } else if (layer == 2){
+      model <- keras_model_sequential() %>% 
+        layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
+                    input_shape = ncol(df_train)-1) %>%
+        layer_dropout(rate = dropout) %>%
+        layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>%
+        layer_dropout(rate = dropout) %>%
+        layer_dense(units = 1) # No activation. Chollet et al. p. 78
+    } else if (layer == 3){
+      model <- keras_model_sequential() %>% 
+        layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
+                    input_shape = ncol(df_train)-1) %>%
+        layer_dropout(rate = dropout) %>%
+        layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>%
+        layer_dropout(rate = dropout) %>%
+        layer_dense(units = units[3], activation = "relu", initializer_he_uniform(seed = 5)) %>%
+        layer_dropout(rate = dropout) %>%
+        layer_dense(units = 1) 
+    } else {
+      return("only three layer possible. pls set layer from 1-3")
+    }
   } else {
-    return("only three layer possible. pls set layer from 1-3")
+    ## Model ####
+    if (layer == 1){
+      model <- keras_model_sequential() %>% 
+        layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
+                    input_shape = ncol(df_train)-1) %>% 
+        layer_dense(units = 1) 
+    } else if (layer == 2){
+      model <- keras_model_sequential() %>% 
+        layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
+                    input_shape = ncol(df_train)-1) %>% 
+        layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
+        layer_dense(units = 1) # No activation. Chollet et al. p. 78
+    } else if (layer == 3){
+      model <- keras_model_sequential() %>% 
+        layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
+                    input_shape = ncol(df_train)-1) %>% 
+        layer_dense(units = units[2], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
+        layer_dense(units = units[3], activation = "relu", initializer_he_uniform(seed = 5)) %>% 
+        layer_dense(units = 1) 
+    } else {
+      return("only three layer possible. pls set layer from 1-3")
+    }
   }
   
   model %>% compile(
@@ -164,7 +194,7 @@ fun_model_run_ms <- function(df_train, params){
   df_results <- data.frame(key = key, mse = all_mse, r2 = all_r2, std = all_std, sem = all_sem, performance = performance)
   rownames(all_mae_history) <- key
   
-  return(liste(df_results, all_mae_history))
+  return(list(df_results, all_mae_history))
 }
 
 ## Function model compute full ####
