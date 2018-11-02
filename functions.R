@@ -183,7 +183,7 @@ fun_model_run_ms <- function(df_train, params){
       std_ <- sd(cv_[[1]])
       sem_ <- sd(cv_[[1]])/sqrt(length(cv_[[1]]))
       time_ <- end_time - start_time
-      mae_history <- apply(cv_[[3]], 2, mean)
+      mae_history <- apply(cv_[[3]], 2, mean, na.rm = T)
       
       all_mse <- rbind(all_mse, mse_)
       all_r2 <- rbind(all_r2, r2_)
@@ -420,7 +420,7 @@ fun_model_run_pa <- function(df_train, params){
       count <- count + 1
     }
     # best model / predictor
-    w_best <- which(all_mse[[i]] == min(all_mse[[i]]))
+    w_best <- which(all_mse[[i]] == min(all_mse[[i]], na.rm = T))
     
     # extract best predictor
     best_pred <- data.frame("dummy" = df_train[, w_best])
@@ -446,6 +446,57 @@ fun_model_run_pa <- function(df_train, params){
   
   return(df_results)
 }
-#### ####
+## Function model dropout analysis  ####
+fun_model_drop <- function(df_train, params) {
+  df_train[is.na(df_train)] <- 0
+  
+  optimizer <- params[["optimizer"]]
+  lr <- params[["lr"]]
+  layer <- params[["best"]]$layer
+  batch <- params[["best"]]$batch_size
+  units <- params[["best"]]$nodes
+  
+  dropout <- seq(0.1,0.5,0.1)
+  
+  all_mae_history <- NULL
+  all_mse <- NULL
+  all_r2 <- NULL
+  all_std <- NULL
+  all_sem <- NULL
+  performance <- NULL
+  
+  ## Model computing
+  for (i in 1:length(dropout)){
+    start_time <- Sys.time()
+    ## create Model
+    model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, 
+                             lr = lr, dropout = dropout[i])
+    
+    cv_ <- fun_model_compute_full(df_train = df_train, params = params, model = model, type = "pred")
+    end_time <- Sys.time()
+    
+    mse_ <- mean(cv_[[1]])
+    r2_ <- mean(cv_[[2]])
+    std_ <- sd(cv_[[1]])
+    sem_ <- sd(cv_[[1]])/sqrt(length(cv_[[1]]))
+    time_ <- end_time - start_time
+    mae_history <- apply(cv_[[3]], 2, mean, na.rm = T)
+    
+    all_mse <- rbind(all_mse, mse_)
+    all_r2 <- rbind(all_r2, r2_)
+    all_std <- rbind(all_std, std_)
+    all_sem <- rbind(all_sem, sem_)
+    performance <- rbind(performance, time_)
+    all_mae_history <- rbind(all_mae_history, mae_history)
+    
+    cat("Complete model: dropout_rate_", i, "! Time: ", time_, "\n", sep = "")
+  }
+  
+  df_results <- data.frame(mse = all_mse, r2 = all_r2, std = all_std, sem = all_sem, performance = performance)
+  rownames(all_mae_history) <- as.character(dropout)
+  
+  return(list(df_results, all_mae_history))
+  
+}
 
 #### ####
