@@ -390,10 +390,6 @@ fun_model_run_pa <- function(df_train, params){
   best_pred_name <- vector("list", ncol(df_train)-1)
   count <- 1
   
-  ## create Model 
-  model <- fun_build_model(df_train = df_train, layer = params[["best"]]$layer, optimizer = params[["optimizer"]], 
-                           units = N, lr = params[["lr"]])
-  
   ## loop for every predictor composition
   for (i in c(1:(ncol(df_train)-1))){
     for (j in c(1:k)){
@@ -408,6 +404,10 @@ fun_model_run_pa <- function(df_train, params){
       } else {
         all_train <- cbind(best_train, train_)
       }
+      
+      ## create Model 
+      model <- fun_build_model(df_train = all_train, layer = params[["best"]]$layer, optimizer = params[["optimizer"]], 
+                               units = N, lr = params[["lr"]])
       
       # compute Model for this predictor composition
       cv_ <- fun_model_compute_full(df_train = all_train, params = params, model = model)
