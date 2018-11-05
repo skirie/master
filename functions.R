@@ -178,10 +178,10 @@ fun_model_run_ms <- function(df_train, params){
       cv_ <- fun_model_compute_full(df_train = df_train, params = params, model = model)
       end_time <- Sys.time()
       
-      mse_ <- mean(cv_[[1]])
-      r2_ <- mean(cv_[[2]])
-      std_ <- sd(cv_[[1]])
-      sem_ <- sd(cv_[[1]])/sqrt(length(cv_[[1]]))
+      mse_ <- mean(cv_[[1]], na.rm = T)
+      r2_ <- mean(cv_[[2]], na.rm = T)
+      std_ <- sd(cv_[[1]], na.rm = T)
+      sem_ <- sd(cv_[[1]], na.rm = T)/sqrt(length(cv_[[1]]))
       time_ <- end_time - start_time
       mae_history <- apply(cv_[[3]], 2, mean, na.rm = T)
       
@@ -411,8 +411,8 @@ fun_model_run_pa <- function(df_train, params){
       
       # compute Model for this predictor composition
       cv_ <- fun_model_compute_full(df_train = all_train, params = params, model = model)
-      mse_ <- mean(cv_[[1]])
-      r2_ <- mean(cv_[[2]])
+      mse_ <- mean(cv_[[1]], na.rm = T)
+      r2_ <- mean(cv_[[2]], na.rm = T)
       all_mse[[i]] <- c(all_mse[[i]], mse_)
       all_r2[[i]] <- c(all_r2[[i]], r2_)
       level_ <- rbind(level_, i)
