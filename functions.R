@@ -395,7 +395,7 @@ fun_model_run_pa <- function(df_train, params){
                            units = N, lr = params[["lr"]])
   
   ## loop for every predictor composition
-  for (i in c(1:ncol(df_train)-1)){
+  for (i in c(1:(ncol(df_train)-1))){
     for (j in c(1:k)){
       # print computed predictor combination      
       pred_[count] <- paste0(best_pred_name[[i]], "+", col_[j])
