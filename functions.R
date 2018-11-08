@@ -20,7 +20,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
     df_results_ms <- rbind(df_results_ms, results_)
     all_mae_history <- rbind(all_mae_history, mae_history)
   }
-  save(df_results_ms, all_mae_history, file = c(paste0(path, "/master/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
+  save(df_results_ms, all_mae_history, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
   
   ## Best Model (Layers & Nodes)
   params <- fun_best_model(df_results = df_results_ms, params = params, type = "nodes")
@@ -29,7 +29,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
   df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
   params <- fun_best_model(df_results = df_results_pa, params = params, type = "pred")
   
-  save(df_results_pa, params, file = paste0(path, "/master/RData/results_pred_", Sys.Date(), ".RData"))
+  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.Date(), ".RData"))
   
   ## best model structur for best predictor Subset ####
   df_train_best <- df_train[,c(params$best_preds_full$predictors, colnames(df_train)[ncol(df_train)])]
@@ -44,7 +44,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
     results_2 <- fun_model_run_ms(df_train = df_train_best, params = params)
     df_results_pa_ms <- rbind(df_results_pa_ms, results_2)
   }
-  save(df_results_pa_ms, file = paste0(path, "/master/RData/results_p_m_", Sys.Date(), ".RData"))
+  save(df_results_pa_ms, file = paste0(path, "/RData/results_p_m_", Sys.Date(), ".RData"))
   
   return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
@@ -410,7 +410,7 @@ fun_model_run_pa <- function(df_train, params){
                                units = N, lr = params[["lr"]])
       
       # compute Model for this predictor composition
-      cv_ <- fun_model_compute_full(df_train = all_train, params = params, model = model)
+      cv_ <- fun_model_compute_full(df_train = all_train, params = params, model = model, type = "pred")
       mse_ <- mean(cv_[[1]], na.rm = T)
       r2_ <- mean(cv_[[2]], na.rm = T)
       all_mse[[i]] <- c(all_mse[[i]], mse_)
