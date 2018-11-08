@@ -22,23 +22,23 @@
   ## path 
   
   #setwd("E:/Uni/05_Masterarbeit/Auswertung")
-  setwd("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/Auswertung")
+  #setwd("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/Auswertung")
   mypath <- getwd()
   
 #### Workspace speichern
-  save.image(paste0(mypath, "/master/RData/save.RData"))
+  save.image(paste0(mypath, "/RData/save.RData"))
 
 #### Verbindung zu dropbox aufbauen ####
   #token <- drop_auth()
   #saveRDS(token, file = "token.rds")
-  token <- readRDS(paste0(mypath,"/master/token.rds"))
+  token <- readRDS(paste0(mypath,"/token.rds"))
   
   ## Workspace runterladen ####
-  drop_download('Master/R/save.RData', paste0(mypath, "/master/RData/save.RData"), overwrite = T, dtoken = token)
+  drop_download('Master/R/save.RData', paste0(mypath, "/RData/save.RData"), overwrite = T, dtoken = token)
   
-  load(paste0(mypath, "/master/RData/save.RData"))
+  load(paste0(mypath, "/RData/save.RData"))
   ## upload WOrkspace ####
-  drop_upload(paste0(mypath, "/master/RData/save.RData"), 'Master/R/', mode = "overwrite", dtoken = token)
+  drop_upload(paste0(mypath, "/RData/save.RData"), 'Master/R/', mode = "overwrite", dtoken = token)
   
   ## Script runterladen ####
   #drop_download('Master/R/Master_ANN.R', overwrite = T, dtoken = token)
