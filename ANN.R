@@ -25,7 +25,7 @@
   
   ## load data ####
   ## path 
-  setwd("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/Auswertung")
+  #setwd("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/Auswertung")
   mypath <- getwd()
   
   ## Flux Data ####
@@ -50,6 +50,17 @@
   df_raw$RH[which(df_raw$RH > 100)] <- NA
   df_raw$RH[which(df_raw$RH < 0)] <- NA
   summary(df_raw$RH)
+  
+  ## shift time to PST
+  df_raw[c(17:nrow(df_raw)),c(1:5)] <- df_raw[c(1:(nrow(df_raw)-16)),c(1:5)]
+  df_raw[1:15,1] <- 2001
+  df_raw[16,1] <- 2002
+  df_raw[1:15,2] <- 12
+  df_raw[16,2] <- 1
+  df_raw[1:15,3] <- 31
+  df_raw[16,3] <- 1
+  df_raw[1:16,4] <- c(16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 0)
+  df_raw[1:16,5] <- rep(c(30,0),8)
   
   ## Sun rise / set ####
   df_hel$Datum <- as.character(df_hel$Datum)
@@ -107,6 +118,7 @@
   
   ## Extract Night Data ####
   df_night <- df_raw[df_raw$flag_night == 1,-32]
+  df_night <- df_night[-which(df_night$PPFDin > 5),]
   
   ## u* correction ####
   # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
@@ -114,7 +126,7 @@
   df_night$NEE_cor[df_night$ustar < 0.19] <- NA
   summary(df_night$NEE_measure)
   summary(df_night$NEE_cor)
-  # percent_gaps <- sum(is.na(df_night$NEE_cor)) / nrow(df_night) ## 53.48 %
+  #percent_gaps <- sum(is.na(df_night$NEE_cor)) / nrow(df_night) ## 78.53 %
   
   ## data frame with NNE != NA ####
   # and without precip, pressure, lw, sw, co2
