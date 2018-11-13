@@ -229,7 +229,7 @@ fun_model_compute_full <- function(df_train, params, type = "full", model){
   callback_list <- list(callback_early_stopping(patience = 6))
   
   ## Model
-  model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
+  #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
   
   ## Crossvalidation j times k-fold crossvalidation
   for (j in 1:times_cv){
