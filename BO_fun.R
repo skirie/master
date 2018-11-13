@@ -31,8 +31,7 @@
           units[3] <- as.integer(units[2]*layer_balance)
         }
       } 
-      model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
-     
+      
       for (j in 1:times_cv){
         set.seed(j*5)
         indices <- sample(1:nrow(df_train))
@@ -40,6 +39,8 @@
         
         for (i in 1:k) {
           cat("processing fold #", paste0(j, ".", i), "\n")
+          
+          model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
           
           # Prepare the train, validation and test data: data from partition # k
           val_test_indices <- which(folds == i, arr.ind = TRUE)
@@ -109,8 +110,8 @@
           model %>% fit(
             partial_train_data, partial_train_targets,
             validation_data = list(val_data, val_targets),
-            epochs = num_epochs, batch_size = batch, verbose = 2)#,
-            #callbacks = list(callback_early_stopping(patience = 10)))
+            epochs = num_epochs, batch_size = batch, verbose = 2,
+            callbacks = list(callback_early_stopping(patience = 8)))
           
           # predict and scale back
           pred_test <- model %>% predict(test_data)
@@ -133,5 +134,6 @@
     return(bo_search)
   }
   
-  params <- fun_params(layer = 3L, epochs = 100)
+  params <- fun_params(layer = 3L, epochs = 150)
   bo_first <- fun_bo(df_train = df_night_model, params = params, type = "pred")
+  
