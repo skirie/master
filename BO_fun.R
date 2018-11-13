@@ -133,4 +133,5 @@
     return(bo_search)
   }
   
- 
+  params <- fun_params(layer = 3L, epochs = 100)
+  bo_first <- fun_bo(df_train = df_night_model, params = params, type = "pred")
