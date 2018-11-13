@@ -15,7 +15,7 @@
   }
   
   ## Packages ####
-  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2")
+  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "rBayesianOptimization")
   check.packages(packages) 
   use_condaenv("r-tensorflow")
   
