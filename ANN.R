@@ -15,7 +15,7 @@
   }
   
   ## Packages ####
-  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "rBayesianOptimization")
+  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "rBayesianOptimization", "corrplot")
   check.packages(packages) 
   use_condaenv("r-tensorflow")
   
@@ -61,6 +61,11 @@
   df_raw[16,3] <- 1
   df_raw[1:16,4] <- c(16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 0)
   df_raw[1:16,5] <- rep(c(30,0),8)
+  
+  ## Check for Colinearity
+  M <- cor(df_raw[,7:29], use = "complete.obs")
+  corrplot.mixed(M)
+  df_raw <- df_raw[,-c(7,8,9,14,15,16)]
   
   ## Sun rise / set ####
   df_hel$Datum <- as.character(df_hel$Datum)
@@ -117,7 +122,7 @@
 #### ------------------------------------- ####  
   
   ## Extract Night Data ####
-  df_night <- df_raw[df_raw$flag_night == 1,-32]
+  df_night <- df_raw[df_raw$flag_night == 1,-26]
   df_night <- df_night[-which(df_night$PPFDin > 5),]
   
   ## u* correction ####
@@ -130,11 +135,14 @@
   
   ## data frame with NNE != NA ####
   # and without precip, pressure, lw, sw, co2
-  df_night_model <-  df_night[!is.na(df_night$NEE_cor),c(7:21, 25:27, 32)]
-  df_night_pred <-  df_night[is.na(df_night$NEE_cor),c(7:21, 25:27, 32)]
+  df_night_model <-  df_night[!is.na(df_night$NEE_cor),c(7:15, 19:22, 24)]
+  df_night_pred <-  df_night[is.na(df_night$NEE_cor),c(7:15, 19:22, 24)]
   
   summary(df_night_model)
   summary(df_night_pred)
+  
+  M <- cor(df_night_model, use = "complete.obs")
+  corrplot.mixed(M)
   
 #### ------------------------------------- ####
   ## First Dense layer ANN - a Baseline with all predictors - Crossvalidation
