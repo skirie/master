@@ -50,7 +50,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
 }
 
 ## Funktion Parameter ####
-fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "rmsprop", lr = 1e-4, layer = 2, Nmin = 8, Nmax = 105, by_ = 12, layer_balance = 0.5, times_cv = 4){
+fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "adam", lr = 1e-4, layer = 2L, Nmin = 8L, Nmax = 105L, by_ = 12, layer_balance = 0.5, times_cv = 4){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -229,7 +229,7 @@ fun_model_compute_full <- function(df_train, params, type = "full", model){
   callback_list <- list(callback_early_stopping(patience = 6))
   
   ## Model
-  #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
+  model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
   
   ## Crossvalidation j times k-fold crossvalidation
   for (j in 1:times_cv){
