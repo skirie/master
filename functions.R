@@ -50,7 +50,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
 }
 
 ## Funktion Parameter ####
-fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "adam", lr = 1e-4, layer = 2L, Nmin = 8L, Nmax = 105L, by_ = 12, layer_balance = 0.5, times_cv = 4){
+fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 25){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -63,6 +63,7 @@ fun_params <- function(batchsize = 64, k = 5, epochs = 200, optimizer = "adam", 
   params[["by_"]] <- by_
   params[["layer_balance"]] <- layer_balance
   params[["times_cv"]] <- times_cv
+  params[["iters_bo"]] <- iters_bo
   return(params)
 }
 
