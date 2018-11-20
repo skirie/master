@@ -15,7 +15,7 @@
   }
   
   ## Packages ####
-  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "rBayesianOptimization", "corrplot")
+  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud")
   check.packages(packages) 
   use_condaenv("r-tensorflow")
   
@@ -144,6 +144,7 @@
   M <- cor(df_night_model, use = "complete.obs")
   corrplot.mixed(M)
   
+  rm(M, df_hel_2)
 #### ------------------------------------- ####
   ## First Dense layer ANN - a Baseline with all predictors - Crossvalidation
 #### ------------------------------------- ####
