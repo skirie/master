@@ -1,4 +1,4 @@
-  fun_bo <- function(df_train, params, type = "full"){
+  fun_bo <- function(df_train, params, type = "full", bounds){
     ## times cv repeated
     if (type == "pred"){
       times_cv <- 2
@@ -11,19 +11,16 @@
     num_epochs <- params[["epochs"]]
     optimizer <- params[["optimizer"]]
     lr <- params[["lr"]]
-    layer <- params[["layer"]]0
+    #layer <- params[["layer"]]
     layer_balance <- params[["layer_balance"]]
    
-    ## bounds
-    bounds <- list(layer = c(1L,3L), units = c(10L, 110L), batch = c(50L, 150L))
-   
-    ## set NA's to zero
+     ## set NA's to zero
     df_train[is.na(df_train)] <- 0
    
     ## empty vector
     all_rmse <- NULL
   
-    nn_fit_bayes <- function(layer, units, batch) {
+    nn_fit_bayes <- function(layer, units) {
       units <- as.integer(rep(units, layer))
       if (layer > 1){
         units[2] <- as.integer(units[2]*layer_balance)
@@ -110,13 +107,13 @@
           model %>% fit(
             partial_train_data, partial_train_targets,
             validation_data = list(val_data, val_targets),
-            epochs = num_epochs, batch_size = batch, verbose = 2,
+            epochs = num_epochs, batch_size = 100, verbose = 2,
             callbacks = list(callback_early_stopping(patience = 6)))
           
           # predict and scale back
           pred_test <- model %>% predict(test_data)
           rmse_ <- sqrt(mse(test_targets, pred_test))
-          all_rmse <- rbind(all_rmse, rmse_)
+          all_rmse <- c(all_rmse, rmse_)
           #r2 <- cor(test_targets, pred_test) ^ 2
           #all_r2 <- rbind(all_r2, r2)
         }
@@ -126,14 +123,17 @@
     set.seed(8606)
     bo_search <- BayesianOptimization(nn_fit_bayes,
                                       bounds = bounds,
-                                      init_points = 9,
-                                      n_iter = 16,
+                                      init_points = 6,
+                                      n_iter = 15,
                                       acq = "ei",
-                                      eps = 0.01)
+                                      eps = 0.01,
+                                      kernel = list(type = "matern", nu=(2*2+1)/2))
    
     return(bo_search)
   }
   
   params <- fun_params(layer = 3L, epochs = 150)
-  bo_first <- fun_bo(df_train = df_night_model, params = params, type = "pred")
- 
+  bounds_ <- list(layer = c(1L,4L), units = c(10L, 110L))#, batch = c(50L, 150L))
+  
+  bo_first <- fun_bo(df_train = df_night_model, params = params, type = "pred", bounds = bounds_)
+  
