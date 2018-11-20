@@ -11,7 +11,7 @@
     num_epochs <- params[["epochs"]]
     optimizer <- params[["optimizer"]]
     lr <- params[["lr"]]
-    layer <- params[["layer"]]
+    layer <- params[["layer"]]0
     layer_balance <- params[["layer_balance"]]
    
     ## bounds
@@ -111,7 +111,7 @@
             partial_train_data, partial_train_targets,
             validation_data = list(val_data, val_targets),
             epochs = num_epochs, batch_size = batch, verbose = 2,
-            callbacks = list(callback_early_stopping(patience = 8)))
+            callbacks = list(callback_early_stopping(patience = 6)))
           
           # predict and scale back
           pred_test <- model %>% predict(test_data)
@@ -136,4 +136,4 @@
   
   params <- fun_params(layer = 3L, epochs = 150)
   bo_first <- fun_bo(df_train = df_night_model, params = params, type = "pred")
-  
+ 
