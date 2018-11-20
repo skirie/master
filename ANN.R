@@ -135,8 +135,8 @@
   
   ## data frame with NNE != NA ####
   # and without precip, pressure, lw, sw, co2
-  df_night_model <-  df_night[!is.na(df_night$NEE_cor),c(7:15, 19:22, 24)]
-  df_night_pred <-  df_night[is.na(df_night$NEE_cor),c(7:15, 19:22, 24)]
+  df_night_model <-  df_night[!is.na(df_night$NEE_cor),c(9:10, 12:15, 19:22, 24)]
+  df_night_pred <-  df_night[is.na(df_night$NEE_cor),c(9:10, 12:15, 19:22, 24)]
   
   summary(df_night_model)
   summary(df_night_pred)
