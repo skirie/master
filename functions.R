@@ -203,7 +203,7 @@ fun_model_run_ms <- function(df_train, params){
 }
 
 ## Function model compute full ####
-fun_model_compute_full <- function(df_train, params, type = "full", model){
+fun_model_compute_full <- function(df_train, params, type = "full"){
   ## params
   if (type == "pred"){
     times_cv <- 2
@@ -213,10 +213,11 @@ fun_model_compute_full <- function(df_train, params, type = "full", model){
   
   k <- params[["k"]]
   num_epochs <- params[["epochs"]]
-  #optimizer <- params[["optimizer"]]
-  #lr <- params[["lr"]]
-  #layer <- params[["layer"]]
+  optimizer <- params[["optimizer"]]
+  lr <- params[["lr"]]
+  layer <- params[["layer"]]
   batch <- params[["batchsize"]]
+  units <- params[["units"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
@@ -229,9 +230,6 @@ fun_model_compute_full <- function(df_train, params, type = "full", model){
   ## Callback - early stopping ####
   callback_list <- list(callback_early_stopping(patience = 6))
   
-  ## Model
-  #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
-  
   ## Crossvalidation j times k-fold crossvalidation
   for (j in 1:times_cv){
     set.seed(j*5)
@@ -240,6 +238,9 @@ fun_model_compute_full <- function(df_train, params, type = "full", model){
     
     for (i in 1:k) {
       cat("processing fold #", paste0(j, ".", i), "\n")
+      
+      ## Model
+      model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
       
       # Prepare the train, validation and test data: data from partition # k
       val_test_indices <- which(folds == i, arr.ind = TRUE)
