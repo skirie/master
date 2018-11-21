@@ -15,7 +15,7 @@
   }
   
   ## Packages ####
-  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud")
+  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg")
   check.packages(packages) 
   use_condaenv("r-tensorflow")
   
@@ -47,10 +47,10 @@
   
   ## df_raw$RH has -Inf and Inf values ####
   summary(df_raw$RH)
-  df_raw$RH[which(df_raw$RH > 100)] <- NA
-  df_raw$RH[which(df_raw$RH < 0)] <- NA
+  df_raw$RH[which(df_raw$RH >= 100)] <- NA
+  df_raw$RH[which(df_raw$RH <= 0)] <- NA
   summary(df_raw$RH)
-  
+
   ## shift time to PST
   df_raw[c(17:nrow(df_raw)),c(1:5)] <- df_raw[c(1:(nrow(df_raw)-16)),c(1:5)]
   df_raw[1:15,1] <- 2001
@@ -63,10 +63,188 @@
   df_raw[1:16,5] <- rep(c(30,0),8)
   
   ## Check for Colinearity
+  summary(df_raw)
   M <- cor(df_raw[,7:29], use = "complete.obs")
   corrplot.mixed(M)
-  df_raw <- df_raw[,-c(7,8,9,14,15,16)]
+  #df_raw <- df_raw[,-c(7,8,9,14,15,16)]
+  df_raw_2 <- df_raw
+  summary(df_raw_2)
   
+## Fill gaps of predictors ####
+  ## Tair ####
+  #df_raw_2[which(is.na(df_raw_2$airT)),]
+  hist(df_raw_2$airT)
+  
+  glm_air <- glm(airT ~ Soil.moisture_main + TS_main + PPFDin, data = df_raw_2[-which(is.na(df_raw_2$airT)),])
+  summary(glm_air)
+  
+  # pseudo r2
+  #1 - glm_air$deviance / glm_air$null.deviance # 0.89
+  preds <- predict(glm_air, newdata = df_raw_2[which(is.na(df_raw_2$airT)),])
+  df_raw_2[which(is.na(df_raw_2$airT)), "airT"] <- unname(preds)
+  
+  rm(preds, glm_air)
+  
+  ## Windspeed ####
+  summary(df_raw_2[which(is.na(df_raw_2$WindSpeed)),"day"])
+  hist(df_raw_2$WindSpeed[-which(is.na(df_raw_2$WindSpeed))])
+  
+  glm_ws <- glm(WindSpeed ~ Soil.moisture_main + TS_main + airT + PPFDin, data = df_raw_2[-which(is.na(df_raw_2$WindSpeed)),])
+  summary(glm_ws)
+  
+  library(randomForest)
+  rf_ws <- randomForest(WindSpeed ~ Soil.moisture_main + TS_main + airT + PPFDin, 
+                        data = df_raw_2[-which(is.na(df_raw_2$WindSpeed)),], importance = TRUE)
+  # pseudo r2
+  #1 - glm_air$deviance / glm_air$null.deviance # 0.89
+  preds <- predict(glm_air, newdata = df_raw_2[which(is.na(df_raw_2$airT)),])
+  df_raw_2[which(is.na(df_raw_2$airT)), "airT"] <- unname(preds)
+  
+  rm(preds, glm_ws)
+  
+  ## RH ####
+  # check if significant correlated predictors have common gaps
+  length(which(which(is.na(df_raw_2$RH)) %in% which(is.na(df_raw_2$LWout)) == T)) # 3% common gaps
+  length(which(which(is.na(df_raw_2$RH)) %in% which(is.na(df_raw_2$PPFDin)) == T)) # no common gaps
+  length(which(which(is.na(df_raw_2$RH)) %in% which(is.na(df_raw_2$airT)) == T)) # no common gaps
+  length(which(which(is.na(df_raw_2$RH)) %in% which(is.na(df_raw_2$Soil.moisture_main)) == T)) # common gaps
+  length(which(which(is.na(df_raw_2$RH)) %in% which(is.na(df_raw_2$CO2)) == T)) # common gaps
+  
+  # Histogram 
+  hist(df_raw_2$RH) # beta distribution
+  
+  # Values need to be in range (0,1) for beta regression
+  df_raw_2$RH <- df_raw_2$RH/100
+  fit_norm <- fitdistr(df_raw_2$RH[-which(is.na(df_raw_2$RH))], "normal")
+  fit_lnorm <- fitdistr(df_raw_2$RH[-which(is.na(df_raw_2$RH))], "lognormal")
+  fit_beta <- fitdistr(df_raw_2$RH[-which(is.na(df_raw_2$RH))], "beta", start = list(shape1 = 1, shape2 = 1), lower=c(0,0))
+  fit_weibull <- fitdistr(df_raw_2$RH[-which(is.na(df_raw_2$RH))], "weibull", start = list(scale = 1, shape = 1), lower=c(0,0))
+  fit_chi <- fitdistr(df_raw_2$RH[-which(is.na(df_raw_2$RH))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
+  fit_gam <- fitdistr(df_raw_2$RH[-which(is.na(df_raw_2$RH))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0,0))
+  
+  AIC(fit_norm)
+  AIC(fit_lnorm)
+  AIC(fit_beta) ## Best distribution
+  AIC(fit_weibull)
+  AIC(fit_chi)
+  AIC(fit_gam)
+  
+  hist(df_raw_2$RH[-which(is.na(df_raw_2$RH))], freq=F, las=1, xlim = c(0,2))
+  curve(dweibull(x, fit_weibull$estimate[1], fit_weibull$estimate[2]),
+        add=T, lwd=2)
+  curve(dlnorm(x, fit_lnorm$estimate[1], fit_lnorm$estimate[2]), add=T,
+        lwd=2, col="grey")
+  curve(dgamma(x, fit_gam$estimate[1], fit_gam$estimate[2]), add=T,
+        lwd=2, col="red")
+  curve(dbeta(x, fit_beta$estimate[1], fit_beta$estimate[2]), add=T,
+        lwd=2, col="blue")
+  
+  # Betaregrssion fitting and predicting
+  betareg_rh <- betareg(RH ~ airT + PPFDin, data = df_raw_2[-which(is.na(df_raw_2$RH)),])
+  summary(betareg_rh, type = "pearson")
+  
+  preds <- predict(betareg_rh, newdata = df_raw_2[which(is.na(df_raw_2$RH)),])
+  summary(preds)
+  df_raw_2[which(is.na(df_raw_2$RH)),"RH"] <- unname(preds)
+  
+  rm(preds, betareg_rh, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam)
+  
+  ## Soil Moisture ####
+  # main Soil Moisture
+  # check if significant correlated predictors have common gaps
+  length(which(which(is.na(df_raw_2$Soil.moisture_main)) %in% which(is.na(df_raw_2$LWout)) == T)) # 3% common gaps
+  length(which(which(is.na(df_raw_2$Soil.moisture_main)) %in% which(is.na(df_raw_2$PPFDin)) == T)) # no common gaps
+  length(which(which(is.na(df_raw_2$Soil.moisture_main)) %in% which(is.na(df_raw_2$Ts3)) == T)) # no common gaps
+  
+  # Histogram
+  hist(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))]) # beta distribution
+  fit_norm <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "normal")
+  fit_lnorm <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "lognormal")
+  fit_beta <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "beta", 
+                       start = list(shape1 = 1, shape2 = 1), lower=c(0,0))
+  fit_weibull <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "weibull", 
+                          start = list(scale = 1, shape = 0.1), lower=c(0.1))
+  fit_chi <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "chi-squared", 
+                      start=list(df=3), method="Brent", lower=0.1, upper=100)
+  fit_gam <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "gamma", 
+                      start = list(shape = 1, rate = 0.1), lower=c(0,0))
+  
+  AIC(fit_norm)
+  AIC(fit_lnorm)
+  AIC(fit_beta)
+  AIC(fit_weibull) # Best Distribution
+  AIC(fit_chi)
+  AIC(fit_gam)
+
+  hist(df_raw_2$Soil.moisture_main, freq=F, las=1, xlim = c(0,0.6))
+  curve(dweibull(x, fit_weibull$estimate[1], fit_weibull$estimate[2]),
+        add=T, lwd=2)
+  curve(dlnorm(x, fit_lnorm$estimate[1], fit_lnorm$estimate[2]), add=T,
+        lwd=2, col="grey")
+  curve(dnorm(x, fit_norm$estimate[1], fit_norm$estimate[2]), add=T,
+        lwd=2, col="red")
+  curve(dbeta(x, fit_beta$estimate[1], fit_beta$estimate[2]), add=T,
+        lwd=2, col="blue")
+  curve(dgamma(x, fit_gam$estimate[1], fit_gam$estimate[2]), add=T,
+        lwd=2, col="green")
+  
+  # Gaussianregrssion fitting and predicting
+  glm_smm <- glm(Soil.moisture_main ~ Ts3 + PPFDin + RH, data = df_raw_2[-which(is.na(df_raw_2$Soil.moisture_main)),], family = gaussian)
+  summary(glm_smm)
+  
+  preds <- predict(glm_smm, newdata = df_raw_2[which(is.na(df_raw_2$Soil.moisture_main)),])
+  summary(preds)
+  df_raw_2[which(is.na(df_raw_2$Soil.moisture_main)),"Soil.moisture_main"] <- unname(preds)
+  
+  rm(preds, glm_smm, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam)
+  
+  # Soil Moisture # 1
+  # check if significant correlated predictors have common gaps
+  length(which(which(is.na(df_raw_2$Soil.moisture1)) %in% which(is.na(df_raw_2$LWout)) == T)) # 3% common gaps
+  length(which(which(is.na(df_raw_2$Soil.moisture1)) %in% which(is.na(df_raw_2$PPFDin)) == T)) # no common gaps
+  length(which(which(is.na(df_raw_2$Soil.moisture1)) %in% which(is.na(df_raw_2$Ts3)) == T)) # no common gaps
+  
+  # Histogram
+  hist(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))]) # beta distribution
+  fit_norm <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "normal")
+  fit_lnorm <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "lognormal")
+  fit_beta <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "beta", 
+                       start = list(shape1 = 1, shape2 = 1), lower=c(0,0))
+  fit_weibull <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "weibull", 
+                          start = list(scale = 1, shape = 0.1), lower=c(0.1))
+  fit_chi <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "chi-squared", 
+                      start=list(df=3), method="Brent", lower=0.1, upper=100)
+  fit_gam <- fitdistr(df_raw_2$Soil.moisture_main[-which(is.na(df_raw_2$Soil.moisture_main))], "gamma", 
+                      start = list(shape = 1, rate = 0.1), lower=c(0,0))
+  
+  AIC(fit_norm)
+  AIC(fit_lnorm)
+  AIC(fit_beta)
+  AIC(fit_weibull) # Best Distribution
+  AIC(fit_chi)
+  AIC(fit_gam)
+  
+  hist(df_raw_2$Soil.moisture_main, freq=F, las=1, xlim = c(0,0.6))
+  curve(dweibull(x, fit_weibull$estimate[1], fit_weibull$estimate[2]),
+        add=T, lwd=2)
+  curve(dlnorm(x, fit_lnorm$estimate[1], fit_lnorm$estimate[2]), add=T,
+        lwd=2, col="grey")
+  curve(dnorm(x, fit_norm$estimate[1], fit_norm$estimate[2]), add=T,
+        lwd=2, col="red")
+  curve(dbeta(x, fit_beta$estimate[1], fit_beta$estimate[2]), add=T,
+        lwd=2, col="blue")
+  curve(dgamma(x, fit_gam$estimate[1], fit_gam$estimate[2]), add=T,
+        lwd=2, col="green")
+  
+  # Gaussianregrssion fitting and predicting
+  glm_smm <- glm(Soil.moisture_main ~ Ts3 + PPFDin + RH, data = df_raw_2[-which(is.na(df_raw_2$Soil.moisture_main)),], family = gaussian)
+  summary(glm_smm)
+  
+  preds <- predict(glm_smm, newdata = df_raw_2[which(is.na(df_raw_2$Soil.moisture_main)),])
+  summary(preds)
+  df_raw_2[which(is.na(df_raw_2$Soil.moisture_main)),"Soil.moisture_main"] <- unname(preds)
+  
+  rm(preds, glm_smm, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam)
   ## Sun rise / set ####
   df_hel$Datum <- as.character(df_hel$Datum)
   df_hel$Sunrise <- as.character(df_hel$Sunrise)
