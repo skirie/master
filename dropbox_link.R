@@ -20,7 +20,7 @@
   
 #### Daten einladen ####
   ## path 
-  
+
   #setwd("E:/Uni/05_Masterarbeit/Auswertung")
   #setwd("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/Auswertung")
   mypath <- getwd()

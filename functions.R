@@ -2,8 +2,8 @@
 #### Functions for modeling trace gas emissions with ANNs ####
 #### ------------------------------------------- ####
 
-## Target function ####
-fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, optimizer = "rmsprop", path){
+## Target function GRID ####
+fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, optimizer = "rmsprop", path){
   df_results_ms <- NULL
   all_mae_history <- NULL
   params <- fun_params(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
@@ -50,7 +50,7 @@ fun_tagret <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, l
 }
 
 ## Funktion Parameter ####
-fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 25){
+fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 30){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -370,8 +370,8 @@ fun_best_model <- function(df_results, params, type){
 fun_model_run_pa <- function(df_train, params){
   ## params 
   params[["layer"]] <- params[["best"]]$layer
-  N <-  params[["best"]]$nodes
   params[["batchsize"]] <- params[["best"]]$batch_size
+  params[["units"]] <- params[["best"]]$units
   
   ## key
   key <- NULL
@@ -408,11 +408,11 @@ fun_model_run_pa <- function(df_train, params){
       }
       
       ## create Model 
-      model <- fun_build_model(df_train = all_train, layer = params[["best"]]$layer, optimizer = params[["optimizer"]], 
-                               units = N, lr = params[["lr"]])
+      #model <- fun_build_model(df_train = all_train, layer = params[["best"]]$layer, optimizer = params[["optimizer"]], 
+                               #units = N, lr = params[["lr"]])
       
       # compute Model for this predictor composition
-      cv_ <- fun_model_compute_full(df_train = all_train, params = params, model = model, type = "pred")
+      cv_ <- fun_model_compute_full(df_train = all_train, params = params, type = "pred")
       mse_ <- mean(cv_[[1]], na.rm = T)
       r2_ <- mean(cv_[[2]], na.rm = T)
       all_mse[[i]] <- c(all_mse[[i]], mse_)
