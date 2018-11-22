@@ -217,7 +217,11 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   lr <- params[["lr"]]
   layer <- params[["layer"]]
   batch <- params[["batchsize"]]
+<<<<<<< HEAD
   units <- params[["best"]]$nodes
+=======
+  units <- params[["units"]]
+>>>>>>> 21063f384d10c3f2417972057b8c92ed12eae0f6
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0

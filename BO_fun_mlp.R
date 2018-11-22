@@ -12,11 +12,14 @@
       }
     }
     
-    cat("Model: # Layer:", layer, " # units:", units, "\n")
-    model <- fun_build_model(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
-    results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "pred", model = model)
+    params[["units"]] <- units
+    params[["layer"]] <- layer
     
-    return(mean(results_[[1]], na.rm = T))
+    cat("Model: # Layer:", layer, " # units:", units, "\n")
+    #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
+    results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "full")
+    
+    return(sqrt(mean(results_[[1]], na.rm = T)))
     }
     
     ## set hyperparameterspace
@@ -42,6 +45,7 @@
     ctrl = makeMBOControl()
     ctrl = setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
     ctrl = setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
+    ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
     
     res_ = mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
     
@@ -50,6 +54,7 @@
   
   params <- fun_params()
   first_bo <- fun_bo_mlr(df_train = df_night_model, params = params)
+<<<<<<< HEAD
     
   ## Target function BO ####
   fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 4, optimizer = "adam", path){
@@ -97,3 +102,7 @@
 #    
 #    return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 #  }
+=======
+  reults_ <- as.data.frame(first_bo$opt.path)
+  
+>>>>>>> 21063f384d10c3f2417972057b8c92ed12eae0f6
