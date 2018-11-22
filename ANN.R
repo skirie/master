@@ -15,7 +15,7 @@
   }
   
   ## Packages ####
-  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg")
+  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg", "MASS", "randomForest")
   check.packages(packages) 
   use_condaenv("r-tensorflow")
   
@@ -86,15 +86,16 @@
   rm(preds, glm_air)
   
   ## Windspeed ####
-  summary(df_raw_2[which(is.na(df_raw_2$WindSpeed)),"day"])
+  summary(df_raw_2[which(is.na(df_raw_2$WindSpeed)),])
   hist(df_raw_2$WindSpeed[-which(is.na(df_raw_2$WindSpeed))])
   
-  glm_ws <- glm(WindSpeed ~ Soil.moisture_main + TS_main + airT + PPFDin, data = df_raw_2[-which(is.na(df_raw_2$WindSpeed)),])
+  glm_ws <- glm(WindSpeed ~ TS_main + airT + PPFDin, data = df_raw_2[-which(is.na(df_raw_2$WindSpeed)),])
   summary(glm_ws)
   
   library(randomForest)
-  rf_ws <- randomForest(WindSpeed ~ Soil.moisture_main + TS_main + airT + PPFDin, 
+  rf_ws <- randomForest(WindSpeed ~ TS_main + airT + PPFDin, 
                         data = df_raw_2[-which(is.na(df_raw_2$WindSpeed)),], importance = TRUE)
+  
   # pseudo r2
   #1 - glm_air$deviance / glm_air$null.deviance # 0.89
   preds <- predict(glm_air, newdata = df_raw_2[which(is.na(df_raw_2$airT)),])
