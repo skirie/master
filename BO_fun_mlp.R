@@ -52,9 +52,10 @@
     return(res_)
   }
   
-  params <- fun_params()
-  first_bo <- fun_bo_mlr(df_train = df_night_model, params = params)
-
+  #params <- fun_params()
+  #first_bo <- fun_bo_mlr(df_train = df_night_model, params = params)
+  first <- fun_tagret_bo(df_train = df_night_model, path = mypath)
+  
   ## Target function BO ####
   fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 4, optimizer = "adam", path){
     df_results_ms <- NULL
