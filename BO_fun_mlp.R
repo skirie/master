@@ -101,7 +101,3 @@
 #    
 #    return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 #  }
-=======
-  reults_ <- as.data.frame(first_bo$opt.path)
-  
->>>>>>> 21063f384d10c3f2417972057b8c92ed12eae0f6
