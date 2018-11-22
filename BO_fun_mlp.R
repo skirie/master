@@ -54,8 +54,7 @@
   
   params <- fun_params()
   first_bo <- fun_bo_mlr(df_train = df_night_model, params = params)
-<<<<<<< HEAD
-    
+
   ## Target function BO ####
   fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 4, optimizer = "adam", path){
     df_results_ms <- NULL
@@ -74,7 +73,7 @@
     
     ## Best Model (Layers & Nodes)
     params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),1]
-    params[["best"]]$nodes <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),2]
+    params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),2]
     params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),3]
     
     ## Predictoranalysis - Best Predictor Subset
