@@ -39,13 +39,13 @@
     
     ## design -> pre hyperparameter calulations
     set.seed(352)
-    des = generateDesign(n = 12, par.set = getParamSet(obj.fun))
+    des = generateDesign(n = 10, par.set = getParamSet(obj.fun))
     
     ## control
     ctrl = makeMBOControl()
     ctrl = setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
     ctrl = setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
-    ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
+    #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
     
     res_ = mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
     
