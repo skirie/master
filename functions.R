@@ -54,7 +54,7 @@ fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 2
 
 
 ## Target function BO ####
-fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 4, optimizer = "adam", path){
+fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
   df_results_ms <- NULL
   params <- fun_params(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
   
@@ -65,14 +65,14 @@ fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, 
     cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
     
     results_ms <- fun_bo_mlr(df_train = df_train, params = params)
-    df_results_ms <- c(df_results_ms, c(results_ms$x$x, batchsize[i], results_ms$y))
+    df_results_ms <- rbind(df_results_ms, c(results_ms$x$layer, results_ms$x$units, batchsize[i], results_ms$y))
   }
   save(df_results_ms, file = c(paste0(path, "/RData/results_model_", layer-1, "l_", Sys.Date(), ".RData")))
   
   ## Best Model (Layers & Nodes)
-  params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),1]
-  params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),2]
-  params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),3]
+  params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 1]
+  params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 2]
+  params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 3]
   
   ## Predictoranalysis - Best Predictor Subset
   df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
@@ -337,19 +337,26 @@ fun_bo_mlr <- function(df_train, params){
 ## Function model compute full ####
 fun_model_compute_full <- function(df_train, params, type = "full"){
   ## params
-  if (type == "pred"){
-    times_cv <- 2
-  } else {
-    times_cv <- params[["times_cv"]]
-  }
-  
   k <- params[["k"]]
   num_epochs <- params[["epochs"]]
   optimizer <- params[["optimizer"]]
   lr <- params[["lr"]]
   layer <- params[["layer"]]
   batch <- params[["batchsize"]]
-  units <- params[["units"]]
+  
+  if (type == "pred"){
+    times_cv <- 2
+    units <- rep(params[["units"]], params[["layer"]])
+    if (layer > 1){
+      units[2] <- as.integer(units[2]*0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2]*0.5)
+      }
+    }
+  } else {
+    times_cv <- params[["times_cv"]]
+    units <- params[["units"]]
+  }
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
@@ -459,6 +466,7 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
       all_r2 <- rbind(all_r2, r2)
     }
   }
+  gc()
   return(list(all_mse, all_r2, all_mae_histories))
 }
 ## Function model run predictor analysis ####
@@ -492,7 +500,7 @@ fun_model_run_pa <- function(df_train, params){
     for (j in c(1:k)){
       # print computed predictor combination      
       pred_[count] <- paste0(best_pred_name[[i]], "+", col_[j])
-      cat("Predictor Posibility: ", count, "/171. Used predictors:", pred_[count], sep = "", "\n")
+      cat("Predictor Posibility: ", count, "/", ncol(df_train)*(ncol(df_train)-1)/2, ". Used predictors:", pred_[count], sep = "", "\n")
       
       # choose of one predictor and always Y. Y needs to be at last column position.
       train_ <- df_train[, c(col_[j], col_[length(col_)])]
@@ -599,4 +607,22 @@ fun_model_drop <- function(df_train, params) {
   
 }
 
+## Restart R session and load all pacakges ####
+fun_rest <- function(){
+  ## Restart R session 
+  .rs.restartR()
+  
+  ## Packages 
+  check.packages <- function(pkg){
+    new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+    if (length(new.pkg)) 
+      install.packages(new.pkg, dependencies = TRUE)
+    sapply(pkg, require, character.only = TRUE)
+  }
+  
+  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg", "MASS")
+  check.packages(packages) 
+  use_condaenv("r-tensorflow")
+  
+}
 #### ####
