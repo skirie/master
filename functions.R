@@ -54,7 +54,7 @@ fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 2
 
 
 ## Target function BO ####
-fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 4, optimizer = "adam", path){
+fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
   df_results_ms <- NULL
   params <- fun_params(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
   
@@ -337,6 +337,13 @@ fun_bo_mlr <- function(df_train, params){
 ## Function model compute full ####
 fun_model_compute_full <- function(df_train, params, type = "full"){
   ## params
+  k <- params[["k"]]
+  num_epochs <- params[["epochs"]]
+  optimizer <- params[["optimizer"]]
+  lr <- params[["lr"]]
+  layer <- params[["layer"]]
+  batch <- params[["batchsize"]]
+  
   if (type == "pred"){
     times_cv <- 2
     units <- rep(params[["units"]], params[["layer"]])
@@ -350,13 +357,6 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
     times_cv <- params[["times_cv"]]
     units <- params[["units"]]
   }
-  
-  k <- params[["k"]]
-  num_epochs <- params[["epochs"]]
-  optimizer <- params[["optimizer"]]
-  lr <- params[["lr"]]
-  layer <- params[["layer"]]
-  batch <- params[["batchsize"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
@@ -466,6 +466,7 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
       all_r2 <- rbind(all_r2, r2)
     }
   }
+  gc()
   return(list(all_mse, all_r2, all_mae_histories))
 }
 ## Function model run predictor analysis ####
@@ -606,4 +607,22 @@ fun_model_drop <- function(df_train, params) {
   
 }
 
+## Restart R session and load all pacakges ####
+fun_rest <- function(){
+  ## Restart R session 
+  .rs.restartR()
+  
+  ## Packages 
+  check.packages <- function(pkg){
+    new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+    if (length(new.pkg)) 
+      install.packages(new.pkg, dependencies = TRUE)
+    sapply(pkg, require, character.only = TRUE)
+  }
+  
+  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg", "MASS")
+  check.packages(packages) 
+  use_condaenv("r-tensorflow")
+  
+}
 #### ####
