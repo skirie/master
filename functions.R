@@ -65,14 +65,14 @@ fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, 
     cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
     
     results_ms <- fun_bo_mlr(df_train = df_train, params = params)
-    df_results_ms <- c(df_results_ms, c(results_ms$x$x, batchsize[i], results_ms$y))
+    df_results_ms <- rbind(df_results_ms, c(results_ms$x$layer, results_ms$x$units, batchsize[i], results_ms$y))
   }
   save(df_results_ms, file = c(paste0(path, "/RData/results_model_", layer-1, "l_", Sys.Date(), ".RData")))
   
   ## Best Model (Layers & Nodes)
-  params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),1]
-  params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),2]
-  params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),3]
+  params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 1]
+  params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 2]
+  params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 3]
   
   ## Predictoranalysis - Best Predictor Subset
   df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
