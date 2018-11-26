@@ -2,6 +2,9 @@
 #### Functions for modeling trace gas emissions with ANNs ####
 #### ------------------------------------------- ####
 
+#### ----------------------- ####
+#### Target Functions ####
+#### ----------------------- ####
 ## Target function GRID ####
 fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, optimizer = "rmsprop", path){
   df_results_ms <- NULL
@@ -49,8 +52,41 @@ fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 2
   return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
 
-## Funktion Parameter ####
-fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 30){
+
+## Target function BO ####
+fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 4, optimizer = "adam", path){
+  df_results_ms <- NULL
+  params <- fun_params(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
+  
+  ## Best Model structure (Layers & Nodes)
+  ## modelrun for different batchsizes
+  for (i in 1:length(batchsize)){
+    params[["batchsize"]] <- batchsize[i]
+    cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
+    
+    results_ms <- fun_bo_mlr(df_train = df_train, params = params)
+    df_results_ms <- c(df_results_ms, c(results_ms$x$x, batchsize[i], results_ms$y))
+  }
+  save(df_results_ms, file = c(paste0(path, "/RData/results_model_", layer-1, "l_", Sys.Date(), ".RData")))
+  
+  ## Best Model (Layers & Nodes)
+  params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),1]
+  params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),2]
+  params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,3])),3]
+  
+  ## Predictoranalysis - Best Predictor Subset
+  df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
+  params <- fun_best_model(df_results = df_results_pa, params = params, type = "pred")
+  
+  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.Date(), ".RData"))
+  return(list(df_results_ms, df_results_pa, params))
+}
+#### ----------------------- ####
+#### Parameter Model Functions ####
+#### ----------------------- ####
+
+## Function Parameter ####
+fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 20){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -137,6 +173,48 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr, dropout = F){
   return(model)
 }
 
+
+## Function best model NEW ####
+fun_best_model <- function(df_results, params, type){
+  # print ordered results
+  print("Best Models")
+  print(df_results[order(df_results$mse),][1:10,])
+  print("Best Performance")
+  print(df_results[order(df_results$performance),][1:10,])
+  
+  # extract layer, nodes and batchsize from key
+  if (type == "nodes"){
+    # models with MSE < lowest mse + sem | One standard error rule
+    w_best <- which(df_results$mse < min(df_results$mse, na.rm = T) + df_results$sem[which(df_results$mse == min(df_results$mse, na.rm = T))])
+    w_perf <- w_best[which(df_results$performance[w_best] == min(df_results$performance[w_best], na.rm = T))]
+    
+    str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_perf]), "_")[[1]]))
+    str_ <- str[!is.na(str)]
+    batch_size <- str_[length(str_)]
+    nodes <- str_[-length(str_)]
+    layer <- length(nodes)
+    
+    params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_perf,]) 
+  } else if(type == "pred"){
+    w_best <- which(df_results$mse == min(df_results$mse, na.rm = T))
+    
+    str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
+    params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best,]) 
+    
+    w_best_5 <- which(df_results$mse[df_results$level <= 5] == min(df_results$mse[df_results$level <= 5], na.rm = T))
+    #w_best_12 <- which(df_results$mse[df_results$level <= 12] == min(df_results$mse[df_results$level <= 12], na.rm = T))
+    str_5 <- strsplit(as.character(df_results$predictors[w_best_5]), "+", fixed = TRUE)[[1]][-1]
+    #str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
+    params[["best_preds_5"]] <- list("predictors" = str_5, "model" = df_results[w_best_5,]) 
+    #params[["best_preds_12"]] <- list("predictors" = str_12, "model" = df_results[w_best_12,])
+  }
+  return(params)
+}
+
+#### ----------------------- ####
+#### Model Evaluation Functions ####
+#### ----------------------- ####
+
 ## Function model run model structure ####
 fun_model_run_ms <- function(df_train, params){
   ## params 
@@ -202,6 +280,60 @@ fun_model_run_ms <- function(df_train, params){
   return(list(df_results, all_mae_history))
 }
 
+## Function model run Bayesian Opt. ####
+fun_bo_mlr <- function(df_train, params){
+  
+  nn_fit_bayes <- function(x) {
+    units <- x$units
+    layer <- x$layer
+    
+    units <- as.integer(rep(units, layer))
+    if (layer > 1){
+      units[2] <- as.integer(units[2]*0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2]*0.5)
+      }
+    }
+    
+    params[["units"]] <- units
+    params[["layer"]] <- layer
+    
+    cat("Model: # Layer:", layer, " # units:", units, "\n")
+    #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
+    results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "full")
+    
+    return(sqrt(mean(results_[[1]], na.rm = T)))
+  }
+  
+  ## set hyperparameterspace
+  par.set = makeParamSet(
+    makeIntegerParam("layer", 1, params[["layer"]]),
+    makeIntegerParam("units", params[["Nmin"]], params[["Nmax"]]))
+  
+  ## create learner -> dicekriging (GaussianProcess)
+  surr.km = makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
+  
+  ## objective Function
+  obj.fun = makeSingleObjectiveFunction(name = "svm.tuning",
+                                        fn = nn_fit_bayes,
+                                        par.set = par.set,
+                                        has.simple.signature = FALSE,
+                                        minimize = TRUE)
+  
+  ## design -> pre hyperparameter calulations
+  set.seed(352)
+  des = generateDesign(n = 10, par.set = getParamSet(obj.fun))
+  
+  ## control
+  ctrl = makeMBOControl()
+  ctrl = setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
+  ctrl = setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
+  #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
+  
+  res_ = mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
+  
+  return(res_)
+}
 ## Function model compute full ####
 fun_model_compute_full <- function(df_train, params, type = "full"){
   ## params
@@ -329,43 +461,6 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   }
   return(list(all_mse, all_r2, all_mae_histories))
 }
-## Function best model NEW ####
-fun_best_model <- function(df_results, params, type){
-  # print ordered results
-  print("Best Models")
-  print(df_results[order(df_results$mse),][1:10,])
-  print("Best Performance")
-  print(df_results[order(df_results$performance),][1:10,])
-  
-  # extract layer, nodes and batchsize from key
-  if (type == "nodes"){
-    # models with MSE < lowest mse + sem | One standard error rule
-    w_best <- which(df_results$mse < min(df_results$mse, na.rm = T) + df_results$sem[which(df_results$mse == min(df_results$mse, na.rm = T))])
-    w_perf <- w_best[which(df_results$performance[w_best] == min(df_results$performance[w_best], na.rm = T))]
-    
-    str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_perf]), "_")[[1]]))
-    str_ <- str[!is.na(str)]
-    batch_size <- str_[length(str_)]
-    nodes <- str_[-length(str_)]
-    layer <- length(nodes)
-    
-    params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_perf,]) 
-  } else if(type == "pred"){
-    w_best <- which(df_results$mse == min(df_results$mse, na.rm = T))
-    
-    str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
-    params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best,]) 
-    
-    w_best_7 <- which(df_results$mse[df_results$level <= 7] == min(df_results$mse[df_results$level <= 7], na.rm = T))
-    w_best_12 <- which(df_results$mse[df_results$level <= 12] == min(df_results$mse[df_results$level <= 12], na.rm = T))
-    str_7 <- strsplit(as.character(df_results$predictors[w_best_7]), "+", fixed = TRUE)[[1]][-1]
-    str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
-    params[["best_preds_7"]] <- list("predictors" = str_7, "model" = df_results[w_best_7,]) 
-    params[["best_preds_12"]] <- list("predictors" = str_12, "model" = df_results[w_best_12,])
-  }
-  return(params)
-}
-
 ## Function model run predictor analysis ####
 fun_model_run_pa <- function(df_train, params){
   ## params 
@@ -448,6 +543,9 @@ fun_model_run_pa <- function(df_train, params){
   
   return(df_results)
 }
+#### ----------------------- ####
+#### Additional Functions ####
+#### ----------------------- ####
 ## Function model dropout analysis  ####
 fun_model_drop <- function(df_train, params) {
   df_train[is.na(df_train)] <- 0
