@@ -339,8 +339,16 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   ## params
   if (type == "pred"){
     times_cv <- 2
+    units <- rep(params[["units"]], params[["layer"]])
+    if (layer > 1){
+      units[2] <- as.integer(units[2]*0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2]*0.5)
+      }
+    }
   } else {
     times_cv <- params[["times_cv"]]
+    units <- params[["units"]]
   }
   
   k <- params[["k"]]
@@ -349,7 +357,6 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   lr <- params[["lr"]]
   layer <- params[["layer"]]
   batch <- params[["batchsize"]]
-  units <- params[["units"]]
   
   ## NA to 0
   df_train[is.na(df_train)] <- 0
@@ -492,7 +499,7 @@ fun_model_run_pa <- function(df_train, params){
     for (j in c(1:k)){
       # print computed predictor combination      
       pred_[count] <- paste0(best_pred_name[[i]], "+", col_[j])
-      cat("Predictor Posibility: ", count, "/171. Used predictors:", pred_[count], sep = "", "\n")
+      cat("Predictor Posibility: ", count, "/", ncol(df_train)*(ncol(df_train)-1)/2, ". Used predictors:", pred_[count], sep = "", "\n")
       
       # choose of one predictor and always Y. Y needs to be at last column position.
       train_ <- df_train[, c(col_[j], col_[length(col_)])]
