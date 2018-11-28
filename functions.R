@@ -55,6 +55,7 @@ fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 2
 
 ## Target function BO ####
 fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
+  results_ms <- list()
   df_results_ms <- NULL
   params <- fun_params(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
   
@@ -64,15 +65,16 @@ fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, 
     params[["batchsize"]] <- batchsize[i]
     cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
     
-    results_ms <- fun_bo_mlr(df_train = df_train, params = params)
-    df_results_ms <- rbind(df_results_ms, c(results_ms$x$layer, results_ms$x$units, batchsize[i], results_ms$y))
+    results_ms[[i]] <- fun_bo_mlr(df_train = df_train, params = params)
+    df_results_ms <- rbind(df_results_ms, c(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, batchsize[i], results_ms[[i]]$y))
   }
-  save(df_results_ms, file = c(paste0(path, "/RData/results_model_", layer-1, "l_", Sys.Date(), ".RData")))
+  save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
   
   ## Best Model (Layers & Nodes)
   params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 1]
   params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 2]
   params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 3]
+  cat("Best Model: Layer: ", params[["best"]]$layer, "! Units: ", params[["best"]]$units, "! Batchsize: ", params[["best"]]$batch_size, "!", "\n")
   
   ## Predictoranalysis - Best Predictor Subset
   df_results_pa <- fun_model_run_pa(df_train = df_train, params = params)
