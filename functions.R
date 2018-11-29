@@ -1,11 +1,11 @@
-#### ------------------------------------------- ####
-#### Functions for modeling trace gas emissions with ANNs ####
-#### ------------------------------------------- ####
+#### ------------------------------------------- ##
+#### Functions for modeling trace gas emissions with ANNs ##
+#### ------------------------------------------- ##
 
-#### ----------------------- ####
-#### Target Functions ####
-#### ----------------------- ####
-## Target function GRID ####
+#### ----------------------- ##
+#### Target Functions ##
+#### ----------------------- ##
+## Target function GRID ##
 fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, optimizer = "rmsprop", path){
   df_results_ms <- NULL
   all_mae_history <- NULL
@@ -52,7 +52,7 @@ fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 2
   return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
 
-## Target function BO ####
+## Target function BO ##
 fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
   results_ms <- list()
   df_results_ms <- NULL
@@ -83,12 +83,14 @@ fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, 
   return(list(df_results_ms, df_results_pa, params))
 }
 
-#### ----------------------- ####
-#### Parameter Model Functions ####
-#### ----------------------- ####
+#### ----------------------- ##
+#### Parameter Model Functions ##
+#### ----------------------- ##
 
-## Function Parameter ####
-fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 20){
+## Function Parameter ##
+fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, 
+                       Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 20,
+                       dropout = F){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -102,18 +104,20 @@ fun_params <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam",
   params[["layer_balance"]] <- layer_balance
   params[["times_cv"]] <- times_cv
   params[["iters_bo"]] <- iters_bo
+  params[["dropout"]] <- dropout
   return(params)
 }
 
-## Function model build ####
+## Function model build ##
 fun_build_model <- function(df_train, layer, optimizer, units, lr, dropout = F){
-  ## optimizer ####
+  ## optimizer ##
   if (optimizer == "rmsprop"){
     optim_ <- optimizer_rmsprop(lr = lr)  
   } else if (optimizer == "adam"){
     optim_ <- optimizer_adam(lr = lr)
   }
   
+  ## dropout model
   if (is.numeric(dropout)){
     if (layer == 1){
       model <- keras_model_sequential() %>% 
@@ -143,7 +147,7 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr, dropout = F){
       return("only three layer possible. pls set layer from 1-3")
     }
   } else {
-    ## Model ####
+    ## normal Model 
     if (layer == 1){
       model <- keras_model_sequential() %>% 
         layer_dense(units = units[1], activation = "relu", initializer_he_uniform(seed = 5),
@@ -175,7 +179,7 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr, dropout = F){
   return(model)
 }
 
-## Function best model NEW ####
+## Function best model NEW ##
 fun_best_model <- function(df_results, params, type){
   # print ordered results
   print("Best Models")
@@ -212,11 +216,11 @@ fun_best_model <- function(df_results, params, type){
   return(params)
 }
 
-#### ----------------------- ####
-#### Model Evaluation Functions ####
-#### ----------------------- ####
+#### ----------------------- ##
+#### Model Evaluation Functions ##
+#### ----------------------- ##
 
-## Function model run model structure ####
+## Function model run model structure ##
 fun_model_run_ms <- function(df_train, params){
   ## params 
   Nmin <- params[["Nmin"]]
@@ -281,7 +285,7 @@ fun_model_run_ms <- function(df_train, params){
   return(list(df_results, all_mae_history))
 }
 
-## Function model run Bayesian Opt. ####
+## Function model run Bayesian Opt. ##
 fun_bo_mlr <- function(df_train, params){
   
   nn_fit_bayes <- function(x) {
@@ -336,7 +340,7 @@ fun_bo_mlr <- function(df_train, params){
   return(res_)
 }
 
-## Function model run Bayesian Opt. ####
+## Function model run Bayesian Opt. ##
 fun_bo_mlr_2 <- function(df_train, params){
   
   nn_fit_bayes <- function(x) {
@@ -392,7 +396,7 @@ fun_bo_mlr_2 <- function(df_train, params){
   return(res_)
 }
 
-## Function model compute full ####
+## Function model compute full ##
 fun_model_compute_full <- function(df_train, params, type = "full"){
   ## params
   k <- params[["k"]]
@@ -401,6 +405,7 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   lr <- params[["lr"]]
   layer <- params[["layer"]]
   batch <- params[["batchsize"]]
+  dropout <- params[["dropout"]]
   
   if (type == "pred"){
     times_cv <- 2
@@ -424,7 +429,7 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   all_mse <- NULL
   all_r2 <- NULL
   
-  ## Callback - early stopping ####
+  ## Callback - early stopping 
   callback_list <- list(callback_early_stopping(patience = 6))
   
   ## Crossvalidation j times k-fold crossvalidation
@@ -437,7 +442,7 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
       cat("processing fold #", paste0(j, ".", i), "\n")
       
       ## Model
-      model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
+      model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr, dropout = dropout)
       
       # Prepare the train, validation and test data: data from partition # k
       val_test_indices <- which(folds == i, arr.ind = TRUE)
@@ -531,7 +536,7 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   return(list(all_mse, all_r2, all_mae_histories))
 }
 
-## Function model run predictor analysis ####
+## Function model run predictor analysis ##
 fun_model_run_pa <- function(df_train, params){
   ## params 
   params[["layer"]] <- params[["best"]]$layer
@@ -614,79 +619,67 @@ fun_model_run_pa <- function(df_train, params){
   return(df_results)
 }
 
-#### ----------------------- ####
-#### Additional Functions ####
-#### ----------------------- ####
+#### ----------------------- ##
+#### Additional Functions ##
+#### ----------------------- ##
 
-## Function model dropout analysis  ####
-fun_model_drop <- function(df_train, params) {
-  df_train[is.na(df_train)] <- 0
+## Function model dropout analysis ##
+fun_bo_mlr_drop <- function(df_train, params){
   
-  optimizer <- params[["optimizer"]]
-  lr <- params[["lr"]]
-  layer <- params[["best"]]$layer
-  batch <- params[["best"]]$batch_size
-  units <- params[["best"]]$nodes
-  
-  dropout <- seq(0.1,0.5,0.1)
-  
-  all_mae_history <- NULL
-  all_mse <- NULL
-  all_r2 <- NULL
-  all_std <- NULL
-  all_sem <- NULL
-  performance <- NULL
-  
-  ## Model computing
-  for (i in 1:length(dropout)){
-    start_time <- Sys.time()
-    ## create Model
-    model <- fun_build_model(df_train = df_train, layer = layer, optimizer = optimizer, units = units, 
-                             lr = lr, dropout = dropout[i])
+  nn_fit_bayes <- function(x) {
+    units <- x$units
+    layer <- x$layer
+    dropout <- x$dropout
     
-    cv_ <- fun_model_compute_full(df_train = df_train, params = params, model = model, type = "pred")
-    end_time <- Sys.time()
+    units <- as.integer(rep(units, layer))
+    if (layer > 1){
+      units[2] <- as.integer(units[2]*0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2]*0.5)
+      }
+    }
     
-    mse_ <- mean(cv_[[1]])
-    r2_ <- mean(cv_[[2]])
-    std_ <- sd(cv_[[1]])
-    sem_ <- sd(cv_[[1]])/sqrt(length(cv_[[1]]))
-    time_ <- end_time - start_time
-    mae_history <- apply(cv_[[3]], 2, mean, na.rm = T)
+    params[["units"]] <- units
+    params[["layer"]] <- layer
+    params[["dropout"]] <- dropout
     
-    all_mse <- rbind(all_mse, mse_)
-    all_r2 <- rbind(all_r2, r2_)
-    all_std <- rbind(all_std, std_)
-    all_sem <- rbind(all_sem, sem_)
-    performance <- rbind(performance, time_)
-    all_mae_history <- rbind(all_mae_history, mae_history)
+    cat("Model: # Layer:", layer, " # units:", units, " # dropout:", dropout, "\n")
+    #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
+    results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "full")
     
-    cat("Complete model: dropout_rate_", i, "! Time: ", time_, "\n", sep = "")
+    return(mean(results_[[1]], na.rm = T))
   }
   
-  df_results <- data.frame(mse = all_mse, r2 = all_r2, std = all_std, sem = all_sem, performance = performance)
-  rownames(all_mae_history) <- as.character(dropout)
+  ## set hyperparameterspace
+  par.set = makeParamSet(
+    makeIntegerParam("layer", 1, params[["layer"]]),
+    makeIntegerParam("units", params[["Nmin"]], params[["Nmax"]]))
+    makeNumericParam("dropout", 0.1, 0.4)
   
-  return(list(df_results, all_mae_history))
+  ## create learner -> dicekriging (GaussianProcess)
+  surr.km = makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
   
+  ## objective Function
+  obj.fun = makeSingleObjectiveFunction(name = "svm.tuning",
+                                        fn = nn_fit_bayes,
+                                        par.set = par.set,
+                                        has.simple.signature = FALSE,
+                                        minimize = TRUE,
+                                        noisy = TRUE)
+  
+  ## design -> pre hyperparameter calulations
+  set.seed(352)
+  des = generateDesign(n = 12, par.set = getParamSet(obj.fun))
+  
+  ## control
+  ctrl = makeMBOControl()
+  ctrl = setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
+  ctrl = setMBOControlInfill(ctrl, crit = crit.aei)
+  #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
+  
+  res_ = mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
+  
+  return(res_)
 }
 
-## Restart R session and load all pacakges ####
-fun_rest <- function(){
-  ## Restart R session 
-  .rs.restartR()
-  
-  ## Packages 
-  check.packages <- function(pkg){
-    new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-    if (length(new.pkg)) 
-      install.packages(new.pkg, dependencies = TRUE)
-    sapply(pkg, require, character.only = TRUE)
-  }
-  
-  packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg", "MASS")
-  check.packages(packages) 
-  use_condaenv("r-tensorflow")
-  
-}
-#### ####
+#### ##
