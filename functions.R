@@ -175,7 +175,6 @@ fun_build_model <- function(df_train, layer, optimizer, units, lr, dropout = F){
   return(model)
 }
 
-
 ## Function best model NEW ####
 fun_best_model <- function(df_results, params, type){
   # print ordered results
@@ -330,6 +329,62 @@ fun_bo_mlr <- function(df_train, params){
   ctrl = makeMBOControl()
   ctrl = setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
   ctrl = setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
+  #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
+  
+  res_ = mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
+  
+  return(res_)
+}
+
+## Function model run Bayesian Opt. ####
+fun_bo_mlr_2 <- function(df_train, params){
+  
+  nn_fit_bayes <- function(x) {
+    units <- x$units
+    layer <- x$layer
+    
+    units <- as.integer(rep(units, layer))
+    if (layer > 1){
+      units[2] <- as.integer(units[2]*0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2]*0.5)
+      }
+    }
+    
+    params[["units"]] <- units
+    params[["layer"]] <- layer
+    
+    cat("Model: # Layer:", layer, " # units:", units, "\n")
+    #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
+    results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "full")
+    
+    return(sqrt(mean(results_[[1]], na.rm = T)))
+  }
+  
+  ## set hyperparameterspace
+  par.set = makeParamSet(
+    makeIntegerParam("layer", 1, params[["layer"]]),
+    makeIntegerParam("units", params[["Nmin"]], params[["Nmax"]]))
+  
+  ## create learner -> dicekriging (GaussianProcess)
+  surr.km = makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
+  
+  ## objective Function
+  obj.fun = makeSingleObjectiveFunction(name = "svm.tuning",
+                                        fn = nn_fit_bayes,
+                                        par.set = par.set,
+                                        has.simple.signature = FALSE,
+                                        minimize = TRUE,
+                                        noisy = TRUE)
+  
+  ## design -> pre hyperparameter calulations
+  set.seed(352)
+  des = generateDesign(n = 10, par.set = getParamSet(obj.fun))
+  
+  ## control
+  ctrl = makeMBOControl()
+  ctrl = setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
+  ctrl = setMBOControlInfill(ctrl, crit = crit.aei)
   #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
   
   res_ = mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
