@@ -37,6 +37,7 @@
   drop_download('Master/R/save.RData', paste0(mypath, "/RData/save.RData"), overwrite = T, dtoken = token)
   
   load(paste0(mypath, "/RData/save.RData"))
+  rm(df_raw, df_raw_2, df_night, df_night_pred)
   ## upload WOrkspace ####
   drop_upload(paste0(mypath, "/RData/save.RData"), 'Master/R/', mode = "overwrite", dtoken = token)
   
