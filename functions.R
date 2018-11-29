@@ -52,7 +52,6 @@ fun_tagret_grid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 2
   return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
 
-
 ## Target function BO ####
 fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
   results_ms <- list()
@@ -83,6 +82,7 @@ fun_tagret_bo <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, 
   save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.Date(), ".RData"))
   return(list(df_results_ms, df_results_pa, params))
 }
+
 #### ----------------------- ####
 #### Parameter Model Functions ####
 #### ----------------------- ####
@@ -180,8 +180,8 @@ fun_best_model <- function(df_results, params, type){
   # print ordered results
   print("Best Models")
   print(df_results[order(df_results$mse),][1:10,])
-  print("Best Performance")
-  print(df_results[order(df_results$performance),][1:10,])
+  #print("Best Performance")
+  #print(df_results[order(df_results$performance),][1:10,])
   
   # extract layer, nodes and batchsize from key
   if (type == "nodes"){
@@ -303,7 +303,7 @@ fun_bo_mlr <- function(df_train, params){
     #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
     results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "full")
     
-    return(sqrt(mean(results_[[1]], na.rm = T)))
+    return(mean(results_[[1]], na.rm = T))
   }
   
   ## set hyperparameterspace
@@ -358,7 +358,7 @@ fun_bo_mlr_2 <- function(df_train, params){
     #model <- fun_build_model(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
     results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "full")
     
-    return(sqrt(mean(results_[[1]], na.rm = T)))
+    return(mean(results_[[1]], na.rm = T))
   }
   
   ## set hyperparameterspace
@@ -391,6 +391,7 @@ fun_bo_mlr_2 <- function(df_train, params){
   
   return(res_)
 }
+
 ## Function model compute full ####
 fun_model_compute_full <- function(df_train, params, type = "full"){
   ## params
@@ -529,6 +530,7 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
   }
   return(list(all_mse, all_r2, all_mae_histories))
 }
+
 ## Function model run predictor analysis ####
 fun_model_run_pa <- function(df_train, params){
   ## params 
@@ -611,9 +613,11 @@ fun_model_run_pa <- function(df_train, params){
   
   return(df_results)
 }
+
 #### ----------------------- ####
 #### Additional Functions ####
 #### ----------------------- ####
+
 ## Function model dropout analysis  ####
 fun_model_drop <- function(df_train, params) {
   df_train[is.na(df_train)] <- 0
