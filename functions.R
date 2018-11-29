@@ -466,9 +466,12 @@ fun_model_compute_full <- function(df_train, params, type = "full"){
       all_mse <- rbind(all_mse, mse_)
       r2 <- cor(test_targets, pred_test) ^ 2
       all_r2 <- rbind(all_r2, r2)
+      
+      K <- backend()
+      K$clear_session()
+      gc()
     }
   }
-  gc()
   return(list(all_mse, all_r2, all_mae_histories))
 }
 ## Function model run predictor analysis ####
@@ -481,7 +484,7 @@ fun_model_run_pa <- function(df_train, params){
   ## key
   key <- NULL
   level <- 1
-  for (i in ncol(df_train)-1:1){
+  for (i in c(ncol(df_train)-1):1){
     key_ <- as.character(level+c(1:i)/100)
     key <- c(key,key_)
     level <- level+1
