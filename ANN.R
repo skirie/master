@@ -69,7 +69,7 @@
   summary(df_raw_2$Precip)
   
   df_raw_2$h_last_precip <- NA
-  df_raw_2$h_last_precip[which(df_raw_2$Precip > 0)] <- 0
+  df_raw_2$h_last_precip[which(df_raw_2$Precip >= 0.1)] <- 0
   
   w_1 <- w_2 <- which(df_raw_2$Precip > 0)
   w_2[2:length(w_2)] <- w_2[1:(length(w_2)-1)]
@@ -86,6 +86,8 @@
   
   rm(w_1, w_2, h_lastprec, h_lastprec_2, w_1.1)
   summary(df_raw_2$h_last_precip)
+  
+  ## Precipitation of last 30 days ####
   
   ## Sinus curves year and day ####
   ## year with peak in winter / summer and spring / autum
@@ -131,20 +133,22 @@
   df_raw_2 <- df_raw_2[,-which(names(df_raw_2) == "hours_mins_")]
   rm(hours_mins_, i, sin_seq, which_, years_, which_2001, which_2002)
 
+  ## Fractional year ####
+  
 ## Plausibilitytests ####
   
-  ## Tair ####
+  ## Tair -20 - 40 ####
   df_raw_2$airT[which(df_raw_2$airT > 40 | df_raw_2$airT < -20)] <- NA
   summary(df_raw_2$airT)
   
-  ## Relative Humidity ####
+  ## Relative Humidity 0 - 100 (105) ####
   summary(df_raw_2$RH)
   df_raw_2$RH[which(df_raw_2$RH > 105)] <- NA
   df_raw_2$RH[which(df_raw_2$RH <= 0)] <- NA
   df_raw_2$RH[which(df_raw_2$RH > 100 & df_raw_2$RH <= 105)] <- 100
   summary(df_raw_2$RH)
   
-  ## PPFDin ####
+  ## PPFDin 0 - 2730 ####
   df_raw_2$PPFDin[which(df_raw_2$PPFDin < 0)] <- 0
   summary(df_raw_2$PPFDin)
   
