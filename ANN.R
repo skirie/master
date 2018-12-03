@@ -45,12 +45,6 @@
   ## NaN to NA ####
   df_raw[df_raw == "NaN"] <- NA
   
-  ## df_raw$RH has -Inf and Inf values ####
-  summary(df_raw$RH)
-  df_raw$RH[which(df_raw$RH >= 100)] <- NA
-  df_raw$RH[which(df_raw$RH <= 0)] <- NA
-  summary(df_raw$RH)
-
   ## shift time to PST ####
   df_raw[c(17:nrow(df_raw)),c(1:5)] <- df_raw[c(1:(nrow(df_raw)-16)),c(1:5)]
   df_raw[1:15,1] <- 2001
@@ -64,11 +58,99 @@
   
   ## Check for Colinearity ####
   summary(df_raw)
-  M <- cor(df_raw[,7:30], use = "complete.obs")
-  corrplot.mixed(M)
-  df_raw <- df_raw[,-c(7:11,14:17)]
+  #M <- cor(df_raw[,7:30], use = "complete.obs")
+  #corrplot.mixed(M)
+  #df_raw <- df_raw[,-c(7:11,14:17)]
   df_raw_2 <- df_raw
   summary(df_raw_2)
+
+## Creating new predictors ####
+  ## Hours since last precipitation event ####
+  summary(df_raw_2$Precip)
+  
+  df_raw_2$h_last_precip <- NA
+  df_raw_2$h_last_precip[which(df_raw_2$Precip > 0)] <- 0
+  
+  w_1 <- w_2 <- which(df_raw_2$Precip > 0)
+  w_2[2:length(w_2)] <- w_2[1:(length(w_2)-1)]
+  
+  h_lastprec <- w_1 - w_2 - 1
+  h_lastprec <- h_lastprec[-1]
+  
+  h_lastprec_2 <- h_lastprec[which(h_lastprec > 0)]
+  w_1.1 <- w_1[which(h_lastprec > 0)]
+  
+  for (i in 1:length(h_lastprec_2)){
+    df_raw_2$h_last_precip[(w_1.1[i]+1):(w_1.1[i]+h_lastprec_2[i])] <- seq(0.5, h_lastprec_2[i]/2, 0.5)
+  }
+  
+  rm(w_1, w_2, h_lastprec, h_lastprec_2, w_1.1)
+  summary(df_raw_2$h_last_precip)
+  
+  ## Sinus curves year and day ####
+  ## year with peak in winter / summer and spring / autum
+  years_ <- unique(df_raw_2$year)
+  df_raw_2$year_ws_sin <- NA
+  df_raw_2$year_sa_sin <- NA
+  
+  for (i in 1:length(years_)){
+    which_ <- which(df_raw_2$year == years_[i+1])
+    
+    df_raw_2$year_ws_sin[which_] <- sin(seq((1.5+(10.5/365*2))*pi, (3.5+(10.5/365*2))*pi,  length.out = length(which_)))
+    df_raw_2$year_sa_sin[which_] <- sin(seq((10.5/365*2)*pi, (2+(10.5/365*2))*pi,  length.out = length(which_)))
+  }
+  
+  which_2001 <- which(df_raw_2$year == 2001)
+  which_2002 <- which(df_raw_2$year == 2002)
+  df_raw_2$year_ws_sin[which_2001] <- df_raw_2$year_ws_sin[which_2002][(length(df_raw_2$year_ws_sin[which_2002])-14):length(df_raw_2$year_ws_sin[which_2002])]
+  df_raw_2$year_sa_sin[which_2001] <- df_raw_2$year_sa_sin[which_2002][(length(df_raw_2$year_ws_sin[which_2002])-14):length(df_raw_2$year_ws_sin[which_2002])]
+  
+  df_raw_2[c(which(df_raw_2$month == 6 & df_raw_2$day == 21 & df_raw_2$hour == 23)), c("year","hour", "min", "year_ws_sin")]
+  df_raw_2[c(which(df_raw_2$month == 12 & df_raw_2$day == 21 & df_raw_2$hour == 11)), c("year","hour", "min", "year_ws_sin")]
+  summary(df_raw_2$year_ws_sin)
+  
+  df_raw_2[c(which(df_raw_2$month == 3 & df_raw_2$day == 21 & df_raw_2$hour == 23)), c("year","hour", "min", "year_sa_sin")]
+  df_raw_2[c(which(df_raw_2$month == 9 & df_raw_2$day == 21 & df_raw_2$hour == 6)), c("year","hour", "min", "year_sa_sin")]
+  summary(df_raw_2$year_sa_sin)
+
+  plot(df_raw_2$year_sa_sin)
+  plot(df_raw_2$year_ws_sin)
+  
+  ## day 
+  df_raw_2$day_sin <- NA
+  df_raw_2$hours_mins_ <- as.numeric(paste0(df_raw_2$hour, ".", df_raw_2$min))
+  hours_mins_ <- unique(df_raw_2$hours_mins_)
+  sin_seq <- sin(seq(1.5*pi, 3.5*pi,  length.out = length(hours_mins_)))
+  
+  for (i in 1:length(hours_mins_)){
+    which_ <- which(df_raw_2$hours_mins_ == hours_mins_[i])
+    df_raw_2$day_sin[which_] <- sin_seq[i]
+  }
+  
+  summary(df_raw_2$day_sin)
+  df_raw_2 <- df_raw_2[,-which(names(df_raw_2) == "hours_mins_")]
+  rm(hours_mins_, i, sin_seq, which_, years_, which_2001, which_2002)
+
+## Plausibilitytests ####
+  
+  ## Tair ####
+  df_raw_2$airT[which(df_raw_2$airT > 40 | df_raw_2$airT < -20)] <- NA
+  summary(df_raw_2$airT)
+  
+  ## Relative Humidity ####
+  summary(df_raw_2$RH)
+  df_raw_2$RH[which(df_raw_2$RH > 105)] <- NA
+  df_raw_2$RH[which(df_raw_2$RH <= 0)] <- NA
+  df_raw_2$RH[which(df_raw_2$RH > 100 & df_raw_2$RH <= 105)] <- 100
+  summary(df_raw_2$RH)
+  
+  ## PPFDin ####
+  df_raw_2$PPFDin[which(df_raw_2$PPFDin < 0)] <- 0
+  summary(df_raw_2$PPFDin)
+  
+  ## SWout ####
+  df_raw_2$SWout[which(df_raw_2$SWout <= 0)] <- NA
+  summary(df_raw_2$SWout)
   
 ## Fill gaps of predictors ####
   ## Tair ####
@@ -95,10 +177,7 @@
   length(which(which(is.na(df_raw_2$SWout)) %in% which(is.na(df_raw_2$CO2)) == T)) # common gaps
   
   # Histogram
-  df_raw_2$SWout[which(df_raw_2$SWout <= 0)] <- NA
   hist(df_raw_2$SWout[-which(is.na(df_raw_2$SWout))])
-  
-  summary(df_raw_2$SWout[-which(is.na(df_raw_2$SWout))])
   
   # Distribution
   fit_norm <- fitdistr(df_raw_2$SWout[-which(is.na(df_raw_2$SWout))], "normal")
@@ -112,11 +191,11 @@
   AIC(fit_gam)
   
   # GLM
-  glm_swout <- glm(log(SWout) ~ PPFDin + airT + as.factor(hour) + as.factor(month), data = df_raw_2[-which(is.na(df_raw_2$SWout)),], family=gaussian(link="identity"))
+  glm_swout <- glm(log(SWout) ~ PPFDin + airT + year_ws_sin + year_sa_sin + day_sin, data = df_raw_2[-which(is.na(df_raw_2$SWout)),], family=gaussian(link="identity"))
   summary(glm_swout)
   
   # pseudo r2
-  #1 - glm_swout$deviance / glm_swout$null.deviance # 0.33
+  #1 - glm_swout$deviance / glm_swout$null.deviance # 0.28
   preds <- exp(predict(glm_swout, newdata = df_raw_2[which(is.na(df_raw_2$SWout)),]))
   summary(preds)
   df_raw_2[which(is.na(df_raw_2$SWout)), "SWout"] <- unname(preds)
@@ -145,7 +224,7 @@
   AIC(fit_chi)
   AIC(fit_gam)
   
-  glm_lwout <- glm(log(LWout) ~ PPFDin + airT + SWout + as.factor(hour) + as.factor(month), data = df_raw_2[-which(is.na(df_raw_2$LWout)),], 
+  glm_lwout <- glm(log(LWout) ~ PPFDin + airT + SWout + year_ws_sin + year_sa_sin + day_sin, data = df_raw_2[-which(is.na(df_raw_2$LWout)),], 
                    family=gaussian(link="identity"))
   summary(glm_lwout)
   
