@@ -29,7 +29,7 @@
   mypath <- getwd()
   
   ## Flux Data ####
-  df_raw <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver2.csv"))
+  df_raw <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver3.csv"))
   
   ## Sun rise / set ####
   df_hel <- read.csv(paste0(mypath, "/Daten/sunsetrise.csv"),
@@ -88,6 +88,18 @@
   summary(df_raw_2$h_last_precip)
   
   ## Precipitation of last 30 days ####
+  df_raw_2$precip_30d <- NA
+  
+  for (i in 30:nrow(df_raw_2)){
+    df_raw_2$precip_30d[i] <- sum(df_raw_2$Precip[(i-29):i], na.rm = T)  
+  }
+  
+  which(df_raw_2$Precip[1:30] > 0)
+  df_raw_2$precip_30d[1:10] <- 0
+  df_raw_2$precip_30d[11:12] <- df_raw_2$precip_30d[10]
+  df_raw_2$precip_30d[13:29] <- sum(df_raw_2$precip_30d[1:12], na.rum = T)
+  
+  summary(df_raw_2$precip_30d)
   
   ## Sinus curves year and day ####
   ## year with peak in winter / summer and spring / autum
@@ -143,13 +155,13 @@
   
   ## Relative Humidity 0 - 100 (105) ####
   summary(df_raw_2$RH)
-  df_raw_2$RH[which(df_raw_2$RH > 105)] <- NA
-  df_raw_2$RH[which(df_raw_2$RH <= 0)] <- NA
+  df_raw_2$RH[which(df_raw_2$RH > 105 | df_raw_2$RH <= 0)] <- NA
   df_raw_2$RH[which(df_raw_2$RH > 100 & df_raw_2$RH <= 105)] <- 100
   summary(df_raw_2$RH)
   
   ## PPFDin 0 - 2730 ####
   df_raw_2$PPFDin[which(df_raw_2$PPFDin < 0)] <- 0
+  df_raw_2$PPFDin[which(df_raw_2$PPFDin > 2730)] <- NA
   summary(df_raw_2$PPFDin)
   
   ## SWout ####
@@ -157,11 +169,47 @@
   summary(df_raw_2$SWout)
   
 ## Fill gaps of predictors ####
+  ## function for detecting location and size of gaps ####
+  fun_detect_gaps <- function(df, maxsize = 12){
+    rl <- rle(is.na(df))
+
+    # position
+    # which gaps are < 12
+    w_gap <- which((rl$lengths < 12) == T & rl$values == T)
+    position_ <- NULL
+    
+    # start position and gap size
+    for (i in 1:length(w_gap)){
+      position_[i] <- sum(rl$lengths[1:(w_gap[i]-1)])+1
+      
+    }
+
+    size_ <- rl$lengths[w_gap]
+    df_retrun <- data.frame("position" = position_, "size" = size_)
+  }
+  
+  ## function for interpolating
+  fun_interpol <- function(df, df_gaps){
+    for (i in 1:nrow(df_gaps)){
+      val_x <- c(df_gaps[i,1] - 1, df_gaps[i,1] + df_gaps[i,2])
+      val_y <- c(df[(df_gaps[i,1] - 1)], df[(df_gaps[i,1] + df_gaps[i,2])])
+      
+      linearMod <- lm(val_y ~ val_x)
+      pred_x <- c(df_gaps[i,1]:(df_gaps[i,1] + df_gaps[i,2] - 1))
+      
+      df[df_gaps[i,1]:(df_gaps[i,1] + df_gaps[i,2] - 1)] <- predict(linearMod, newdata = data.frame(val_x = pred_x))
+    }
+    return(df)
+  }
+  
   ## Tair ####
-  #df_raw_2[which(is.na(df_raw_2$airT)),]
-  hist(df_raw_2$airT)
+  ## gaps smaller 6 hours -> interpolating
+  summary(df_raw_2$airT)
+  df_airt_gaps <- fun_detect_gaps(df = df_raw_2$airT, 12)
+  df_raw_2$airT <- fun_interpol(df = df_raw_2$airT, df_gaps = df_airt_gaps)
   
   # GLM
+  hist(df_raw_2$airT)
   glm_air <- glm(airT ~ Soil.moisture_main + TS_main + PPFDin, data = df_raw_2[-which(is.na(df_raw_2$airT)),])
   summary(glm_air)
   
@@ -173,6 +221,12 @@
   rm(preds, glm_air)
   
   ## SWout ####
+  summary(df_raw_2$SWout)
+  # smal gaps < 6h interpolating
+  df_swout_gaps <- fun_detect_gaps(df = df_raw_2$SWout, 12)
+  df_raw_2$SWout <- fun_interpol(df = df_raw_2$SWout, df_gaps = df_swout_gaps)
+  
+  df_raw_2$SWout[486:500]
   # check if highly correlated predictors have common gaps
   length(which(which(is.na(df_raw_2$SWout)) %in% which(is.na(df_raw_2$LWout)) == T)) # common gaps
   length(which(which(is.na(df_raw_2$SWout)) %in% which(is.na(df_raw_2$PPFDin)) == T)) # no common gaps
@@ -207,6 +261,11 @@
   rm(preds, glm_swout, fit_norm, fit_lnorm, fit_chi, fit_gam)
 
   ## LWout ####
+  summary(df_raw_2$LWout)
+  # smal gaps < 6h interpolating
+  df_lwout_gaps <- fun_detect_gaps(df = df_raw_2$LWout, 12)
+  df_raw_2$LWout <- fun_interpol(df = df_raw_2$LWout, df_gaps = df_lwout_gaps)
+  
   # check if highly correlated predictors have common gaps
   length(which(which(is.na(df_raw_2$LWout)) %in% which(is.na(df_raw_2$SWout)) == T)) # no common gaps
   length(which(which(is.na(df_raw_2$LWout)) %in% which(is.na(df_raw_2$PPFDin)) == T)) # no common gaps
