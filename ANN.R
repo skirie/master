@@ -257,6 +257,9 @@
   df_rh_gaps <- fun_detect_gaps(df = df_comox_2$relative_humidity, 12)
   df_comox_2$relative_humidity <- fun_interpol(df = df_comox_2$relative_humidity, df_gaps = df_rh_gaps)
   
+  df_ws_gaps <- fun_detect_gaps(df = df_comox_2$wind_speed, 12)
+  df_comox_2$wind_speed <- fun_interpol(df = df_comox_2$wind_speed, df_gaps = df_ws_gaps)
+  
   ## create dataset with all data ####
   df_merged <- merge(df_raw_3, df_comox_2[,c("dt", "temperature", "relative_humidity", "wind_speed")], by = "dt")
   
@@ -266,37 +269,37 @@
   df_airt_gaps <- fun_detect_gaps(df = df_merged$airT, 12)
   df_merged$airT <- fun_interpol(df = df_merged$airT, df_gaps = df_airt_gaps)
   
-  # GLM
-  hist(df_merged$airT)
-  plot(df_merged$airT ~ df_merged$temperature)
+  ## GLM
+  # hist(df_merged$airT)
+  # plot(df_merged$airT ~ df_merged$temperature)
   glm_air <- glm(airT ~ TS_main + PPFDin + Rnet + temperature, data = df_merged)
   summary(glm_air)
   
-  # pseudo r2
+  ## pseudo r2
   #1 - glm_air$deviance / glm_air$null.deviance # 0.95
   preds <- predict(glm_air, newdata = df_merged[which(is.na(df_merged$airT)),])
   summary(preds)
   df_merged[which(is.na(df_merged$airT)), "airT"] <- unname(preds)
   
-  rm(preds, glm_air, df_airt_gaps, df_temp_gaps, df_rh_gaps)
+  rm(preds, glm_air, df_airt_gaps, df_temp_gaps, df_rh_gaps, df_ws_gaps)
   
 ## SWout ####
   summary(df_merged$SWout)
-  # smal gaps < 6h interpolating
+  ## smal gaps < 6h interpolating
   df_swout_gaps <- fun_detect_gaps(df = df_merged$SWout, 12)
   df_merged$SWout <- fun_interpol(df = df_merged$SWout, df_gaps = df_swout_gaps)
   
-  # check if highly correlated predictors have common gaps
+  ## check if highly correlated predictors have common gaps
   # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$LWout)) == T)) # common gaps
   # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$PPFDin)) == T)) # no common gaps
   # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$airT)) == T)) # no common gaps
   # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$RH)) == T)) # common gaps
   # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$CO2)) == T)) # common gaps
   
-  # Histogram
-  hist(df_merged$SWout[-which(is.na(df_merged$SWout))])
+  ## Histogram
+  #hist(df_merged$SWout[-which(is.na(df_merged$SWout))])
   
-  # Distribution
+  ## Distribution
   # fit_norm <- fitdistr(df_merged$SWout[-which(is.na(df_merged$SWout))], "normal")
   # fit_lnorm <- fitdistr(df_merged$SWout[-which(is.na(df_merged$SWout))], "lognormal")
   # fit_chi <- fitdistr(df_merged$SWout[-which(is.na(df_merged$SWout))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
@@ -307,11 +310,11 @@
   # AIC(fit_chi)
   # AIC(fit_gam)
   
-  # GLM
+  ## GLM
   glm_swout <- glm(log(SWout) ~ PPFDin + airT + day_sin + Rnet, data = df_merged[-which(is.na(df_merged$SWout)),], family=gaussian(link="identity"))
   summary(glm_swout)
 
-  # pseudo r2
+  ## pseudo r2
   # 1 - glm_swout$deviance / glm_swout$null.deviance # 0.26
   preds <- exp(predict(glm_swout, newdata = df_merged[which(is.na(df_merged$SWout)),]))
   summary(preds)
@@ -326,20 +329,20 @@
 
 ## LWout ####
   summary(df_merged$LWout)
-  # smal gaps < 6h interpolating
+  ## smal gaps < 6h interpolating
   df_lwout_gaps <- fun_detect_gaps(df = df_merged$LWout, 12)
   df_merged$LWout <- fun_interpol(df = df_merged$LWout, df_gaps = df_lwout_gaps)
   
-  # check if highly correlated predictors have common gaps
+  ## check if highly correlated predictors have common gaps
   # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$SWout)) == T)) # no common gaps
   # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$PPFDin)) == T)) # no common gaps
   # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$airT)) == T)) # no common gaps
   # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$RH)) == T)) # common gaps
   
-  # Histogram
-  hist(df_merged$LWout[-which(is.na(df_merged$LWout))])
+  ## Histogram
+  #hist(df_merged$LWout[-which(is.na(df_merged$LWout))])
   
-  # # Distribution
+  ## Distribution
   # fit_norm <- fitdistr(df_merged$LWout[-which(is.na(df_merged$LWout))], "normal")
   # fit_lnorm <- fitdistr(df_merged$LWout[-which(is.na(df_merged$LWout))], "lognormal")
   # fit_chi <- fitdistr(df_merged$LWout[-which(is.na(df_merged$LWout))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
@@ -364,14 +367,14 @@
   
 ## Soil moisture Main ####
   summary(df_merged$Soil.moisture_main)
-  # smal gaps < 6h interpolating
+  ## smal gaps < 6h interpolating
   df_swmain_gaps <- fun_detect_gaps(df = df_merged$Soil.moisture_main, 12)
   df_merged$Soil.moisture_main <- fun_interpol(df = df_merged$Soil.moisture_main, df_gaps = df_swmain_gaps)
   
-  # Histogram
-  hist(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))])
+  ## Histogram
+  #hist(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))])
   
-  # Distribution
+  ## Distribution
   # fit_norm <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "normal")
   # fit_lnorm <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "lognormal")
   # fit_beta <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "beta", 
@@ -390,7 +393,7 @@
   # AIC(fit_chi)
   # AIC(fit_gam)
   
-  # Histogram with distributions
+  ## Histogram with distributions
   # hist(df_merged$Soil.moisture_main, freq=F, las=1, xlim = c(0,0.6))
   # curve(dweibull(x, fit_weibull$estimate[1], fit_weibull$estimate[2]),
   #       add=T, lwd=2)
@@ -403,7 +406,7 @@
   # curve(dgamma(x, fit_gam$estimate[1], fit_gam$estimate[2]), add=T,
   #       lwd=2, col="green")
   
-  # Gaussianregrssion fitting and predicting
+  ## Gaussianregrssion fitting and predicting
   glm_smm <- glm(Soil.moisture_main ~ airT + Ts6 + PPFDin + SWout + LWout + precip_30d, 
                  data = df_merged[-which(is.na(df_merged$Soil.moisture_main)),], 
                  family = gaussian)
@@ -421,14 +424,14 @@
   
 ## LWin ####
   summary(df_merged$LWin)
-  # smal gaps < 6h interpolating
+  ## smal gaps < 6h interpolating
   df_lwin_gaps <- fun_detect_gaps(df = df_merged$LWin, 12)
   df_merged$LWin <- fun_interpol(df = df_merged$LWin, df_gaps = df_lwin_gaps)
   
-  # Histogram
-  hist(df_merged$LWin[-which(is.na(df_merged$LWin))])
+  ## Histogram
+  #hist(df_merged$LWin[-which(is.na(df_merged$LWin))])
   
-  # Distribution
+  ## Distribution
   # fit_norm <- fitdistr(df_merged$LWin[-which(is.na(df_merged$LWin))], "normal")
   # fit_lnorm <- fitdistr(df_merged$LWin[-which(is.na(df_merged$LWin))], "lognormal")
   # fit_chi <- fitdistr(df_merged$LWin[-which(is.na(df_merged$LWin))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
@@ -443,7 +446,7 @@
                    family=gaussian(link="identity"))
   summary(glm_lwin)
   
-  # pseudo r2
+  ## pseudo r2
   #1 - glm_lwin$deviance / glm_lwin$null.deviance # 0.95
   preds <- predict(glm_lwin, newdata = df_merged[which(is.na(df_merged$LWin)),])
   summary(preds)
@@ -460,12 +463,18 @@
   
 ## Windspeed ####
   summary(df_merged$WindSpeed)
-  hist(df_merged$WindSpeed[-which(is.na(df_merged$WindSpeed))])
+  ## smal gaps < 6h interpolating
+  df_wind_gaps <- fun_detect_gaps(df = df_merged$WindSpeed, 12)
+  df_merged$WindSpeed <- fun_interpol(df = df_merged$WindSpeed, df_gaps = df_wind_gaps)
   
+  ## Histogram
+  #hist(df_merged$WindSpeed[-which(is.na(df_merged$WindSpeed))])
+  
+  ## GLM
   glm_ws <- glm(WindSpeed ~ airT + PPFDin + wind_speed, data = df_merged[-which(is.na(df_merged$WindSpeed)),])
   summary(glm_ws)
   
-  # pseudo r2
+  ## pseudo r2
   #1 - glm_ws$deviance / glm_ws$null.deviance # 0.11
   preds <- predict(glm_ws, newdata = df_merged[which(is.na(df_merged$WindSpeed)),])
   summary(preds)
@@ -474,23 +483,23 @@
   rm(preds, glm_ws)
   
 ## RH ####
-  # check if significant correlated predictors have common gaps
+  ## check if significant correlated predictors have common gaps
   # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$LWout)) == T)) # 3% common gaps
   # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$PPFDin)) == T)) # no common gaps
   # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$airT)) == T)) # no common gaps
   # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$Soil.moisture_main)) == T)) # common gaps
   # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$CO2)) == T)) # common gaps
   
-  # Histogram 
-  hist(df_merged$RH) # beta distribution
-  plot(RH ~ relative_humidity, df_merged)
+  ## Histogram 
+  #hist(df_merged$RH) # beta distribution
+  #plot(RH ~ relative_humidity, df_merged)
   summary(df_merged$RH)
   
-  # Values need to be in range (0,1) for beta regression
+  ## Values need to be in range (0,1) for beta regression
   df_merged$RH <- df_merged$RH/100
   df_merged$RH[which(df_merged$RH == 1)] <- 1-1e-10
   
-  # # Check distributions
+  ## Check distributions
   # fit_norm <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "normal")
   # fit_lnorm <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "lognormal")
   # fit_beta <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "beta", start = list(shape1 = 1, shape2 = 1), lower=c(0,0))
@@ -515,10 +524,10 @@
   # curve(dbeta(x, fit_beta$estimate[1], fit_beta$estimate[2]), add=T,
   #       lwd=2, col="blue")
   
-  # Betaregrssion fitting and predicting
+  ## Betaregrssion fitting and predicting
   betareg_rh <- betareg(RH ~ airT + PPFDin + relative_humidity + h_last_precip, data = df_merged[-which(is.na(df_merged$RH)),])
   summary(betareg_rh, type = "pearson")
-  # pseudo r2 0.16
+  ## pseudo r2 0.16
   
   preds <- predict(betareg_rh, newdata = df_merged[which(is.na(df_merged$RH)),])
   summary(preds)
@@ -527,15 +536,16 @@
   rm(preds, betareg_rh, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam)
   
 ## Precipitation ####
-  summary(df_merged$Precip)
-  # smal gaps < 6h interpolating
-  df_precip_gaps <- fun_detect_gaps(df = df_merged$Precip, 12)
-  df_merged$Precip <- fun_interpol(df = df_merged$Precip, df_gaps = df_precip_gaps)
+  # summary(df_merged$Precip)
+  # # smal gaps < 6h interpolating
+  # df_precip_gaps <- fun_detect_gaps(df = df_merged$Precip, 12)
+  # df_merged$Precip <- fun_interpol(df = df_merged$Precip, df_gaps = df_precip_gaps)
+  # 
+  # # Histogram
+  # hist(df_merged$Precip[-which(is.na(df_merged$Precip))])
+  # summary(df_merged$Precip[-which(is.na(df_merged$Precip))])
   
-  # Histogram
-  hist(df_merged$Precip[-which(is.na(df_merged$Precip))])
-  summary(df_merged$Precip[-which(is.na(df_merged$Precip))])
-  
+  summary(df_merged)
   #### ####
   
 #### ------------------------------------- ####
