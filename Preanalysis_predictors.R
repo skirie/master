@@ -29,7 +29,7 @@ fun_model_run_preanalysis_pred <- function(df_train, params){
     train_ <- df_train[, c(col_[i], col_[ncol(df_train)])]
 
     # compute Model for this predictor composition
-    cv_ <- fun_model_compute_full(df_train = train_, params = params, type = "full")
+    cv_ <- fun_model_compute_full(df_train = train_, params = params, type = "pred")
     mse_ <- mean(cv_[[1]], na.rm = T)
     r2_ <- mean(cv_[[2]], na.rm = T)
     all_mse[[i]] <- c(all_mse[[i]], mse_)
