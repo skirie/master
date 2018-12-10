@@ -5,8 +5,8 @@ params[["best"]]$layer <- 2
 params[["best"]]$batch_size <- 30
 params[["best"]]$units <- 40
 
-df_ts <- df_night_model[,c(2:8,34)]
-df_ms <- df_night_model[,c(9:13,34)]
+df_ts <- df_night_model[,c(2:8,32,34)]
+df_ms <- df_night_model[,c(9:13,33,34)]
 
 fun_model_run_preanalysis_pred <- function(df_train, params){
   ## params 
@@ -38,8 +38,11 @@ fun_model_run_preanalysis_pred <- function(df_train, params){
     
   df_results <- data.frame(predictors = col_[1:k], mse = unlist(all_mse, use.names=FALSE), 
                            r2 = unlist(all_r2, use.names=FALSE))
+  df_results <- df_results[order(df_results$mse),]
   
   return(df_results)
   }
 
 results_ts <- fun_model_run_preanalysis_pred(df_train = df_ts, params = params)
+results_ms <- fun_model_run_preanalysis_pred(df_train = df_ms, params = params)
+save(results_ts, results_ts, file = c(paste0(mypath, "/RData/results_preanalysis_predictors_", Sys.Date(), ".RData")))
