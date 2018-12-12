@@ -311,9 +311,9 @@ fun_target_df_train <- function(df_train){
   print(res_soil_m)
   print(res_rad)
   
-  pred_t <- res_soil_t$predictors[which(res_soil_t$mse == min(res_soil_t$mse))]
-  pred_m <- res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse))]
-  pred_rad <- res_rad$predictors[which(res_rad$mse == min(res_rad$mse))]
+  pred_t <- res_soil_t$predictors[which(res_soil_t$mse == min(res_soil_t$mse)),]
+  pred_m <- res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse)),]
+  pred_rad <- res_rad$predictors[which(res_rad$mse == min(res_rad$mse)),]
   
   pred_model <- c(pred_t, pred_m, pred_rad, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
                                               "year_ws_sin", "year_sa_sin", "day_sin", "NEE_cor"))
