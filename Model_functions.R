@@ -16,6 +16,7 @@ check.packages <- function(pkg){
 #### ----------------------- ##
 #### Check data availability ##
 #### ----------------------- ##
+
 fun_check_data <- function(){
   if (!("df_night_model" %in% ls(envir=.GlobalEnv))){
     if (file.exists(paste0(mypath, "/RData/df_model.RData")) == T){
@@ -294,32 +295,31 @@ fun_model_run_preanalysis_pred <- function(df_train, params){
 fun_target_df_train <- function(df_train){
   names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_main", "TS_mean")
   names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
-  names_rad <- c("SWin", "PPFDin")
+  # names_rad <- c("SWin", "PPFDin")
   
   names_ <- colnames(df_train)
   w_soil_t <- which(names_ %in% names_soil_t)
   w_soil_m <- which(names_ %in% names_soil_m)
-  w_rad <- which(names_ %in% names_rad)
+  # w_rad <- which(names_ %in% names_rad)
   
   params <- fun_params()
   
   res_soil_t <- fun_model_run_preanalysis_pred(df_train = df_train[,c(w_soil_t, ncol(df_train))], params = params)
   res_soil_m <- fun_model_run_preanalysis_pred(df_train = df_train[,c(w_soil_m, ncol(df_train))], params = params)
-  res_rad <- fun_model_run_preanalysis_pred(df_train = df_train[,c(w_rad, ncol(df_train))], params = params)
+  # res_rad <- fun_model_run_preanalysis_pred(df_train = df_train[,c(w_rad, ncol(df_train))], params = params)
   
   print(res_soil_t)
   print(res_soil_m)
-  print(res_rad)
+  # print(res_rad)
   
-  pred_t <- res_soil_t$predictors[which(res_soil_t$mse == min(res_soil_t$mse)),]
-  pred_m <- res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse)),]
-  pred_rad <- res_rad$predictors[which(res_rad$mse == min(res_rad$mse)),]
+  pred_t <-  as.character(res_soil_t$predictors[which(res_soil_t$mse == min(res_soil_t$mse))])
+  pred_m <-  as.character(res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse))])
+  # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
   
-  pred_model <- c(pred_t, pred_m, pred_rad, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
+  pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
                                               "year_ws_sin", "year_sa_sin", "day_sin", "NEE_cor"))
-  
   df_train_ <- df_train[, pred_model]
-  return(df_train_, res_soil_t, res_soil_m, res_rad)
+  return(list(df_train_, res_soil_t, res_soil_m, res_rad))
 }
 
 #### ----------------------- ##
