@@ -12,16 +12,16 @@
   mypath <- getwd()
   
   ## Flux Data ####
-  df.raw.o <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver2.csv"))
-  df.raw <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver3.csv"))
+  df_raw_o <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver2.csv"))
+  df_raw <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver3.csv"))
   
-  df.raw.2 <- cbind(df.raw, "ustar" = df.raw.o$ustar, "NEE_measure" = df.raw.o$NEE_measure)
+  df_raw_2 <- cbind(df_raw, "ustar" = df_raw_o$ustar, "NEE_measure" = df_raw_o$NEE_measure)
   
   ## Weather data from Comox airport ####
-  df.comox <- read.csv(paste0(mypath, "/Daten/weatherstats_comox_hourly.csv"))
+  df_comox <- read.csv(paste0(mypath, "/Daten/weatherstats_comox_hourly.csv"))
   
   ## Sun rise / set ####
-  df.hel <- read.csv(paste0(mypath, "/Daten/sunsetrise.csv"),
+  df_hel <- read.csv(paste0(mypath, "/Daten/sunsetrise.csv"),
                      header=T, sep=";")
   ####  ####
   
@@ -30,16 +30,16 @@
 #### ------------------------------------- ####
   
   ## Time format ####
-  df.comox$dt <- as.POSIXct(substr(as.character(df.comox$date_time_local), 1, 16), format = "%Y-%m-%e %H:%M", tz = "America/Vancouver")
+  df_comox$dt <- as.POSIXct(substr(as.character(df_comox$date_time_local), 1, 16), format = "%Y-%m-%e %H:%M", tz = "America/Vancouver")
   
-  df.comox <- df.comox[which(df.comox$dt > df.comox$dt[which(df.comox$dt == "2002-1-1 00:00:00")]),]             
-  df.comox <- df.comox[which(df.comox$dt < df.comox$dt[which(df.comox$dt == "2017-1-1 02:00:00")]),]
+  df_comox <- df_comox[which(df_comox$dt > df_comox$dt[which(df_comox$dt == "2002-1-1 00:00:00")]),]             
+  df_comox <- df_comox[which(df_comox$dt < df_comox$dt[which(df_comox$dt == "2017-1-1 02:00:00")]),]
   
-  df.raw.2$dt <- paste0(df.raw.2$year, "-", df.raw.2$month, "-", 
-                        df.raw.2$day, " ", df.raw.2$hour, ":", 
-                        df.raw.2$min)
-  df.raw.2$dt <- as.POSIXct(df.raw.2$dt, format = "%Y-%m-%d %H:%M", "GMT")
-  attr(df.raw.2$dt, "tzone") <- "America/Vancouver"
+  df_raw_2$dt <- paste0(df_raw_2$year, "-", df_raw_2$month, "-", 
+                        df_raw_2$day, " ", df_raw_2$hour, ":", 
+                        df_raw_2$min)
+  df_raw_2$dt <- as.POSIXct(df_raw_2$dt, format = "%Y-%m-%d %H:%M", "GMT")
+  attr(df_raw_2$dt, "tzone") <- "America/Vancouver"
 
   ####  ####
   
@@ -48,26 +48,26 @@
 #### ------------------------------------- ####  
   
   ## NaN to NA ####
-  df.raw.2[df.raw.2 == "NaN"] <- NA
+  df_raw_2[df_raw_2 == "NaN"] <- NA
 
-  ## expand df.comox to halfhour intervall ####
-  dt <- paste0(substr(as.character(df.comox$date_time_local), 1, 14), "30:00")
+  ## expand df_comox to halfhour intervall ####
+  dt <- paste0(substr(as.character(df_comox$date_time_local), 1, 14), "30:00")
   dt <- as.POSIXct(dt, format="%Y-%m-%e %H:%M", "America/Vancouver")
-  df. <- df.comox
-  df.[, ] <- NA
-  df.$dt <- dt
+  df_ <- df_comox
+  df_[, ] <- NA
+  df_$dt <- dt
   
-  df.comox.2 <- rbind(df.comox, df.)
-  df.comox.2 <- df.comox.2[order(df.comox.2$dt), ]
+  df_comox_2 <- rbind(df_comox, df_)
+  df_comox_2 <- df_comox_2[order(df_comox_2$dt), ]
   
-  rm(dt, df., df.raw.o, df.raw, df.comox.2)
+  rm(dt, df_, df_raw_o, df_raw, df_comox_2)
   
   ## Check for Colinearity ####
-  # summary(df.raw.2)
-  # summary(df.comox.2)
-  # M <- cor(df.raw.2[,7:30], use = "complete.obs")
+  # summary(df_raw_2)
+  # summary(df_comox_2)
+  # M <- cor(df_raw_2[,7:30], use = "complete.obs")
   # corrplot.mixed(M)
-  # df.raw <- df.raw[,-c(7:11,14:17)]
+  # df_raw <- df_raw[,-c(7:11,14:17)]
 
   ####  ####
   
@@ -76,77 +76,77 @@
 #### ------------------------------------- ####  
   
   ## Hours since last precipitation event ####
-  # summary(df.raw.2$Precip)
+  # summary(df_raw_2$Precip)
   
-  df.raw.2$h_last_precip <- NA
-  df.raw.2$h_last_precip[which(df.raw.2$Precip >= 0.1)] <- 0
+  df_raw_2$h_last_precip <- NA
+  df_raw_2$h_last_precip[which(df_raw_2$Precip >= 0.1)] <- 0
   
-  w.1 <- w.2 <- which(df.raw.2$Precip > 0)
-  w.2[2:length(w.2)] <- w.2[1:(length(w.2) - 1)]
+  w_1 <- w_2 <- which(df_raw_2$Precip > 0)
+  w_2[2:length(w_2)] <- w_2[1:(length(w_2) - 1)]
   
-  h.lastprec <- w.1 - w.2 - 1
-  h.lastprec <- h.lastprec[-1]
+  h_lastprec <- w_1 - w_2 - 1
+  h_lastprec <- h_lastprec[-1]
   
-  h.lastprec.2 <- h.lastprec[which(h.lastprec > 0)]
-  w.1.1 <- w.1[which(h.lastprec > 0)]
+  h_lastprec_2 <- h_lastprec[which(h_lastprec > 0)]
+  w_1.1 <- w_1[which(h_lastprec > 0)]
   
-  for (i in 1:length(h.lastprec.2)){
-    df.raw.2$h_last_precip[(w.1.1[i] + 1):(w.1.1[i] + h.lastprec.2[i])] <- seq(0.5, h.lastprec.2[i] /2 , 0.5)
+  for (i in 1:length(h_lastprec_2)){
+    df_raw_2$h_last_precip[(w_1.1[i] + 1):(w_1.1[i] + h_lastprec_2[i])] <- seq(0.5, h_lastprec_2[i] /2 , 0.5)
   }
   
-  rm(w.1, w.2, h.lastprec, h.lastprec.2, w.1.1)
-  # summary(df.raw.2$h_last_precip)
+  rm(w_1, w_2, h_lastprec, h_lastprec_2, w_1.1)
+  # summary(df_raw_2$h_last_precip)
   
   ## Precipitation of last 30 days ####
-  df.raw.2$precip_30d <- NA
+  df_raw_2$precip_30d <- NA
   
-  for (i in 30:nrow(df.raw.2)){
-    df.raw.2$precip_30d[i] <- sum(df.raw.2$Precip[(i - 29):i], na.rm = T)  
+  for (i in 30:nrow(df_raw_2)){
+    df_raw_2$precip_30d[i] <- sum(df_raw_2$Precip[(i - 29):i], na.rm = T)  
   }
   
-  which(df.raw.2$Precip[1:30] > 0)
-  df.raw.2$precip_30d[1:10] <- 0
-  df.raw.2$precip_30d[11:12] <- df.raw.2$precip_30d[10]
-  df.raw.2$precip_30d[13:29] <- sum(df.raw.2$precip_30d[1:12], na.rum = T)
+  which(df_raw_2$Precip[1:30] > 0)
+  df_raw_2$precip_30d[1:10] <- 0
+  df_raw_2$precip_30d[11:12] <- df_raw_2$precip_30d[10]
+  df_raw_2$precip_30d[13:29] <- sum(df_raw_2$precip_30d[1:12], na.rum = T)
   
-  # summary(df.raw.2$precip_30d)
+  # summary(df_raw_2$precip_30d)
   
   ## Sinus curves year and day ####
   ## year with peak in winter / summer and spring / autum
-  years. <- unique(df.raw.2$year)
-  df.raw.2$year_ws_sin <- NA
-  df.raw.2$year_sa_sin <- NA
+  years_ <- unique(df_raw_2$year)
+  df_raw_2$year_ws_sin <- NA
+  df_raw_2$year_sa_sin <- NA
   
   for (i in 1:length(years_)){
-    which. <- which(df.raw.2$year == years.[i])
+    which_ <- which(df_raw_2$year == years_[i])
     
-    df.raw.2$year_ws_sin[which.] <- sin(seq((1.5 + (10.5 / 365 * 2)) * pi, (3.5 + (10.5 / 365 * 2)) * pi, 
-                                            length.out = length(which.)))
-    df.raw.2$year_sa_sin[which.] <- sin(seq((10.5 / 365 * 2) * pi, (2 + (10.5 / 365 * 2)) * pi,
-                                            length.out = length(which.)))
+    df_raw_2$year_ws_sin[which_] <- sin(seq((1.5 + (10.5 / 365 * 2)) * pi, (3.5 + (10.5 / 365 * 2)) * pi, 
+                                            length.out = length(which_)))
+    df_raw_2$year_sa_sin[which_] <- sin(seq((10.5 / 365 * 2) * pi, (2 + (10.5 / 365 * 2)) * pi,
+                                            length.out = length(which_)))
   }
   
-  # summary(df.raw.2$year_ws_sin)
-  # summary(df.raw.2$year_sa_sin)
+  # summary(df_raw_2$year_ws_sin)
+  # summary(df_raw_2$year_sa_sin)
 
-  # plot(df.raw.2$year_sa_sin)
-  # plot(df.raw.2$year_ws_sin)
+  # plot(df_raw_2$year_sa_sin)
+  # plot(df_raw_2$year_ws_sin)
   
   ## day 
-  df.raw.2$day_sin <- NA
-  df.raw.2$hours_mins_ <- as.numeric(paste0(df.raw.2$hour, ".", df.raw.2$min))
-  hours.mins <- unique(df.raw.2$hours_mins)
-  sin.seq <- sin(seq(1.5 * pi, 3.5 * pi,  length.out = length(hours.mins)))
+  df_raw_2$day_sin <- NA
+  df_raw_2$hours_mins_ <- as.numeric(paste0(df_raw_2$hour, ".", df_raw_2$min))
+  hours_mins_ <- unique(df_raw_2$hours_mins_)
+  sin_seq <- sin(seq(1.5 * pi, 3.5 * pi,  length.out = length(hours_mins_)))
   
-  for (i in 1:length(hours.mins)){
-    which. <- which(df.raw.2$hours_mins_ == hours.mins[i])
-    df.raw.2$day_sin[which_] <- sin.seq[i]
+  for (i in 1:length(hours_mins_)){
+    which_ <- which(df_raw_2$hours_mins_ == hours_mins_[i])
+    df_raw_2$day_sin[which_] <- sin_seq[i]
   }
   
-  #summary(df.raw.2$day_sin)
-  df.raw.2 <- df.raw.2[, -which(names(df.raw.2) == "hours_mins_")]
+  #summary(df_raw_2$day_sin)
+  df_raw_2 <- df_raw_2[, -which(names(df_raw_2) == "hours_mins_")]
   
-  rm(hours.mins, i, sin.seq, which., years.)
+  rm(hours_mins_, i, sin_seq, which_, years_)
 
   ## Fractional year ####
   ####  ####
@@ -155,28 +155,28 @@
   ## 4 - Plausibilitytests ####
 #### ------------------------------------- #### 
   
-  df.raw.3 <- df.raw.2
+  df_raw_3 <- df_raw_2
   ## Tair -20 - 40 ####
-  df.raw.3$airT[which(df.raw.3$airT > 40 | df.raw.3$airT < -20)] <- NA
-  # summary(df.raw.3$airT)
+  df_raw_3$airT[which(df_raw_3$airT > 40 | df_raw_3$airT < -20)] <- NA
+  # summary(df_raw_3$airT)
   
   ## Relative Humidity 0 - 100 (105) ####
-  # summary(df.raw.3$RH)
-  df.raw.3$RH[which(df.raw.3$RH > 105 | df.raw.3$RH <= 0)] <- NA
-  df.raw.3$RH[which(df.raw.3$RH > 100 & df.raw.3$RH <= 105)] <- 100
-  # summary(df.raw.3$RH)
+  # summary(df_raw_3$RH)
+  df_raw_3$RH[which(df_raw_3$RH > 105 | df_raw_3$RH <= 0)] <- NA
+  df_raw_3$RH[which(df_raw_3$RH > 100 & df_raw_3$RH <= 105)] <- 100
+  # summary(df_raw_3$RH)
   
   ## PPFDin 0 - 2730 ####
-  df.raw.3$PPFDin[which(df.raw.3$PPFDin < 0)] <- 0
-  df.raw.3$PPFDin[which(df.raw.3$PPFDin > 2730)] <- NA
-  # summary(df.raw.3$PPFDin)
+  df_raw_3$PPFDin[which(df_raw_3$PPFDin < 0)] <- 0
+  df_raw_3$PPFDin[which(df_raw_3$PPFDin > 2730)] <- NA
+  # summary(df_raw_3$PPFDin)
   
   ## SWout ####
-  df.raw.3$SWout[which(df.raw.3$SWout <= 0)] <- NA
-  # summary(df.raw.3$SWout)
+  df_raw_3$SWout[which(df_raw_3$SWout <= 0)] <- NA
+  # summary(df_raw_3$SWout)
   
   ## Windspeed ####
-  df.raw.3$WindSpeed[which(df.raw.3$WindSpeed < 0)] <- NA
+  df_raw_3$WindSpeed[which(df_raw_3$WindSpeed < 0)] <- NA
   ####  ####
   
 #### ------------------------------------- ####
@@ -221,61 +221,61 @@
   }
   
   ## fill gaps of comox dataset -> half hourly data ####
-  df_temp_gaps <- DetectGaps(df = df.comox.2$temperature, 12)
-  df.comox.2$temperature <- InterpolFun(df = df.comox.2$temperature, df_gaps = df_temp_gaps)
+  df_temp_gaps <- DetectGaps(df = df_comox_2$temperature, 12)
+  df_comox_2$temperature <- InterpolFun(df = df_comox_2$temperature, df_gaps = df_temp_gaps)
   
-  df_rh_gaps <- DetectGaps(df = df.comox.2$relative_humidity, 12)
-  df.comox.2$relative_humidity <- InterpolFun(df = df.comox.2$relative_humidity, df_gaps = df_rh_gaps)
+  df_rh_gaps <- DetectGaps(df = df_comox_2$relative_humidity, 12)
+  df_comox_2$relative_humidity <- InterpolFun(df = df_comox_2$relative_humidity, df_gaps = df_rh_gaps)
   
-  df_ws_gaps <- DetectGaps(df = df.comox.2$wind_speed, 12)
-  df.comox.2$wind_speed <- InterpolFun(df = df.comox.2$wind_speed, df_gaps = df_ws_gaps)
+  df_ws_gaps <- DetectGaps(df = df_comox_2$wind_speed, 12)
+  df_comox_2$wind_speed <- InterpolFun(df = df_comox_2$wind_speed, df_gaps = df_ws_gaps)
   
   rm(df_temp_gaps, df_rh_gaps, df_ws_gaps)
   
   ## create dataset with all data ####
-  df.merged <- merge(df.raw.3, df.comox.2[, c("dt", "temperature", "relative_humidity", "wind_speed")], by = "dt")
+  df_merged <- merge(df_raw_3, df_comox_2[, c("dt", "temperature", "relative_humidity", "wind_speed")], by = "dt")
   
 ## Tair ####
   ## gaps smaller 6 hours -> interpolating
-  # summary(df.merged$airT)
-  df_airt_gaps <- DetectGaps(df = df.merged$airT, 12)
-  df.merged$airT <- InterpolFun(df = df.merged$airT, df_gaps = df_airt_gaps)
+  # summary(df_merged$airT)
+  df_airt_gaps <- DetectGaps(df = df_merged$airT, 12)
+  df_merged$airT <- InterpolFun(df = df_merged$airT, df_gaps = df_airt_gaps)
   
   ## GLM
-  # hist(df.merged$airT)
-  # plot(df.merged$airT ~ df.merged$temperature)
-  glm_air <- glm(airT ~ TS_main + PPFDin + Rnet + temperature, data = df.merged)
+  # hist(df_merged$airT)
+  # plot(df_merged$airT ~ df_merged$temperature)
+  glm_air <- glm(airT ~ TS_main + PPFDin + Rnet + temperature, data = df_merged)
   # summary(glm_air)
   
   ## pseudo r2
   # 1 - glm_air$deviance / glm_air$null.deviance # 0.95
-  preds <- predict(glm_air, newdata = df.merged[which(is.na(df.merged$airT)), ])
+  preds <- predict(glm_air, newdata = df_merged[which(is.na(df_merged$airT)), ])
   # summary(preds)
-  df.merged[which(is.na(df.merged$airT)), "airT"] <- unname(preds)
+  df_merged[which(is.na(df_merged$airT)), "airT"] <- unname(preds)
   
   rm(preds, glm_air, df_airt_gaps)
   
 ## SWout ####
-  # summary(df.merged$SWout)
+  # summary(df_merged$SWout)
   ## smal gaps < 6h interpolating
-  df_swout_gaps <- DetectGaps(df = df.merged$SWout, 12)
-  df.merged$SWout <- InterpolFun(df = df.merged$SWout, df_gaps = df_swout_gaps)
+  df_swout_gaps <- DetectGaps(df = df_merged$SWout, 12)
+  df_merged$SWout <- InterpolFun(df = df_merged$SWout, df_gaps = df_swout_gaps)
   
   ## check if highly correlated predictors have common gaps
-  # length(which(which(is.na(df.merged$SWout)) %in% which(is.na(df.merged$LWout)) == T)) # common gaps
-  # length(which(which(is.na(df.merged$SWout)) %in% which(is.na(df.merged$PPFDin)) == T)) # no common gaps
-  # length(which(which(is.na(df.merged$SWout)) %in% which(is.na(df.merged$airT)) == T)) # no common gaps
-  # length(which(which(is.na(df.merged$SWout)) %in% which(is.na(df.merged$RH)) == T)) # common gaps
-  # length(which(which(is.na(df.merged$SWout)) %in% which(is.na(df.merged$CO2)) == T)) # common gaps
+  # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$LWout)) == T)) # common gaps
+  # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$PPFDin)) == T)) # no common gaps
+  # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$airT)) == T)) # no common gaps
+  # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$RH)) == T)) # common gaps
+  # length(which(which(is.na(df_merged$SWout)) %in% which(is.na(df_merged$CO2)) == T)) # common gaps
   
   ## Histogram
-  # hist(df.merged$SWout[-which(is.na(df.merged$SWout))])
+  # hist(df_merged$SWout[-which(is.na(df_merged$SWout))])
   
   ## Distribution
-  # fit_norm <- fitdistr(df.merged$SWout[-which(is.na(df.merged$SWout))], "normal")
-  # fit_lnorm <- fitdistr(df.merged$SWout[-which(is.na(df.merged$SWout))], "lognormal")
-  # fit_chi <- fitdistr(df.merged$SWout[-which(is.na(df.merged$SWout))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
-  # fit_gam <- fitdistr(df.merged$SWout[-which(is.na(df.merged$SWout))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0.1))
+  # fit_norm <- fitdistr(df_merged$SWout[-which(is.na(df_merged$SWout))], "normal")
+  # fit_lnorm <- fitdistr(df_merged$SWout[-which(is.na(df_merged$SWout))], "lognormal")
+  # fit_chi <- fitdistr(df_merged$SWout[-which(is.na(df_merged$SWout))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
+  # fit_gam <- fitdistr(df_merged$SWout[-which(is.na(df_merged$SWout))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0.1))
   # 
   # AIC(fit_norm)
   # AIC(fit_lnorm) # best distribution
@@ -283,44 +283,44 @@
   # AIC(fit_gam)
   
   ## GLM
-  glm_swout <- glm(log(SWout) ~ PPFDin + airT + day_sin + Rnet, data = df.merged[-which(is.na(df.merged$SWout)), ], 
+  glm_swout <- glm(log(SWout) ~ PPFDin + airT + day_sin + Rnet, data = df_merged[-which(is.na(df_merged$SWout)), ], 
                    family = gaussian(link = "identity"))
   # summary(glm_swout)
 
   ## pseudo r2
   # 1 - glm_swout$deviance / glm_swout$null.deviance # 0.26
-  preds <- exp(predict(glm_swout, newdata = df.merged[which(is.na(df.merged$SWout)), ]))
+  preds <- exp(predict(glm_swout, newdata = df_merged[which(is.na(df_merged$SWout)), ]))
   # summary(preds)
-  df.merged[which(is.na(df.merged$SWout)), "SWout"] <- unname(preds)
+  df_merged[which(is.na(df_merged$SWout)), "SWout"] <- unname(preds)
   
-  df.merged$SWout[which(df.merged$SWout > 800)] <- NA
-  df_swout_gaps <- DetectGaps(df = df.merged$SWout, 12)
-  df.merged$SWout <- InterpolFun(df = df.merged$SWout, df_gaps = df_swout_gaps)
-  # summary(df.merged$SWout)
+  df_merged$SWout[which(df_merged$SWout > 800)] <- NA
+  df_swout_gaps <- DetectGaps(df = df_merged$SWout, 12)
+  df_merged$SWout <- InterpolFun(df = df_merged$SWout, df_gaps = df_swout_gaps)
+  # summary(df_merged$SWout)
   
   rm(preds, glm_swout, df_swout_gaps)
   # rm(preds, glm_swout, fit_norm, fit_lnorm, fit_chi, fit_gam, df_swout_gaps)
   
 ## LWout ####
-  # summary(df.merged$LWout)
+  # summary(df_merged$LWout)
   ## smal gaps < 6h interpolating
-  df_lwout_gaps <- DetectGaps(df = df.merged$LWout, 12)
-  df.merged$LWout <- InterpolFun(df = df.merged$LWout, df_gaps = df_lwout_gaps)
+  df_lwout_gaps <- DetectGaps(df = df_merged$LWout, 12)
+  df_merged$LWout <- InterpolFun(df = df_merged$LWout, df_gaps = df_lwout_gaps)
   
   ## check if highly correlated predictors have common gaps
-  # length(which(which(is.na(df.merged$LWout)) %in% which(is.na(df.merged$SWout)) == T)) # no common gaps
-  # length(which(which(is.na(df.merged$LWout)) %in% which(is.na(df.merged$PPFDin)) == T)) # no common gaps
-  # length(which(which(is.na(df.merged$LWout)) %in% which(is.na(df.merged$airT)) == T)) # no common gaps
-  # length(which(which(is.na(df.merged$LWout)) %in% which(is.na(df.merged$RH)) == T)) # common gaps
+  # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$SWout)) == T)) # no common gaps
+  # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$PPFDin)) == T)) # no common gaps
+  # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$airT)) == T)) # no common gaps
+  # length(which(which(is.na(df_merged$LWout)) %in% which(is.na(df_merged$RH)) == T)) # common gaps
   
   ## Histogram
-  # hist(df.merged$LWout[-which(is.na(df.merged$LWout))])
+  # hist(df_merged$LWout[-which(is.na(df_merged$LWout))])
   
   ## Distribution
-  # fit_norm <- fitdistr(df.merged$LWout[-which(is.na(df.merged$LWout))], "normal")
-  # fit_lnorm <- fitdistr(df.merged$LWout[-which(is.na(df.merged$LWout))], "lognormal")
-  # fit_chi <- fitdistr(df.merged$LWout[-which(is.na(df.merged$LWout))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
-  # fit_gam <- fitdistr(df.merged$LWout[-which(is.na(df.merged$LWout))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0.1))
+  # fit_norm <- fitdistr(df_merged$LWout[-which(is.na(df_merged$LWout))], "normal")
+  # fit_lnorm <- fitdistr(df_merged$LWout[-which(is.na(df_merged$LWout))], "lognormal")
+  # fit_chi <- fitdistr(df_merged$LWout[-which(is.na(df_merged$LWout))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
+  # fit_gam <- fitdistr(df_merged$LWout[-which(is.na(df_merged$LWout))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0.1))
   # 
   # AIC(fit_norm)
   # AIC(fit_lnorm) # best distribution
@@ -328,38 +328,38 @@
   # AIC(fit_gam)
   
   glm_lwout <- glm(log(LWout) ~ PPFDin + airT + SWout + year_ws_sin + year_sa_sin + day_sin + Rnet, 
-                   data = df.merged[-which(is.na(df.merged$LWout)), ], 
+                   data = df_merged[-which(is.na(df_merged$LWout)), ], 
                    family = gaussian(link = "identity"))
   # summary(glm_lwout)
   
   ## pseudo r2
   # 1 - glm_lwout$deviance / glm_lwout$null.deviance # 0.98
-  preds <- exp(predict(glm_lwout, newdata = df.merged[which(is.na(df.merged$LWout)), ]))
+  preds <- exp(predict(glm_lwout, newdata = df_merged[which(is.na(df_merged$LWout)), ]))
   # summary(preds)
-  df.merged[which(is.na(df.merged$LWout)), "LWout"] <- unname(preds)
+  df_merged[which(is.na(df_merged$LWout)), "LWout"] <- unname(preds)
   
   rm(preds, glm_lwout, df_lwout_gaps)
   # rm(preds, glm_lwout, fit_norm, fit_lnorm, fit_chi, fit_gam, df_lwout_gaps)
   
 ## Soil moisture Main ####
-  summary(df.merged$Soil.moisture_main)
+  summary(df_merged$Soil.moisture_main)
   ## smal gaps < 6h interpolating
-  df_swmain_gaps <- DetectGaps(df = df.merged$Soil.moisture_main, 12)
-  df.merged$Soil.moisture_main <- InterpolFun(df = df.merged$Soil.moisture_main, df_gaps = df_swmain_gaps)
+  df_swmain_gaps <- DetectGaps(df = df_merged$Soil.moisture_main, 12)
+  df_merged$Soil.moisture_main <- InterpolFun(df = df_merged$Soil.moisture_main, df_gaps = df_swmain_gaps)
   
   ## Histogram
-  # hist(df.merged$Soil.moisture_main[-which(is.na(df.merged$Soil.moisture_main))])
+  # hist(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))])
   
   ## Distribution
-  # fit_norm <- fitdistr(df.merged$Soil.moisture_main[-which(is.na(df.merged$Soil.moisture_main))], "normal")
-  # fit_lnorm <- fitdistr(df.merged$Soil.moisture_main[-which(is.na(df.merged$Soil.moisture_main))], "lognormal")
-  # fit_beta <- fitdistr(df.merged$Soil.moisture_main[-which(is.na(df.merged$Soil.moisture_main))], "beta", 
+  # fit_norm <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "normal")
+  # fit_lnorm <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "lognormal")
+  # fit_beta <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "beta", 
   #                      start = list(shape1 = 1, shape2 = 1), lower=c(0.1))
-  # fit_weibull <- fitdistr(df.merged$Soil.moisture_main[-which(is.na(df.merged$Soil.moisture_main))], "weibull", 
+  # fit_weibull <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "weibull", 
   #                         start = list(scale = 1, shape = 0.1), lower=c(0.1))
-  # fit_chi <- fitdistr(df.merged$Soil.moisture_main[-which(is.na(df.merged$Soil.moisture_main))], "chi-squared", 
+  # fit_chi <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "chi-squared", 
   #                     start=list(df=3), method="Brent", lower=0.1, upper=100)
-  # fit_gam <- fitdistr(df.merged$Soil.moisture_main[-which(is.na(df.merged$Soil.moisture_main))], "gamma", 
+  # fit_gam <- fitdistr(df_merged$Soil.moisture_main[-which(is.na(df_merged$Soil.moisture_main))], "gamma", 
   #                     start = list(shape = 1, rate = 0.1), lower=c(0,0))
   # 
   # AIC(fit_norm)
@@ -370,7 +370,7 @@
   # AIC(fit_gam)
   
   ## Histogram with distributions
-  # hist(df.merged$Soil.moisture_main, freq=F, las=1, xlim = c(0,0.6))
+  # hist(df_merged$Soil.moisture_main, freq=F, las=1, xlim = c(0,0.6))
   # curve(dweibull(x, fit_weibull$estimate[1], fit_weibull$estimate[2]),
   #       add=T, lwd=2)
   # curve(dlnorm(x, fit_lnorm$estimate[1], fit_lnorm$estimate[2]), add=T,
@@ -384,124 +384,124 @@
   
   ## Gaussianregrssion fitting and predicting
   glm_smm <- glm(Soil.moisture_main ~ airT + Ts6 + PPFDin + SWout + LWout + precip_30d, 
-                 data = df.merged[-which(is.na(df.merged$Soil.moisture_main)), ], 
+                 data = df_merged[-which(is.na(df_merged$Soil.moisture_main)), ], 
                  family = gaussian)
   # summary(glm_smm)
   # 1 - glm_smm$deviance / glm_smm$null.deviance # 0.77
   
-  preds <- predict(glm_smm, newdata = df.merged[which(is.na(df.merged$Soil.moisture_main)), ])
+  preds <- predict(glm_smm, newdata = df_merged[which(is.na(df_merged$Soil.moisture_main)), ])
   summary(preds)
-  preds[which(preds < 0)] <- min(df.merged$Soil.moisture_main, na.rm = T)
-  df.merged[which(is.na(df.merged$Soil.moisture_main)), "Soil.moisture_main"] <- unname(preds)
+  preds[which(preds < 0)] <- min(df_merged$Soil.moisture_main, na.rm = T)
+  df_merged[which(is.na(df_merged$Soil.moisture_main)), "Soil.moisture_main"] <- unname(preds)
   
-  # summary(df.merged$Soil.moisture_main)
+  # summary(df_merged$Soil.moisture_main)
   
   rm(preds, glm_smm, df_swmain_gaps)
   # rm(preds, glm_smm, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam, df_swmain_gaps)
 
 ## Soil moisture 1 ####
-  # summary(df.merged$Soil.moisture1)
+  # summary(df_merged$Soil.moisture1)
   
   ## smal gaps < 6h interpolating
-  df_sm1_gaps <- DetectGaps(df = df.merged$Soil.moisture1, 12)
+  df_sm1_gaps <- DetectGaps(df = df_merged$Soil.moisture1, 12)
   
   ## Gaussianregrssion fitting and predicting
   glm_sm1 <- glm(Soil.moisture1 ~ airT + Ts6 + PPFDin + SWout + LWout + precip_30d + Soil.moisture_main, 
-                 data = df.merged[-which(is.na(df.merged$Soil.moisture1)), ], 
+                 data = df_merged[-which(is.na(df_merged$Soil.moisture1)), ], 
                  family = gaussian)
   # summary(glm_sm1)
   ## pseudo r2
   # 1 - glm_sm1$deviance / glm_sm1$null.deviance # 0.91
   
-  preds <- predict(glm_sm1, newdata = df.merged[which(is.na(df.merged$Soil.moisture1)), ])
+  preds <- predict(glm_sm1, newdata = df_merged[which(is.na(df_merged$Soil.moisture1)), ])
   # summary(preds)
-  df.merged$Soil.moisture1[which(is.na(df.merged$Soil.moisture1))] <- unname(preds)
+  df_merged$Soil.moisture1[which(is.na(df_merged$Soil.moisture1))] <- unname(preds)
   
-  # summary(df.merged$Soil.moisture1)
+  # summary(df_merged$Soil.moisture1)
   
   rm(preds, glm_sm1, df_sm1_gaps)
   
 ## Soil moisture 2 ####
-  # summary(df.merged$Soil.moisture2)
+  # summary(df_merged$Soil.moisture2)
   
   ## smal gaps < 6h interpolating
-  df_sm2_gaps <- DetectGaps(df = df.merged$Soil.moisture2, 12)
+  df_sm2_gaps <- DetectGaps(df = df_merged$Soil.moisture2, 12)
   
   ## Gaussianregrssion fitting and predicting
   glm_sm2 <- glm(Soil.moisture2 ~ airT + Ts6 + PPFDin + SWout + LWout + precip_30d + Soil.moisture_main, 
-                 data = df.merged[-which(is.na(df.merged$Soil.moisture2)), ], 
+                 data = df_merged[-which(is.na(df_merged$Soil.moisture2)), ], 
                  family = gaussian)
   # summary(glm_sm2)
   
   ## Pseudo r2
   # 1 - glm_sm2$deviance / glm_sm2$null.deviance # 0.97
   
-  preds <- predict(glm_sm2, newdata = df.merged[which(is.na(df.merged$Soil.moisture2)), ])
+  preds <- predict(glm_sm2, newdata = df_merged[which(is.na(df_merged$Soil.moisture2)), ])
   # summary(preds)
-  df.merged$Soil.moisture2[which(is.na(df.merged$Soil.moisture2))] <- unname(preds)
+  df_merged$Soil.moisture2[which(is.na(df_merged$Soil.moisture2))] <- unname(preds)
   
-  # summary(df.merged$Soil.moisture2)
+  # summary(df_merged$Soil.moisture2)
   
   rm(preds, glm_sm2, df_sm2_gaps)
 
 ## Soil moisture 3 ####
-  # summary(df.merged$Soil.moisture3)
+  # summary(df_merged$Soil.moisture3)
   
   ## smal gaps < 6h interpolating
-  df_sm3_gaps <- DetectGaps(df = df.merged$Soil.moisture3, 12)
+  df_sm3_gaps <- DetectGaps(df = df_merged$Soil.moisture3, 12)
   
   ## Gaussianregrssion fitting and predicting
   glm_sm3 <- glm(Soil.moisture3 ~ airT + Ts6 + PPFDin + SWout + LWout + precip_30d + Soil.moisture_main, 
-                 data = df.merged[-which(is.na(df.merged$Soil.moisture3)), ], 
+                 data = df_merged[-which(is.na(df_merged$Soil.moisture3)), ], 
                  family = gaussian)
   # summary(glm_sm3)
   ## Pseudo r2
   # 1 - glm_sm3$deviance / glm_sm3$null.deviance # 0.99
   
-  preds <- predict(glm_sm3, newdata = df.merged[which(is.na(df.merged$Soil.moisture3)), ])
+  preds <- predict(glm_sm3, newdata = df_merged[which(is.na(df_merged$Soil.moisture3)), ])
   # summary(preds)
-  df.merged$Soil.moisture3[which(is.na(df.merged$Soil.moisture3))] <- unname(preds)
+  df_merged$Soil.moisture3[which(is.na(df_merged$Soil.moisture3))] <- unname(preds)
   
-  # summary(df.merged$Soil.moisture3)
+  # summary(df_merged$Soil.moisture3)
   
   rm(preds, glm_sm3, df_sm3_gaps)
   
 ## Soil moisture 4 ####
-  # summary(df.merged$Soil.moisture4)
+  # summary(df_merged$Soil.moisture4)
   
   ## smal gaps < 6h interpolating
-  df_sm4_gaps <- DetectGaps(df = df.merged$Soil.moisture4, 12)
+  df_sm4_gaps <- DetectGaps(df = df_merged$Soil.moisture4, 12)
   
   ## Gaussianregrssion fitting and predicting
   glm_sm4 <- glm(Soil.moisture4 ~ airT + Ts6 + PPFDin + SWout + LWout + precip_30d + Soil.moisture_main, 
-                 data = df.merged[-which(is.na(df.merged$Soil.moisture4)), ], 
+                 data = df_merged[-which(is.na(df_merged$Soil.moisture4)), ], 
                  family = gaussian)
   # summary(glm_sm4)
   ## Pseudo r2
   # 1 - glm_sm4$deviance / glm_sm4$null.deviance # 0.92
   
-  preds <- predict(glm_sm4, newdata = df.merged[which(is.na(df.merged$Soil.moisture4)), ])
+  preds <- predict(glm_sm4, newdata = df_merged[which(is.na(df_merged$Soil.moisture4)), ])
   # summary(preds)
-  df.merged$Soil.moisture4[which(is.na(df.merged$Soil.moisture4))] <- unname(preds)
+  df_merged$Soil.moisture4[which(is.na(df_merged$Soil.moisture4))] <- unname(preds)
   
-  # summary(df.merged$Soil.moisture4)
+  # summary(df_merged$Soil.moisture4)
   
   rm(preds, glm_sm4, df_sm4_gaps)
   
 ## LWin ####
-  # summary(df.merged$LWin)
+  # summary(df_merged$LWin)
   ## smal gaps < 6h interpolating
-  df_lwin_gaps <- DetectGaps(df = df.merged$LWin, 12)
-  df.merged$LWin <- InterpolFun(df = df.merged$LWin, df_gaps = df_lwin_gaps)
+  df_lwin_gaps <- DetectGaps(df = df_merged$LWin, 12)
+  df_merged$LWin <- InterpolFun(df = df_merged$LWin, df_gaps = df_lwin_gaps)
   
   ## Histogram
-  #hist(df.merged$LWin[-which(is.na(df.merged$LWin))])
+  #hist(df_merged$LWin[-which(is.na(df_merged$LWin))])
   
   ## Distribution
-  # fit_norm <- fitdistr(df.merged$LWin[-which(is.na(df.merged$LWin))], "normal")
-  # fit_lnorm <- fitdistr(df.merged$LWin[-which(is.na(df.merged$LWin))], "lognormal")
-  # fit_chi <- fitdistr(df.merged$LWin[-which(is.na(df.merged$LWin))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
-  # fit_gam <- fitdistr(df.merged$LWin[-which(is.na(df.merged$LWin))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0.1))
+  # fit_norm <- fitdistr(df_merged$LWin[-which(is.na(df_merged$LWin))], "normal")
+  # fit_lnorm <- fitdistr(df_merged$LWin[-which(is.na(df_merged$LWin))], "lognormal")
+  # fit_chi <- fitdistr(df_merged$LWin[-which(is.na(df_merged$LWin))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
+  # fit_gam <- fitdistr(df_merged$LWin[-which(is.na(df_merged$LWin))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0.1))
   # 
   # AIC(fit_norm) # best distribution
   # AIC(fit_lnorm) 
@@ -509,71 +509,71 @@
   # AIC(fit_gam)
   
   glm_lwin <- glm(LWin ~ PPFDin + airT + SWout + Soil.moisture_main + LWout + Rnet, 
-                  data = df.merged[-which(is.na(df.merged$LWin)), ], 
+                  data = df_merged[-which(is.na(df_merged$LWin)), ], 
                   family = gaussian(link = "identity"))
   # summary(glm_lwin)
   
   ## pseudo r2
   # 1 - glm_lwin$deviance / glm_lwin$null.deviance # 0.95
-  preds <- predict(glm_lwin, newdata = df.merged[which(is.na(df.merged$LWin)), ])
+  preds <- predict(glm_lwin, newdata = df_merged[which(is.na(df_merged$LWin)), ])
   # summary(preds)
   preds[which(preds < 0)] <- NA
-  df.merged[which(is.na(df.merged$LWin)), "LWin"] <- unname(preds)
+  df_merged[which(is.na(df_merged$LWin)), "LWin"] <- unname(preds)
   
   # small gaps fill again 
-  df_lwin_gaps <- DetectGaps(df = df.merged$LWin, 12)
-  df.merged$LWin <- InterpolFun(df = df.merged$LWin, df_gaps = df_lwin_gaps)
+  df_lwin_gaps <- DetectGaps(df = df_merged$LWin, 12)
+  df_merged$LWin <- InterpolFun(df = df_merged$LWin, df_gaps = df_lwin_gaps)
   
-  # summary(df.merged$LWin)
+  # summary(df_merged$LWin)
   
   rm(preds, glm_lwin, fit_norm, fit_lnorm, fit_chi, fit_gam, df_lwin_gaps)
   # rm(preds, glm_lwin, df_lwin_gaps)
   
 ## Windspeed ####
-  # summary(df.merged$WindSpeed)
+  # summary(df_merged$WindSpeed)
   ## smal gaps < 6h interpolating
-  df_wind_gaps <- DetectGaps(df = df.merged$WindSpeed, 12)
-  df.merged$WindSpeed <- InterpolFun(df = df.merged$WindSpeed, df_gaps = df_wind_gaps)
+  df_wind_gaps <- DetectGaps(df = df_merged$WindSpeed, 12)
+  df_merged$WindSpeed <- InterpolFun(df = df_merged$WindSpeed, df_gaps = df_wind_gaps)
   
   ## Histogram
-  # hist(df.merged$WindSpeed[-which(is.na(df.merged$WindSpeed))])
+  # hist(df_merged$WindSpeed[-which(is.na(df_merged$WindSpeed))])
   
   ## GLM
-  glm_ws <- glm(WindSpeed ~ airT + PPFDin + wind_speed, data = df.merged[-which(is.na(df.merged$WindSpeed)), ])
+  glm_ws <- glm(WindSpeed ~ airT + PPFDin + wind_speed, data = df_merged[-which(is.na(df_merged$WindSpeed)), ])
   # summary(glm_ws)
   
   ## pseudo r2
   # 1 - glm_ws$deviance / glm_ws$null.deviance # 0.11
-  preds <- predict(glm_ws, newdata = df.merged[which(is.na(df.merged$WindSpeed)), ])
+  preds <- predict(glm_ws, newdata = df_merged[which(is.na(df_merged$WindSpeed)), ])
   # summary(preds)
-  df.merged[which(is.na(df.merged$WindSpeed)), "WindSpeed"] <- unname(preds)
+  df_merged[which(is.na(df_merged$WindSpeed)), "WindSpeed"] <- unname(preds)
   
   rm(preds, glm_ws, df_wind_gaps)
   
 ## RH ####
   ## check if significant correlated predictors have common gaps
-  # length(which(which(is.na(df.merged$RH)) %in% which(is.na(df.merged$LWout)) == T)) # 3% common gaps
-  # length(which(which(is.na(df.merged$RH)) %in% which(is.na(df.merged$PPFDin)) == T)) # no common gaps
-  # length(which(which(is.na(df.merged$RH)) %in% which(is.na(df.merged$airT)) == T)) # no common gaps
-  # length(which(which(is.na(df.merged$RH)) %in% which(is.na(df.merged$Soil.moisture_main)) == T)) # common gaps
-  # length(which(which(is.na(df.merged$RH)) %in% which(is.na(df.merged$CO2)) == T)) # common gaps
+  # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$LWout)) == T)) # 3% common gaps
+  # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$PPFDin)) == T)) # no common gaps
+  # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$airT)) == T)) # no common gaps
+  # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$Soil.moisture_main)) == T)) # common gaps
+  # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$CO2)) == T)) # common gaps
   
   ## Histogram 
-  # hist(df.merged$RH) # beta distribution
-  # plot(RH ~ relative_humidity, df.merged)
-  # summary(df.merged$RH)
+  # hist(df_merged$RH) # beta distribution
+  # plot(RH ~ relative_humidity, df_merged)
+  # summary(df_merged$RH)
   
   ## Values need to be in range (0,1) for beta regression
-  df.merged$RH <- df.merged$RH / 100
-  df.merged$RH[which(df.merged$RH == 1)] <- 1 - 1e-10
+  df_merged$RH <- df_merged$RH / 100
+  df_merged$RH[which(df_merged$RH == 1)] <- 1 - 1e-10
   
   ## Check distributions
-  # fit_norm <- fitdistr(df.merged$RH[-which(is.na(df.merged$RH))], "normal")
-  # fit_lnorm <- fitdistr(df.merged$RH[-which(is.na(df.merged$RH))], "lognormal")
-  # fit_beta <- fitdistr(df.merged$RH[-which(is.na(df.merged$RH))], "beta", start = list(shape1 = 1, shape2 = 1), lower=c(0,0))
-  # fit_weibull <- fitdistr(df.merged$RH[-which(is.na(df.merged$RH))], "weibull", start = list(scale = 1, shape = 1), lower=c(0,0))
-  # fit_chi <- fitdistr(df.merged$RH[-which(is.na(df.merged$RH))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
-  # fit_gam <- fitdistr(df.merged$RH[-which(is.na(df.merged$RH))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0,0))
+  # fit_norm <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "normal")
+  # fit_lnorm <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "lognormal")
+  # fit_beta <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "beta", start = list(shape1 = 1, shape2 = 1), lower=c(0,0))
+  # fit_weibull <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "weibull", start = list(scale = 1, shape = 1), lower=c(0,0))
+  # fit_chi <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "chi-squared", start=list(df=3), method="Brent", lower=0.1, upper=100)
+  # fit_gam <- fitdistr(df_merged$RH[-which(is.na(df_merged$RH))], "gamma", start = list(shape = 1, rate = 0.1), lower=c(0,0))
   # 
   # AIC(fit_norm)
   # AIC(fit_lnorm)
@@ -582,7 +582,7 @@
   # AIC(fit_chi)
   # AIC(fit_gam)
   # 
-  # hist(df.merged$RH[-which(is.na(df.merged$RH))], freq=F, las=1, xlim = c(0,2))
+  # hist(df_merged$RH[-which(is.na(df_merged$RH))], freq=F, las=1, xlim = c(0,2))
   # curve(dweibull(x, fit_weibull$estimate[1], fit_weibull$estimate[2]),
   #       add=T, lwd=2)
   # curve(dlnorm(x, fit_lnorm$estimate[1], fit_lnorm$estimate[2]), add=T,
@@ -594,52 +594,52 @@
   
   ## Betaregrssion fitting and predicting
   betareg_rh <- betareg(RH ~ airT + PPFDin + relative_humidity + h_last_precip, 
-                        data = df.merged[-which(is.na(df.merged$RH)), ])
+                        data = df_merged[-which(is.na(df_merged$RH)), ])
   # summary(betareg_rh, type = "pearson")
   ## pseudo r2 0.16
   
-  preds <- predict(betareg_rh, newdata = df.merged[which(is.na(df.merged$RH)), ])
+  preds <- predict(betareg_rh, newdata = df_merged[which(is.na(df_merged$RH)), ])
   # summary(preds)
-  df.merged[which(is.na(df.merged$RH)),"RH"] <- unname(preds)
+  df_merged[which(is.na(df_merged$RH)),"RH"] <- unname(preds)
   
   rm(preds, betareg_rh, fit_gam)
   # rm(preds, betareg_rh, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam)
   
 ## Precipitation ####
-  # summary(df.merged$Precip)
+  # summary(df_merged$Precip)
   # # smal gaps < 6h interpolating
-  # df_precip_gaps <- DetectGaps(df = df.merged$Precip, 12)
-  # df.merged$Precip <- InterpolFun(df = df.merged$Precip, df_gaps = df_precip_gaps)
+  # df_precip_gaps <- DetectGaps(df = df_merged$Precip, 12)
+  # df_merged$Precip <- InterpolFun(df = df_merged$Precip, df_gaps = df_precip_gaps)
   # 
   # # Histogram
-  # hist(df.merged$Precip[-which(is.na(df.merged$Precip))])
-  # summary(df.merged$Precip[-which(is.na(df.merged$Precip))])
+  # hist(df_merged$Precip[-which(is.na(df_merged$Precip))])
+  # summary(df_merged$Precip[-which(is.na(df_merged$Precip))])
   
-  #summary(df.merged)
+  #summary(df_merged)
   #### ####
 
 #### ------------------------------------- ####
   ## 6 - Calculate SWin, mean TS, mean MS and fill gaps ####
 #### ------------------------------------- ####   
   ## Short wave in ####
-  df.merged$SWin <- df.merged$Rnet - (df.merged$LWin - df.merged$LWout) + df.merged$SWout
-  df.merged$SWin[which(df.merged$SWin < -5 )] <- NA
-  df.merged$SWin[which(df.merged$SWin > 1300 )] <- NA
-  df.merged$SWin[which(df.merged$SWin > -5 &  df.merged$SWin < 0 )] <- 0
-  # summary(df.merged$SWin)
+  df_merged$SWin <- df_merged$Rnet - (df_merged$LWin - df_merged$LWout) + df_merged$SWout
+  df_merged$SWin[which(df_merged$SWin < -5 )] <- NA
+  df_merged$SWin[which(df_merged$SWin > 1300 )] <- NA
+  df_merged$SWin[which(df_merged$SWin > -5 &  df_merged$SWin < 0 )] <- 0
+  # summary(df_merged$SWin)
   
-  df.swin.gaps <- DetectGaps(df = df.merged$SWin, 12)
-  df.merged$SWin <- InterpolFun(df = df.merged$SWin, df_gaps = df.swin.gaps)
+  df_swin_gaps <- DetectGaps(df = df_merged$SWin, 12)
+  df_merged$SWin <- InterpolFun(df = df_merged$SWin, df_gaps = df_swin_gaps)
   
-  # hist(df.merged$SWin)  
-  rm(df.swin.gaps)
+  # hist(df_merged$SWin)  
+  rm(df_swin_gaps)
   ## mean TS ####
-  df.merged$TS_mean <- apply(df.merged[, 8:13], 1, mean, na.rm = T)
-  # summary(df.merged$TS_mean)
+  df_merged$TS_mean <- apply(df_merged[, 8:13], 1, mean, na.rm = T)
+  # summary(df_merged$TS_mean)
   
   ## mean MS ####
-  df.merged$MS_mean <- apply(df.merged[, 15:18], 1, mean, na.rm = T)
-  #s ummary(df.merged$MS_mean)
+  df_merged$MS_mean <- apply(df_merged[, 15:18], 1, mean, na.rm = T)
+  #s ummary(df_merged$MS_mean)
   
   #### ####
   
@@ -648,22 +648,22 @@
 #### ------------------------------------- ####    
   
   ## Sun rise / set ####
-  df.hel$Datum <- as.character(df.hel$Datum)
-  df.hel$Sunrise <- as.character(df.hel$Sunrise)
-  df.hel$Sunset <- as.character(df.hel$Sunset)
+  df_hel$Datum <- as.character(df_hel$Datum)
+  df_hel$Sunrise <- as.character(df_hel$Sunrise)
+  df_hel$Sunset <- as.character(df_hel$Sunset)
   
-  df.hel.2 <- data.frame(df.hel, as.numeric(do.call(rbind, strsplit(df.hel$Datum,' '))[, 1]))
-  names(df.hel.2)[5] <- "day"
+  df_hel_2 <- data.frame(df_hel, as.numeric(do.call(rbind, strsplit(df_hel$Datum,' '))[, 1]))
+  names(df_hel_2)[5] <- "day"
   
-  df.hel.2 <- data.frame(df.hel.2, as.numeric(do.call(rbind, strsplit(df.hel$Sunset,':'))[, 1]))
-  df.hel.2 <- data.frame(df.hel.2, as.numeric(do.call(rbind, strsplit(df.hel$Sunset,':'))[, 2]))
-  names(df.hel.2)[6:7] <- paste("set", c("h","m"), sep = "_")
+  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunset,':'))[, 1]))
+  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunset,':'))[, 2]))
+  names(df_hel_2)[6:7] <- paste("set", c("h","m"), sep = "_")
   
-  df.hel.2 <- data.frame(df.hel.2, as.numeric(do.call(rbind, strsplit(df.hel$Sunrise,':'))[, 1]))
-  df.hel.2 <- data.frame(df.hel.2, as.numeric(do.call(rbind, strsplit(df.hel$Sunrise,':'))[, 2]))
-  names(df.hel.2)[8:9] <- paste("rise", c("h","m"), sep = "_")
+  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunrise,':'))[, 1]))
+  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunrise,':'))[, 2]))
+  names(df_hel_2)[8:9] <- paste("rise", c("h","m"), sep = "_")
   
-  df.hel.2 <- df.hel.2[, -c(2:4)]
+  df_hel_2 <- df_hel_2[, -c(2:4)]
   
   ## flag night time data ####
   FlagNightData <- function(df_flux, df_sun){
@@ -687,9 +687,9 @@
     return(flag_)
   }
   
-  df.merged$flag_night <- FlagNightData(df_flux = df.merged, df_sun = df.hel.2)
+  df_merged$flag_night <- FlagNightData(df_flux = df_merged, df_sun = df_hel_2)
   
-  rm(df.hel, df.hel.2, FlagNightData)
+  rm(df_hel, df_hel_2, fun_flag_night)
   
   #### ####
 
@@ -698,32 +698,32 @@
 #### ------------------------------------- ####  
   
   ## Extract Night Data ####
-  df.night <- df.merged[df.merged$flag_night == 1, -c(2:7, 38:40, 44)]
-  df.night <- df.night[-which(df.night$PPFDin > 5), ]
+  df_night <- df_merged[df_merged$flag_night == 1, -c(2:7, 38:40, 44)]
+  df_night <- df_night[-which(df_night$PPFDin > 5), ]
   
   ## u* correction ####
   # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
-  df.night$NEE_cor <- df.night$NEE_measure
-  df.night$NEE_cor[df.night$ustar < 0.19] <- NA
-  df.night <- df.night[, -25]
-  # summary(df.night$NEE_measure)
-  # summary(df.night$NEE_cor)
-  # sum(is.na(df.night$NEE_cor)) / nrow(df.night) ## 78 % gaps
+  df_night$NEE_cor <- df_night$NEE_measure
+  df_night$NEE_cor[df_night$ustar < 0.19] <- NA
+  df_night <- df_night[, -25]
+  # summary(df_night$NEE_measure)
+  # summary(df_night$NEE_cor)
+  # sum(is.na(df_night$NEE_cor)) / nrow(df_night) ## 78 % gaps
   
   ## data frame with NNE != NA ####
   ## and without precip, pressure, lw, sw, co2
-  df.night.model <-  df.night[!is.na(df.night$NEE_cor), ]
-  df.night.pred <-  df.night[is.na(df.night$NEE_cor), ]
+  df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
+  df_night_pred <-  df_night[is.na(df_night$NEE_cor), ]
   
-  # summary(df.night_model)
-  # summary(df.night_pred)
+  # summary(df_night_model)
+  # summary(df_night_pred)
   
-  rm(df.night, df.merged)
+  rm(df_night, df_merged)
   #### ####
   
 #### ------------------------------------- ####
   ## 9 - Save data ####
 #### ------------------------------------- ####  
   ## save ####
-  save(df.night.model, df.night.pred, file = c(paste0(mypath, "/RData/df_model.RData")))
+  save(df_night_model, df_night_pred, file = c(paste0(mypath, "/RData/df_model.RData")))
   
