@@ -2,16 +2,17 @@
 #### Excecution ##
 #### ------------------------------------------- ##
   
+#### ----------------------- ##
+#### 1 - Load path, functions and packages ##
+#### ----------------------- ##
+
   ## path ####
   mypath <- getwd()
-  
+
   ## dp token ####
   token <- readRDS(paste0(mypath,"/token.rds"))
   
-#### ----------------------- ##
-#### Load functions and packages ##
-#### ----------------------- ##
-  
+  ## functions ####
   source("Model_functions.R")
   
   ## Packages ####
@@ -21,7 +22,7 @@
   #### ####
   
 #### ----------------------- ##
-#### Check for data preprocessing ##
+#### Check for preprocessed data  ##
 #### ----------------------- ##
   
   CheckData()
@@ -31,13 +32,30 @@
 #### ----------------------- ##
   
   pred_analysis <- TargetPreAnalysisPredictors(df_train = df_night_model)  
-  df_train_1 <- pred_analysis[[1]]
+  df_train.1 <- pred_analysis[[1]]
   
 #### ----------------------- ##
 #### Model Selection Respiration whole time span ##
 #### ----------------------- ##
   
-  results_resp_all <- TargetFunBO(df_train = df_train_1, path = mypath)
+  results_resp_all <- TargetFunBO(df_train = df_train.1, path = mypath)
   
+#### ----------------------- ##
+#### Model Selection for an moving window of 4 years ##
+#### ----------------------- ##
+  
+  years_ <- unique(as.numeric(format(df_night_model$dt, "%Y")))
+  results_pa <- vector("list", length(years_) - 3)
+  results_ms <- vector("list", length(years_) - 3)
+  
+  for (i in 1:(length(years_) - 3)){
+    window_ <- years_[i:(i + 3)]
+    df_train.2 <- df_night_model[which(as.numeric(format(df_night_model$dt, "%Y")) %in% window_), ]
+    
+    results_pa[[i]] <- TargetPreAnalysisPredictors(df_train = df_train.2)
+    df_train.3 <- results_pa[[i]][[1]]
+    
+    results_ms[[i]] <- TargetFunBO(df_train = df_train.3, path = mypath) 
+  }
   
   
