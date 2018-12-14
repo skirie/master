@@ -135,7 +135,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
     df_results_ms <- rbind(df_results_ms, results_)
     all_mae_history <- rbind(all_mae_history, mae_history)
   }
-  save(df_results_ms, all_mae_history, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
+  save(df_results_ms, all_mae_history, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.time(), ".RData")))
   
   ## Best Model (Layers & Nodes)
   params <- BestModelSelection(df_results = df_results_ms, params = params, type = "nodes")
@@ -144,7 +144,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
   df_results_pa <- RunModel.PredictroAnalysis(df_train = df_train, params = params)
   params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
-  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.Date(), ".RData"))
+  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.time(), ".RData"))
   
   ## best model structur for best predictor Subset ####
   df_train_best <- df_train[, c(params$best_preds_full$predictors, colnames(df_train)[ncol(df_train)])]
@@ -159,7 +159,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
     results_2 <- RunModel.GridOpt(df_train = df_train_best, params = params)
     df_results_pa_ms <- rbind(df_results_pa_ms, results_2)
   }
-  save(df_results_pa_ms, file = paste0(path, "/RData/results_p_m_", Sys.Date(), ".RData"))
+  save(df_results_pa_ms, file = paste0(path, "/RData/results_p_m_", Sys.time(), ".RData"))
   
   return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
@@ -179,7 +179,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
     results_ms[[i]] <- RunModel.BayesianOpt(df_train = df_train, params = params)
     df_results_ms <- rbind(df_results_ms, c(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, batchsize[i], results_ms[[i]]$y))
   }
-  save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
+  save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.time(), ".RData")))
   
   ## Best Model (Layers & Nodes)
   params[["best"]]$layer <- df_results_ms[which(df_results_ms[, 4] == min(df_results_ms[, 4])), 1]
@@ -191,7 +191,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
   df_results_pa <- RunModel.PredictroAnalysis(df_train = df_train, params = params)
   params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
-  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.Date(), ".RData"))
+  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.time(), ".RData"))
   return(list(df_results_ms, df_results_pa, params))
 }
 
