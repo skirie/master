@@ -41,7 +41,7 @@ CheckData <- function(){
 #### ----------------------- ##
 
 ## Target function GRID ##
-TagretFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, 
+TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, 
                           optimizer = "rmsprop", path){
   df_results_ms <- NULL
   all_mae_history <- NULL
@@ -89,7 +89,7 @@ TagretFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
 }
 
 ## Target function BO ##
-TagretFunBO <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
+TargetFunBO <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
   results_ms <- list()
   df_results_ms <- NULL
   params <- ParamsFun(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
@@ -644,7 +644,7 @@ ComputeModel <- function(df_train, params, type = "full"){
 }
 
 ## Function model run predictor analysis ##
-RunModel.PredictroAnalysis <- function(df_train, params){
+RunModel.PredictorAnalysis <- function(df_train, params){
   ## params 
   params[["layer"]] <- params[["best"]]$layer
   params[["batchsize"]] <- params[["best"]]$batch_size
