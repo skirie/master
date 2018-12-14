@@ -614,7 +614,7 @@ ComputeModel <- function(df_train, params, type = "full"){
       test_targets <- val_test_targets[-val_test_indices_2]
       
       # predict = x
-      partial_train_data <- scale(partial_train_data, center = mins_data, 
+      partial_train_data <- scale(partial_train_data, center = mins_data,
                                   scale = maxs_data - mins_data)
       val_data <- scale(val_data, center = mins_data, 
                         scale = maxs_data - mins_data)
