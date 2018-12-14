@@ -319,7 +319,7 @@ fun_target_df_train <- function(df_train){
   pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
                                               "year_ws_sin", "year_sa_sin", "day_sin", "NEE_cor"))
   df_train_ <- df_train[, pred_model]
-  return(list(df_train_, res_soil_t, res_soil_m, res_rad))
+  return(list(df_train_, res_soil_t, res_soil_m))
 }
 
 #### ----------------------- ##
