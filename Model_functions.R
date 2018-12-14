@@ -100,15 +100,15 @@ TagretFunBO <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr
     params[["batchsize"]] <- batchsize[i]
     cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
     
-    results_ms[[i]] <- fun_bo_mlr(df_train = df_train, params = params)
+    results_ms[[i]] <- RunModel.BayesianOpt(df_train = df_train, params = params)
     df_results_ms <- rbind(df_results_ms, c(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, batchsize[i], results_ms[[i]]$y))
   }
   save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
   
   ## Best Model (Layers & Nodes)
-  params[["best"]]$layer <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 1]
-  params[["best"]]$units <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 2]
-  params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[,4] == min(df_results_ms[,4])), 3]
+  params[["best"]]$layer <- df_results_ms[which(df_results_ms[, 4] == min(df_results_ms[, 4])), 1]
+  params[["best"]]$units <- df_results_ms[which(df_results_ms[, 4] == min(df_results_ms[, 4])), 2]
+  params[["best"]]$batch_size <- df_results_ms[which(df_results_ms[, 4] == min(df_results_ms[, 4])), 3]
   cat("Best Model: Layer: ", params[["best"]]$layer, "! Units: ", params[["best"]]$units, "! Batchsize: ", params[["best"]]$batch_size, "!", "\n")
   
   ## Predictoranalysis - Best Predictor Subset
@@ -393,7 +393,7 @@ RunModel.GridOpt <- function(df_train, params){
 }
 
 ## Function model run Bayesian Opt. ##
-RunModel.BayesianOpt.1 <- function(df_train, params){
+RunModel.BayesianOpt <- function(df_train, params){
   
   nn_fit_bayes <- function(x) {
     units <- x$units
@@ -448,7 +448,7 @@ RunModel.BayesianOpt.1 <- function(df_train, params){
 }
 
 ## Function model run Bayesian Opt. ##
-RunModel.BayesianOpt.2 <- function(df_train, params){
+RunModel.BayesianOptNoisy <- function(df_train, params){
   
   nn_fit_bayes <- function(x) {
     units <- x$units
