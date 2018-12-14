@@ -3,7 +3,7 @@
 #### ------------------------------------------- ##
 
 #### ----------------------- ##
-#### Package Function  ##
+#### 0 - Package Function  ##
 #### ----------------------- ##
 
 CheckPackages <- function(pkg){
@@ -14,7 +14,7 @@ CheckPackages <- function(pkg){
 }
 
 #### ----------------------- ##
-#### Check data availability ##
+#### 1 - Check data availability ##
 #### ----------------------- ##
 
 CheckData <- function(){
@@ -37,8 +37,84 @@ CheckData <- function(){
 }
 
 #### ----------------------- ##
-#### Target Functions ##
+#### 2 - Pre analysis Predictors ##
 #### ----------------------- ##
+  
+  ## These functions doing a pretictor pre selection of the different soil depths (soil temperatur and moisture)
+
+## Pre analysis Predictors ##
+PreAnalysisPredictors <- function(df_train, params){
+  ## params 
+  params[["layer"]] <- 2
+  params[["batchsize"]] <- 30
+  params[["units"]] <- 40
+  
+  ## required empty features / target 
+  all_mse <- vector("list", ncol(df_train) - 1)
+  all_r2 <- vector("list", ncol(df_train) - 1)
+  k <- ncol(df_train) - 1
+  col_ <- colnames(df_train)
+  
+  ## loop for every predictor
+  for (i in 1:k){
+    # print computed predictor combination      
+    cat("Predictor: ", i, "/", ncol(df_train) - 1, ". Used predictors:", col_[i], sep = "", "\n")
+    
+    # choose of one predictor and always Y. Y needs to be at last column position.
+    train_ <- df_train[, c(col_[i], col_[ncol(df_train)])]
+    
+    # compute Model for this predictor composition
+    cv_ <- ComputeModel(df_train = train_, params = params, type = "prepred")
+    mse_ <- mean(cv_[[1]], na.rm = T)
+    r2_ <- mean(cv_[[2]], na.rm = T)
+    all_mse[[i]] <- c(all_mse[[i]], mse_)
+    all_r2[[i]] <- c(all_r2[[i]], r2_)
+  }
+  
+  df_results <- data.frame(predictors = col_[1:k], mse = unlist(all_mse, use.names=FALSE), 
+                           r2 = unlist(all_r2, use.names=FALSE))
+  df_results <- df_results[order(df_results$mse), ]
+  
+  return(df_results)
+}
+
+## Predictor preanalysis target data frame ##
+TargetPreAnalysisPredictors <- function(df_train){
+  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_main", "TS_mean")
+  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
+  # names_rad <- c("SWin", "PPFDin")
+  
+  names_ <- colnames(df_train)
+  w_soil_t <- which(names_ %in% names_soil_t)
+  w_soil_m <- which(names_ %in% names_soil_m)
+  # w_rad <- which(names_ %in% names_rad)
+  
+  params <- ParamsFun()
+  
+  res_soil_t <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_t, ncol(df_train))], params = params)
+  res_soil_m <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_m, ncol(df_train))], params = params)
+  # res_rad <- PreAnalysisPredictors(df_train = df_train[,c(w_rad, ncol(df_train))], params = params)
+  
+  print(res_soil_t)
+  print(res_soil_m)
+  # print(res_rad)
+  
+  pred_t <-  as.character(res_soil_t$predictors[which(res_soil_t$mse == min(res_soil_t$mse))])
+  pred_m <-  as.character(res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse))])
+  # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
+  
+  pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
+                                    "year_ws_sin", "year_sa_sin", "day_sin", "NEE_cor"))
+  df_train_ <- df_train[, pred_model]
+  return(list(df_train_, res_soil_t, res_soil_m))
+}
+
+#### ----------------------- ##
+#### 3 - Target Functions ##
+#### ----------------------- ##
+
+## These functions do the whole Modelselection.
+  # They are using the function of 4. and 5. 
 
 ## Target function GRID ##
 TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, 
@@ -62,11 +138,11 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
   save(df_results_ms, all_mae_history, file = c(paste0(path, "/RData/results_model_", layer, "l_", Sys.Date(), ".RData")))
   
   ## Best Model (Layers & Nodes)
-  params <- BestHyperParameter(df_results = df_results_ms, params = params, type = "nodes")
+  params <- BestModelSelection(df_results = df_results_ms, params = params, type = "nodes")
   
   ## Predictoranalysis - Best Predictor Subset
   df_results_pa <- RunModel.PredictroAnalysis(df_train = df_train, params = params)
-  params <- BestHyperParameter(df_results = df_results_pa, params = params, type = "pred")
+  params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
   save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.Date(), ".RData"))
   
@@ -113,14 +189,14 @@ TargetFunBO <- function(df_train, batchsize = c(40, 80), k = 5, epochs = 200, lr
   
   ## Predictoranalysis - Best Predictor Subset
   df_results_pa <- RunModel.PredictroAnalysis(df_train = df_train, params = params)
-  params <- BestHyperParameter(df_results = df_results_pa, params = params, type = "pred")
+  params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
   save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", Sys.Date(), ".RData"))
   return(list(df_results_ms, df_results_pa, params))
 }
 
 #### ----------------------- ##
-#### Parameter Model Functions ##
+#### 4 - Parameter and Model building Functions ##
 #### ----------------------- ##
 
 ## Function Parameter ##
@@ -216,7 +292,7 @@ BuildModel <- function(df_train, layer, optimizer, units, lr, dropout = F){
 }
 
 ## Function best model NEW ##
-BestHyperParameter <- function(df_results, params, type){
+BestModelSelection <- function(df_results, params, type){
   # print ordered results
   print("Best Models")
   print(df_results[order(df_results$mse),][1:10, ])
@@ -253,78 +329,7 @@ BestHyperParameter <- function(df_results, params, type){
 }
 
 #### ----------------------- ##
-#### Pre analysis Predictors ##
-#### ----------------------- ##
-
-## Pre analysis Predictors ##
-PreAnalysisPredictors <- function(df_train, params){
-  ## params 
-  params[["layer"]] <- 2
-  params[["batchsize"]] <- 30
-  params[["units"]] <- 40
-  
-  ## required empty features / target 
-  all_mse <- vector("list", ncol(df_train) - 1)
-  all_r2 <- vector("list", ncol(df_train) - 1)
-  k <- ncol(df_train) - 1
-  col_ <- colnames(df_train)
-  
-  ## loop for every predictor
-  for (i in 1:k){
-    # print computed predictor combination      
-    cat("Predictor: ", i, "/", ncol(df_train) - 1, ". Used predictors:", col_[i], sep = "", "\n")
-    
-    # choose of one predictor and always Y. Y needs to be at last column position.
-    train_ <- df_train[, c(col_[i], col_[ncol(df_train)])]
-    
-    # compute Model for this predictor composition
-    cv_ <- fun_model_compute_full(df_train = train_, params = params, type = "pred")
-    mse_ <- mean(cv_[[1]], na.rm = T)
-    r2_ <- mean(cv_[[2]], na.rm = T)
-    all_mse[[i]] <- c(all_mse[[i]], mse_)
-    all_r2[[i]] <- c(all_r2[[i]], r2_)
-  }
-  
-  df_results <- data.frame(predictors = col_[1:k], mse = unlist(all_mse, use.names=FALSE), 
-                           r2 = unlist(all_r2, use.names=FALSE))
-  df_results <- df_results[order(df_results$mse), ]
-  
-  return(df_results)
-}
-
-## Predictor preanalysis target data frame ##
-TargetPreAnalysisPredictors <- function(df_train){
-  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_main", "TS_mean")
-  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
-  # names_rad <- c("SWin", "PPFDin")
-  
-  names_ <- colnames(df_train)
-  w_soil_t <- which(names_ %in% names_soil_t)
-  w_soil_m <- which(names_ %in% names_soil_m)
-  # w_rad <- which(names_ %in% names_rad)
-  
-  params <- ParamsFun()
-  
-  res_soil_t <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_t, ncol(df_train))], params = params)
-  res_soil_m <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_m, ncol(df_train))], params = params)
-  # res_rad <- PreAnalysisPredictors(df_train = df_train[,c(w_rad, ncol(df_train))], params = params)
-  
-  print(res_soil_t)
-  print(res_soil_m)
-  # print(res_rad)
-  
-  pred_t <-  as.character(res_soil_t$predictors[which(res_soil_t$mse == min(res_soil_t$mse))])
-  pred_m <-  as.character(res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse))])
-  # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
-  
-  pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
-                                              "year_ws_sin", "year_sa_sin", "day_sin", "NEE_cor"))
-  df_train_ <- df_train[, pred_model]
-  return(list(df_train_, res_soil_t, res_soil_m))
-}
-
-#### ----------------------- ##
-#### Model Evaluation Functions ##
+#### 5 - Model Evaluation Functions ##
 #### ----------------------- ##
 
 ## Function model run model structure ##
@@ -366,7 +371,7 @@ RunModel.GridOpt <- function(df_train, params){
       model <- BuildModel(df_train = df_train, layer = l, optimizer = params[["optimizer"]],
                           units = N_[i, 1:l], lr = params[["lr"]])
       
-      cv_ <- fun_model_compute_full(df_train = df_train, params = params, model = model)
+      cv_ <- ComputeModel(df_train = df_train, params = params, model = model)
       end_time <- Sys.time()
       
       mse_ <- mean(cv_[[1]], na.rm = T)
@@ -447,7 +452,7 @@ RunModel.BayesianOpt <- function(df_train, params){
   return(res_)
 }
 
-## Function model run Bayesian Opt. ##
+## Function model run Bayesian Opt. Noisy ##
 RunModel.BayesianOptNoisy <- function(df_train, params){
   
   nn_fit_bayes <- function(x) {
@@ -516,6 +521,15 @@ ComputeModel <- function(df_train, params, type = "full"){
   
   if (type == "pred"){
     times_cv <- 2
+    units <- rep(params[["units"]], params[["layer"]])
+    if (layer > 1){
+      units[2] <- as.integer(units[2] * 0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2] * 0.5)
+      }
+    }
+  } else if (type == "prepred") {
+    times_cv <- 4
     units <- rep(params[["units"]], params[["layer"]])
     if (layer > 1){
       units[2] <- as.integer(units[2] * 0.5)
@@ -727,7 +741,7 @@ RunModel.PredictorAnalysis <- function(df_train, params){
 }
 
 #### ----------------------- ##
-#### Additional Functions ##
+#### 6 - Additional Functions ##
 #### ----------------------- ##
 
 ## Function model dropout analysis ##
@@ -751,7 +765,7 @@ RunModel.BayesianOpt.Dropout <- function(df_train, params){
     
     cat("Model: # Layer:", layer, " # units:", units, " # dropout:", dropout, "\n")
     #model <- BuildModel(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
-    results_ <- fun_model_compute_full(df_train = df_train, params = params, type = "full")
+    results_ <- ComputeModel(df_train = df_train, params = params, type = "full")
     
     return(mean(results_[[1]], na.rm = T))
   }
