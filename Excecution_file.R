@@ -33,18 +33,17 @@
   
   pred_analysis <- TargetPreAnalysisPredictors(df_train = df_night_model)  
   df_train.1 <- pred_analysis[[1]]
-  
+
 #### ----------------------- ##
 #### Model Selection Respiration whole time span ##
 #### ----------------------- ##
   
-  results_resp_all <- TargetFunBO(df_train = df_train.1, path = mypath)
+  results_resp_all_b <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T)
   
 #### ----------------------- ##
 #### Model Selection for an moving window of 4 years ##
 #### ----------------------- ##
   
-  df_train.1 <- cbind("dt" = df_night_model$dt, df_train.1)
   years_ <- unique(as.numeric(format(df_train.1$dt, "%Y")))
   results_pa <- vector("list", length(years_) - 3)
   results_ms <- vector("list", length(years_) - 3)
@@ -56,7 +55,7 @@
     #results_pa[[i]] <- TargetPreAnalysisPredictors(df_train = df_train.2)
     #df_train.3 <- results_pa[[i]][[1]]
     
-    results_ms[[i]] <- TargetFunBO(df_train = df_train.2[,2:ncol(df_train.2)], path = mypath) 
+    results_ms[[i]] <- TargetFunBO(df_train = df_train.2, path = mypath) 
   }
   
   
