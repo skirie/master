@@ -166,20 +166,28 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
 }
 
 ## Target function BO ##
-TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, optimizer = "adam", path){
+TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, 
+                        optimizer = "adam", path, opt.batch = T){
   results_ms <- list()
   df_results_ms <- NULL
   params <- ParamsFun(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
   
   ## Best Model structure (Layers & Nodes)
   ## modelrun for different batchsizes
-  for (i in 1:length(batchsize)){
-    params[["batchsize"]] <- batchsize[i]
-    cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
-    
-    results_ms[[i]] <- RunModel.BayesianOpt(df_train = df_train, params = params)
-    df_results_ms <- rbind(df_results_ms, c(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, batchsize[i], results_ms[[i]]$y))
+  if (opt.batch == F){
+    for (i in 1:length(batchsize)){
+      params[["batchsize"]] <- batchsize[i]
+      cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
+      
+      results_ms[[i]] <- RunModel.BayesianOpt(df_train = df_train, params = params)  
+      
+      df_results_ms <- rbind(df_results_ms, c(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, batchsize[i], results_ms[[i]]$y))
+    }
+  } else if (opt.batch == T){
+    results_ms <- RunModel.BayesianOpt.B(df_train = df_train, params = params)
+    df_results_ms <- data.frame(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, results_ms[[i]]$x$batch, results_ms[[i]]$y)
   }
+  
   save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData")))
   
   ## Best Model (Layers & Nodes)
@@ -202,7 +210,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
 
 ## Function Parameter ##
 ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, 
-                       Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 20,
+                       Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 25,
                        dropout = F){
   params <- list()
   params[["batchsize"]] <- batchsize
@@ -441,6 +449,64 @@ RunModel.BayesianOpt <- function(df_train, params){
   ## design -> pre hyperparameter calulations
   set.seed(352)
   des <- generateDesign(n = 10, par.set = getParamSet(obj.fun))
+  
+  ## control
+  ctrl <- makeMBOControl()
+  ctrl <- setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
+  ctrl <- setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
+  #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
+  
+  res_ <- mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
+  
+  return(res_)
+}
+
+## Function model run Bayesian Opt. (incl. Batchsize) ##
+RunModel.BayesianOpt.B <- function(df_train, params){
+  
+  nn_fit_bayes <- function(x) {
+    units <- x$units
+    layer <- x$layer
+    batch <- x$batch
+    
+    units <- as.integer(rep(units, layer))
+    if (layer > 1){
+      units[2] <- as.integer(units[2] * 0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2] * 0.5)
+      }
+    }
+    
+    params[["units"]] <- units
+    params[["layer"]] <- layer
+    params[["batchsize"]] <- batch
+    
+    cat("Model: # Layer:", layer, " # units:", units, " # batchsize:", batch, "\n")
+    #model <- BuildModel(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
+    results_ <- ComputeModel(df_train = df_train, params = params, type = "full")
+    
+    return(mean(results_[[1]], na.rm = T))
+  }
+  
+  ## set hyperparameterspace
+  par.set <- makeParamSet(
+    makeIntegerParam("layer", 1, params[["layer"]]),
+    makeIntegerParam("units", params[["Nmin"]], params[["Nmax"]]),
+    makeIntegerParam("batch", 5, 80))
+  
+  ## create learner -> dicekriging (GaussianProcess)
+  surr.km <- makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
+  
+  ## objective Function
+  obj.fun <- makeSingleObjectiveFunction(name = "svm.tuning",
+                                         fn = nn_fit_bayes,
+                                         par.set = par.set,
+                                         has.simple.signature = FALSE,
+                                         minimize = TRUE)
+  
+  ## design -> pre hyperparameter calulations
+  set.seed(352)
+  des <- generateDesign(n = 15, par.set = getParamSet(obj.fun))
   
   ## control
   ctrl <- makeMBOControl()
