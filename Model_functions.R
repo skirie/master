@@ -142,7 +142,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
   params <- BestModelSelection(df_results = df_results_ms, params = params, type = "nodes")
   
   ## Predictoranalysis - Best Predictor Subset
-  df_results_pa <- RunModel.PredictroAnalysis(df_train = df_train, params = params)
+  df_results_pa <- RunModel.PredictorAnalysis(df_train = df_train, params = params)
   params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
   save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
