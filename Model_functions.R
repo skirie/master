@@ -185,7 +185,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
     }
   } else if (opt.batch == T){
     results_ms <- RunModel.BayesianOpt.B(df_train = df_train, params = params)
-    df_results_ms <- data.frame(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, results_ms[[i]]$x$batch, results_ms[[i]]$y)
+    df_results_ms <- data.frame(results_ms$x$layer, results_ms$x$units, results_ms$x$batch, results_ms$y)
   }
   
   save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData")))
@@ -506,7 +506,7 @@ RunModel.BayesianOpt.B <- function(df_train, params){
   
   ## design -> pre hyperparameter calulations
   set.seed(352)
-  des <- generateDesign(n = 15, par.set = getParamSet(obj.fun))
+  des <- generateDesign(n = 20, par.set = getParamSet(obj.fun))
   
   ## control
   ctrl <- makeMBOControl()
