@@ -44,6 +44,7 @@
 #### Model Selection for an moving window of 4 years ##
 #### ----------------------- ##
   
+  df_train.1 <- cbind("dt" = df_night_model$dt, df_train.1)
   years_ <- unique(as.numeric(format(df_train.1$dt, "%Y")))
   results_pa <- vector("list", length(years_) - 3)
   results_ms <- vector("list", length(years_) - 3)
@@ -55,7 +56,7 @@
     #results_pa[[i]] <- TargetPreAnalysisPredictors(df_train = df_train.2)
     #df_train.3 <- results_pa[[i]][[1]]
     
-    results_ms[[i]] <- TargetFunBO(df_train = df_train.2, path = mypath) 
+    results_ms[[i]] <- TargetFunBO(df_train = df_train.2[,2:ncol(df_train.2)], path = mypath) 
   }
   
   
