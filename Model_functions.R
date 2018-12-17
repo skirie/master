@@ -189,7 +189,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
   cat("Best Model: Layer: ", params[["best"]]$layer, "! Units: ", params[["best"]]$units, "! Batchsize: ", params[["best"]]$batch_size, "!", "\n")
   
   ## Predictoranalysis - Best Predictor Subset
-  df_results_pa <- RunModel.PredictroAnalysis(df_train = df_train, params = params)
+  df_results_pa <- RunModel.PredictorAnalysis(df_train = df_train, params = params)
   params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
   save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
