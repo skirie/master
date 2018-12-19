@@ -56,7 +56,7 @@
     #results_pa[[i]] <- TargetPreAnalysisPredictors(df_train = df_train.2)
     #df_train.3 <- results_pa[[i]][[1]]
     
-    results_ms[[i]] <- TargetFunBO(df_train = df_train.2[,2:ncol(df_train.2)], path = mypath) 
+    results_ms[[i]] <- TargetFunBO(df_train = df_train.2[,2:ncol(df_train.2)], path = mypath, opt.batch = T) 
   }
   
-  
+  save(results_ms, file = paste0(mypath, "/RData/results_movingwindow.RData"))
