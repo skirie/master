@@ -826,7 +826,7 @@ ComputeModelLSTM <- function(df_train, params, type = "full"){
     folds <- cut(indices, breaks = k, labels = FALSE)
     
     for (i in 1:k) {
-      cat("processing fold #", i, "\n")
+      cat("processing fold #", paste0(j, ".", i), "\n")
       
       ## Model
       model <- BuildModelLSTM(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
