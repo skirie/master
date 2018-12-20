@@ -38,7 +38,8 @@
 #### Model Selection Respiration whole time span ##
 #### ----------------------- ##
   
-  results_resp_all_b <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T)
+  results_resp_all_b <- TargetFunBO(df_train = df_train.1[, -1], path = mypath, opt.batch = T)
+  save(results_resp_all_b, file = paste0(mypath, "/RData/results_complete.RData"))
   
 #### ----------------------- ##
 #### Model Selection for an moving window of 4 years ##
