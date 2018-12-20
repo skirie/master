@@ -167,7 +167,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
 
 ## Target function BO ##
 TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, 
-                        optimizer = "adam", path, opt.batch = T){
+                        optimizer = "adam", path, opt.batch = T, ANN = "seq"){
   results_ms <- list()
   df_results_ms <- NULL
   params <- ParamsFun(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
@@ -179,12 +179,12 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
       params[["batchsize"]] <- batchsize[i]
       cat("Models with Batchsize: ", params[["batchsize"]], "!!", sep = "", "\n")
       
-      results_ms[[i]] <- RunModel.BayesianOpt(df_train = df_train, params = params)  
+      results_ms[[i]] <- RunModel.BayesianOpt(df_train = df_train, params = params, ANN = ANN)  
       
       df_results_ms <- rbind(df_results_ms, c(results_ms[[i]]$x$layer, results_ms[[i]]$x$units, batchsize[i], results_ms[[i]]$y))
     }
   } else if (opt.batch == T){
-    results_ms <- RunModel.BayesianOpt.B(df_train = df_train, params = params)
+    results_ms <- RunModel.BayesianOpt.B(df_train = df_train, params = params, ANN = ANN)
     df_results_ms <- data.frame(results_ms$x$layer, results_ms$x$units, results_ms$x$batch, results_ms$y)
   }
   
@@ -290,6 +290,45 @@ BuildModel <- function(df_train, layer, optimizer, units, lr, dropout = F){
     } else {
       return("only three layer possible. pls set layer from 1-3")
     }
+  }
+  
+  model %>% compile(
+    optimizer = optim_, 
+    loss = "mse", 
+    metrics = c("mae"))
+  
+  return(model)
+}
+
+## Function model build LSTM ##
+BuildModelLSTM <- function(df_train, layer, optimizer, units, lr){
+  ## optimizer ##
+  if (optimizer == "rmsprop"){
+    optim_ <- optimizer_rmsprop(lr = lr)  
+  } else if (optimizer == "adam"){
+    optim_ <- optimizer_adam(lr = lr)
+  }
+  
+  ## Model ####
+  if (layer == 1){
+    model <- keras_model_sequential() %>% 
+      layer_gru(units = units[1], input_shape = c(1, ncol(df_train)-1)) %>% 
+      layer_dense(units = 1) 
+  } else if (layer == 2){
+    model <- keras_model_sequential() %>% 
+      layer_gru(units = units[1], input_shape = c(1, ncol(df_train)-1),
+                return_sequences = T) %>% 
+      layer_gru(units = units[2]) %>% 
+      layer_dense(units = 1)
+  } else if (layer == 3){
+    model <- keras_model_sequential() %>% 
+      layer_gru(units = units[1], input_shape = c(1, ncol(df_train)-1),
+                return_sequences = T) %>% 
+      layer_gru(units = units[2], return_sequences = T) %>% 
+      layer_gru(units = units[3]) %>% 
+      layer_dense(units = 1) 
+  } else {
+    return("only three layer possible. pls set layer from 1-3")
   }
   
   model %>% compile(
@@ -407,7 +446,7 @@ RunModel.GridOpt <- function(df_train, params){
 }
 
 ## Function model run Bayesian Opt. ##
-RunModel.BayesianOpt <- function(df_train, params){
+RunModel.BayesianOpt <- function(df_train, params, ANN = "seq"){
   
   nn_fit_bayes <- function(x) {
     units <- x$units
@@ -426,7 +465,11 @@ RunModel.BayesianOpt <- function(df_train, params){
     
     cat("Model: # Layer:", layer, " # units:", units, "\n")
     #model <- BuildModel(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
-    results_ <- ComputeModel(df_train = df_train, params = params, type = "full")
+    if (ANN == "seq"){
+      results_ <- ComputeModel(df_train = df_train, params = params, type = "full")  
+    } else if (ANN == "LSTM"){
+      results_ <- ComputeModelLSTM(df_train = df_train, params = params, type = "full")
+    }
     
     return(mean(results_[[1]], na.rm = T))
   }
@@ -462,7 +505,7 @@ RunModel.BayesianOpt <- function(df_train, params){
 }
 
 ## Function model run Bayesian Opt. (incl. Batchsize) ##
-RunModel.BayesianOpt.B <- function(df_train, params){
+RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
   
   nn_fit_bayes <- function(x) {
     units <- x$units
@@ -483,7 +526,11 @@ RunModel.BayesianOpt.B <- function(df_train, params){
     
     cat("Model: # Layer:", layer, " # units:", units, " # batchsize:", batch, "\n")
     #model <- BuildModel(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
-    results_ <- ComputeModel(df_train = df_train, params = params, type = "full")
+    if (ANN == "seq"){
+      results_ <- ComputeModel(df_train = df_train, params = params, type = "full")  
+    } else if (ANN == "LSTM"){
+      results_ <- ComputeModelLSTM(df_train = df_train, params = params, type = "full")
+    }
     
     return(mean(results_[[1]], na.rm = T))
   }
@@ -722,6 +769,128 @@ ComputeModel <- function(df_train, params, type = "full"){
     }
   }
   return(list(all_mse, all_r2, all_mae_histories))
+}
+
+## Function model compute full for LSTM ##
+ComputeModelLSTM <- function(df_train, params, type = "full"){
+  ## params
+  k <- params[["k"]]
+  num_epochs <- params[["epochs"]]
+  optimizer <- params[["optimizer"]]
+  lr <- params[["lr"]]
+  layer <- params[["layer"]]
+  batch <- params[["batchsize"]]
+  
+  if (type == "pred"){
+    times_cv <- 2
+    units <- rep(params[["units"]], params[["layer"]])
+    if (layer > 1){
+      units[2] <- as.integer(units[2] * 0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2] * 0.5)
+      }
+    }
+  } else if (type == "prepred") {
+    times_cv <- 4
+    units <- rep(params[["units"]], params[["layer"]])
+    if (layer > 1){
+      units[2] <- as.integer(units[2] * 0.5)
+      if (layer == 3){
+        units[3] <- as.integer(units[2] * 0.5)
+      }
+    }
+  } else {
+    times_cv <- params[["times_cv"]]
+    units <- params[["units"]]
+  }
+  
+  ## NA to 0
+  df_train[is.na(df_train)] <- 0
+  
+  ## Callback - early stopping ####
+  callback_list <- list(callback_early_stopping(patience = 6))
+  
+  ## empty lists 
+  all_mae_histories <- NULL
+  all_mse <- NULL
+  all_r2 <- NULL
+  
+  ## CV loop ####
+  set.seed(5)
+  indices <- sample(1:nrow(df_train))
+  folds <- cut(indices, breaks = k, labels = FALSE)
+  
+  for (j in 1:times_cv){
+    set.seed(j * 5)
+    indices <- sample(1:nrow(df_train))
+    folds <- cut(indices, breaks = k, labels = FALSE)
+    
+    for (i in 1:k) {
+      cat("processing fold #", i, "\n")
+      
+      ## Model
+      model <- BuildModelLSTM(df_train = df_train, layer = layer, optimizer = optimizer, units = units, lr = lr)
+      
+      # Prepare the validation data: data from partition # k | Also needed for model build (input shape)
+      val_indices <- which(folds == i, arr.ind = TRUE)
+      set.seed(i*5)
+      vt_indices <- sample(1:length(val_indices))
+      vt_folds <- cut(vt_indices, breaks = 2, labels = FALSE)
+      val_test_indices_2 <- which(vt_folds == 1, arr.ind = TRUE)
+      
+      ## normalize all data
+      df_part_train_scale <- df_train[-val_indices,]
+      
+      mins_data <- apply(df_part_train_scale, 2, min, na.rm = T)
+      maxs_data <- apply(df_part_train_scale, 2, max, na.rm = T)
+      
+      df_train_ <- scale(df_train, center = mins_data, 
+                         scale = maxs_data - mins_data)
+      
+      # Prepare the training and validation data: data from all other partitions
+      partial_train_data <- array(df_train_[-val_indices, 1:ncol(df_train_)-1], 
+                                  dim = c(nrow(df_train_[-val_indices,]), 1, ncol(df_train_)-1))
+      
+      partial_train_targets <- array(df_train_[-val_indices, ncol(df_train_)], 
+                                     dim = nrow(df_train_[-val_indices,]))
+      
+      val_data <- array(df_train_[val_indices[val_test_indices_2], 1:ncol(df_train_)-1], 
+                        dim = c(nrow(df_train_[val_indices[val_test_indices_2],]), 1, ncol(df_train_)-1))
+      
+      val_targets <- array(df_train_[val_indices[val_test_indices_2], ncol(df_train_)], 
+                           dim = nrow(df_train_[val_indices[val_test_indices_2],]))
+      
+      test_data <- array(df_train_[val_indices[-val_test_indices_2], 1:ncol(df_train_)-1], 
+                         dim = c(nrow(df_train_[val_indices[-val_test_indices_2],]), 1, ncol(df_train_)-1))
+      
+      test_targets <- as.numeric(df_train_[val_indices[-val_test_indices_2], ncol(df_train_)])
+      
+      
+      history <- model %>% fit(
+        partial_train_data, partial_train_targets,
+        validation_data = list(val_data, val_targets),
+        epochs = num_epochs, batch_size = batch, verbose = 0,
+        callbacks = callback_list)
+      
+      # Evaluate the model on the validation data
+      mae_history <- history$metrics$val_mean_absolute_error
+      mae_history_ <- rep(NA, num_epochs)
+      mae_history_[1:length(mae_history)] <- mae_history
+      all_mae_histories <- rbind(all_mae_histories, mae_history_)
+      
+      pred_test <- model %>% predict(test_data)
+      mse_ <- mse(test_targets, pred_test)
+      all_mse <- rbind(all_mse, mse_)
+      r2 <- cor(test_targets, pred_test) ^ 2
+      all_r2 <- rbind(all_r2, r2)
+      
+      K <- backend()
+      K$clear_session()
+      gc()
+    }
+  }
+  
+  return(list(all_mae_histories, all_rmse, all_r2))
 }
 
 ## Function model run predictor analysis ##
