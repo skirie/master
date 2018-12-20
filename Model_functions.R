@@ -197,7 +197,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
   cat("Best Model: Layer: ", params[["best"]]$layer, "! Units: ", params[["best"]]$units, "! Batchsize: ", params[["best"]]$batch_size, "!", "\n")
   
   ## Predictoranalysis - Best Predictor Subset
-  df_results_pa <- RunModel.PredictorAnalysis(df_train = df_train, params = params)
+  df_results_pa <- RunModel.PredictorAnalysis(df_train = df_train, params = params, ANN = ANN)
   params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
   save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
@@ -894,7 +894,7 @@ ComputeModelLSTM <- function(df_train, params, type = "full"){
 }
 
 ## Function model run predictor analysis ##
-RunModel.PredictorAnalysis <- function(df_train, params){
+RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
   ## params 
   params[["layer"]] <- params[["best"]]$layer
   params[["batchsize"]] <- params[["best"]]$batch_size
@@ -939,7 +939,11 @@ RunModel.PredictorAnalysis <- function(df_train, params){
                                #units = N, lr = params[["lr"]])
       
       # compute Model for this predictor composition
-      cv_ <- ComputeModel(df_train = all_train, params = params, type = "pred")
+      if (ANN == "seq"){
+        cv_ <- ComputeModel(df_train = all_train, params = params, type = "pred")  
+      } else if (ANN == "LSTM"){
+        cv_ <- ComputeModelLSTM(df_train = all_train, params = params, type = "pred")
+      }
       mse_ <- mean(cv_[[1]], na.rm = T)
       r2_ <- mean(cv_[[2]], na.rm = T)
       all_mse[[i]] <- c(all_mse[[i]], mse_)
