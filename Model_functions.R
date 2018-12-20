@@ -890,7 +890,7 @@ ComputeModelLSTM <- function(df_train, params, type = "full"){
     }
   }
   
-  return(list(all_mae_histories, all_rmse, all_r2))
+  return(list(all_mae_histories, all_mse, all_r2))
 }
 
 ## Function model run predictor analysis ##
