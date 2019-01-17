@@ -114,7 +114,7 @@ TargetPreAnalysisPredictors <- function(df_train){
 #### ----------------------- ##
 
 ## These functions do the whole Modelselection.
-  # They are using the function of 4. and 5. 
+  # They are using the functions of 4. and 5. 
 
 ## Target function GRID ##
 TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200, lr = 1e-4, layer = 2, 
@@ -165,7 +165,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
   return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
 
-## Target function BO ##
+## Target function Bayesian Opitimization ##
 TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, 
                         optimizer = "adam", path, opt.batch = T, ANN = "seq"){
   results_ms <- list()
@@ -643,7 +643,7 @@ ComputeModel <- function(df_train, params, type = "full"){
       }
     }
   } else if (type == "prepred") {
-    times_cv <- 4
+    times_cv <- 10
     units <- rep(params[["units"]], params[["layer"]])
     if (layer > 1){
       units[2] <- as.integer(units[2] * 0.5)
