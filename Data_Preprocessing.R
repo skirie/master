@@ -60,7 +60,7 @@
   df_comox_2 <- rbind(df_comox, df_)
   df_comox_2 <- df_comox_2[order(df_comox_2$dt), ]
   
-  rm(dt, df_, df_raw_o, df_raw, df_comox_2)
+  rm(dt, df_, df_raw_o, df_raw, df_comox)
   
   ## Check for Colinearity ####
   # summary(df_raw_2)
@@ -154,31 +154,51 @@
 #### ------------------------------------- ####
   ## 4 - Plausibilitytests ####
 #### ------------------------------------- #### 
-  
+
   df_raw_3 <- df_raw_2
   ## Tair -20 - 40 ####
+  ## occurance of values outside thresholds 
+  # length(df_raw_3$airT[which(df_raw_3$airT > 40 | df_raw_3$airT < -20)]) / nrow(df_raw_3)
+  
+  ## flag
   df_raw_3$airT[which(df_raw_3$airT > 40 | df_raw_3$airT < -20)] <- NA
   # summary(df_raw_3$airT)
   
   ## Relative Humidity 0 - 100 (105) ####
   # summary(df_raw_3$RH)
+  
+  ## occurance of values outside thresholds 
+  # length(df_raw_3$RH[which(df_raw_3$RH > 105 | df_raw_3$RH <= 0)]) / nrow(df_raw_3)
+  
+  ## flag
   df_raw_3$RH[which(df_raw_3$RH > 105 | df_raw_3$RH <= 0)] <- NA
   df_raw_3$RH[which(df_raw_3$RH > 100 & df_raw_3$RH <= 105)] <- 100
   # summary(df_raw_3$RH)
   
   ## PPFDin 0 - 2730 ####
+  ## occurance of values outside thresholds 
+  # length(df_raw_3$PPFDin[which(df_raw_3$PPFDin > 2730)]) / nrow(df_raw_3)
+  
+  ## flag
   df_raw_3$PPFDin[which(df_raw_3$PPFDin < 0)] <- 0
   df_raw_3$PPFDin[which(df_raw_3$PPFDin > 2730)] <- NA
   # summary(df_raw_3$PPFDin)
   
   ## SWout ####
+  ## occurance of values outside thresholds 
+  # length(df_raw_3$SWout[which(df_raw_3$SWout <= 0)]) / nrow(df_raw_3)
+  
+  ## flag
   df_raw_3$SWout[which(df_raw_3$SWout <= 0)] <- NA
   # summary(df_raw_3$SWout)
   
   ## Windspeed ####
+  ## occurance of values outside thresholds 
+  # length(df_raw_3$WindSpeed[which(df_raw_3$WindSpeed < 0)]) / nrow(df_raw_3)
+  
   df_raw_3$WindSpeed[which(df_raw_3$WindSpeed < 0)] <- NA
   ####  ####
-  
+
 #### ------------------------------------- ####
   ## 5 - Fill gaps of predictors ####
 #### ------------------------------------- ####   
@@ -236,6 +256,8 @@
   df_merged <- merge(df_raw_3, df_comox_2[, c("dt", "temperature", "relative_humidity", "wind_speed")], by = "dt")
   
 ## Tair ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$airT))) / nrow(df_merged)
   ## gaps smaller 6 hours -> interpolating
   # summary(df_merged$airT)
   df_airt_gaps <- DetectGaps(df = df_merged$airT, 12)
@@ -256,6 +278,9 @@
   rm(preds, glm_air, df_airt_gaps)
   
 ## SWout ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$SWout))) / nrow(df_merged)
+  
   # summary(df_merged$SWout)
   ## smal gaps < 6h interpolating
   df_swout_gaps <- DetectGaps(df = df_merged$SWout, 12)
@@ -302,6 +327,9 @@
   # rm(preds, glm_swout, fit_norm, fit_lnorm, fit_chi, fit_gam, df_swout_gaps)
   
 ## LWout ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$LWout))) / nrow(df_merged)
+  
   # summary(df_merged$LWout)
   ## smal gaps < 6h interpolating
   df_lwout_gaps <- DetectGaps(df = df_merged$LWout, 12)
@@ -342,6 +370,9 @@
   # rm(preds, glm_lwout, fit_norm, fit_lnorm, fit_chi, fit_gam, df_lwout_gaps)
   
 ## Soil moisture Main ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$Soil.moisture_main))) / nrow(df_merged)
+  
   summary(df_merged$Soil.moisture_main)
   ## smal gaps < 6h interpolating
   df_swmain_gaps <- DetectGaps(df = df_merged$Soil.moisture_main, 12)
@@ -400,6 +431,9 @@
   # rm(preds, glm_smm, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam, df_swmain_gaps)
 
 ## Soil moisture 1 ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$Soil.moisture1))) / nrow(df_merged)
+  
   # summary(df_merged$Soil.moisture1)
   
   ## smal gaps < 6h interpolating
@@ -422,6 +456,9 @@
   rm(preds, glm_sm1, df_sm1_gaps)
   
 ## Soil moisture 2 ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$Soil.moisture2))) / nrow(df_merged)
+  
   # summary(df_merged$Soil.moisture2)
   
   ## smal gaps < 6h interpolating
@@ -445,6 +482,9 @@
   rm(preds, glm_sm2, df_sm2_gaps)
 
 ## Soil moisture 3 ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$Soil.moisture3))) / nrow(df_merged)
+  
   # summary(df_merged$Soil.moisture3)
   
   ## smal gaps < 6h interpolating
@@ -467,6 +507,9 @@
   rm(preds, glm_sm3, df_sm3_gaps)
   
 ## Soil moisture 4 ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$Soil.moisture4))) / nrow(df_merged)
+  
   # summary(df_merged$Soil.moisture4)
   
   ## smal gaps < 6h interpolating
@@ -489,6 +532,9 @@
   rm(preds, glm_sm4, df_sm4_gaps)
   
 ## LWin ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$LWin))) / nrow(df_merged)
+  
   # summary(df_merged$LWin)
   ## smal gaps < 6h interpolating
   df_lwin_gaps <- DetectGaps(df = df_merged$LWin, 12)
@@ -530,6 +576,9 @@
   # rm(preds, glm_lwin, df_lwin_gaps)
   
 ## Windspeed ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$WindSpeed))) / nrow(df_merged)
+  
   # summary(df_merged$WindSpeed)
   ## smal gaps < 6h interpolating
   df_wind_gaps <- DetectGaps(df = df_merged$WindSpeed, 12)
@@ -551,6 +600,9 @@
   rm(preds, glm_ws, df_wind_gaps)
   
 ## RH ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$RH))) / nrow(df_merged)
+  
   ## check if significant correlated predictors have common gaps
   # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$LWout)) == T)) # 3% common gaps
   # length(which(which(is.na(df_merged$RH)) %in% which(is.na(df_merged$PPFDin)) == T)) # no common gaps
@@ -606,6 +658,9 @@
   # rm(preds, betareg_rh, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam)
   
 ## Precipitation ####
+  ## Missing data - NA 
+  # length(which(is.na(df_merged$Precip))) / nrow(df_merged)
+  
   # summary(df_merged$Precip)
   # # smal gaps < 6h interpolating
   # df_precip_gaps <- DetectGaps(df = df_merged$Precip, 12)
@@ -615,7 +670,7 @@
   # hist(df_merged$Precip[-which(is.na(df_merged$Precip))])
   # summary(df_merged$Precip[-which(is.na(df_merged$Precip))])
   
-  #summary(df_merged)
+  # summary(df_merged)
   #### ####
 
 #### ------------------------------------- ####
@@ -623,10 +678,14 @@
 #### ------------------------------------- ####   
   ## Short wave in ####
   df_merged$SWin <- df_merged$Rnet - (df_merged$LWin - df_merged$LWout) + df_merged$SWout
+  
+  ## occurance
+  # (length(df_merged$SWin[which(df_merged$SWin < -5 )]) + length(df_merged$SWin[which(df_merged$SWin > 1300 )])) / nrow(df_merged)
   df_merged$SWin[which(df_merged$SWin < -5 )] <- NA
   df_merged$SWin[which(df_merged$SWin > 1300 )] <- NA
   df_merged$SWin[which(df_merged$SWin > -5 &  df_merged$SWin < 0 )] <- 0
   # summary(df_merged$SWin)
+  # length(which(is.na(df_merged$SWin))) / nrow(df_merged) ## total ammount of gaps
   
   df_swin_gaps <- DetectGaps(df = df_merged$SWin, 12)
   df_merged$SWin <- InterpolFun(df = df_merged$SWin, df_gaps = df_swin_gaps)
