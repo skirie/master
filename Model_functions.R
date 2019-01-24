@@ -210,7 +210,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
 
 ## Function Parameter ##
 ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, 
-                       Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 4, iters_bo = 25,
+                       Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 6, iters_bo = 25,
                        dropout = F){
   params <- list()
   params[["batchsize"]] <- batchsize
@@ -634,7 +634,7 @@ ComputeModel <- function(df_train, params, type = "full"){
   dropout <- params[["dropout"]]
   
   if (type == "pred"){
-    times_cv <- 2
+    times_cv <- 4
     units <- rep(params[["units"]], params[["layer"]])
     if (layer > 1){
       units[2] <- as.integer(units[2] * 0.5)
@@ -657,7 +657,7 @@ ComputeModel <- function(df_train, params, type = "full"){
   }
   
   ## NA to 0
-  df_train[is.na(df_train)] <- 0
+  # df_train[is.na(df_train)] <- 0
   
   ## empty vectors for Results
   all_mae_histories <- NULL
