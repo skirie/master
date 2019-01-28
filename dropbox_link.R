@@ -13,8 +13,8 @@
   save.image(paste0(mypath, "/RData/save.RData"))
   
   ## Workspace runterladen ####
-  drop_download('Master/R/save.RData', paste0(mypath, "/RData/save.RData"), overwrite = T, dtoken = token)
-  load(paste0(mypath, "/RData/save.RData"))
+  drop_download('Master/R/df_model.RData', paste0(mypath, "/RData/df_model.RData"), overwrite = T, dtoken = token)
+  load(paste0(mypath, "/RData/df_model.RData"))
   
   ## upload WOrkspace ####
   drop_upload(paste0(mypath, "/RData/df_model.RData"), 'Master/R/', mode = "overwrite", dtoken = token)
