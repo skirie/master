@@ -796,6 +796,11 @@
   # summary(df_night_model)
   # summary(df_pred_complete)
   
+  # sort by date
+  df_merged <- df_merged[order(df_merged$dt),]
+  df_night_model <- df_night_model[order(df_night_model$dt), ]
+  df_pred_complete <- df_pred_complete[order(df_pred_complete$dt), ]
+  
   rm(df_night, df_day, df_night_pred, df_night_pred_PPFD, df_pred, df_comox_2, df_raw_2, df_raw_3)
   #### ####
   
