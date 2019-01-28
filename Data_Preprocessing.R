@@ -748,7 +748,7 @@
   
   df_merged$flag_night <- FlagNightData(df_flux = df_merged, df_sun = df_hel_2)
   
-  rm(df_hel, df_hel_2, fun_flag_night)
+  rm(df_hel, df_hel_2, FlagNightData)
   
   #### ####
 
@@ -756,33 +756,52 @@
   ## 8 - Prepare Data for Respiration Model ####
 #### ------------------------------------- ####  
   
-  ## Extract Night Data ####
-  df_night <- df_merged[df_merged$flag_night == 1, -c(2:7, 38:40, 44)]
-  df_night <- df_night[-which(df_night$PPFDin > 5), ]
   
-  ## u* correction ####
+  df_merged$NEE_cor <- df_merged$NEE_measure
+  
+  ## Extract Night and Day Data ####
+  df_night <- df_merged[df_merged$flag_night == 1, ]
+  df_day <- df_merged[df_merged$flag_night == 0, ]
+  
+  # night data with PPFDin > 5, not used in model
+  df_night_pred_PPFD <- df_night[which(df_night$PPFDin > 5),]
+  
+  # night data without PPFDin > 5, not used in model
+  df_night <- df_night[-which(df_night$PPFDin > 5),]
+  
+  # u* correction 
   # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
-  df_night$NEE_cor <- df_night$NEE_measure
   df_night$NEE_cor[df_night$ustar < 0.19] <- NA
-  df_night <- df_night[, -25]
-  # summary(df_night$NEE_measure)
-  # summary(df_night$NEE_cor)
+  
+  # data frame for model
+  df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
+  
+  # data frame for NEE perdiction
+  df_night_pred <-  df_night[is.na(df_night$NEE_cor), ]
+  
+  df_pred <- rbind(df_day, df_night_pred_PPFD, df_night_pred)
+  df_pred_complete <- df_pred[is.na(df_pred$NEE_cor), ]
+  
+  # summary(df_pred)
+  
+  df_night_model <- df_night_model[, -c(2:7, 31, 38:40, 44)]
+  df_pred_complete <- df_pred_complete[, -c(2:7, 31, 38:40, 44)]
+  
+  # summary(df_night_model$NEE_cor)
   # sum(is.na(df_night$NEE_cor)) / nrow(df_night) ## 78 % gaps
   
   ## data frame with NNE != NA ####
   ## and without precip, pressure, lw, sw, co2
-  df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
-  df_night_pred <-  df_night[is.na(df_night$NEE_cor), ]
   
   # summary(df_night_model)
-  # summary(df_night_pred)
+  # summary(df_pred_complete)
   
-  rm(df_night, df_merged)
+  rm(df_night, df_day, df_night_pred, df_night_pred_PPFD, df_pred, df_comox_2, df_raw_2, df_raw_3)
   #### ####
   
 #### ------------------------------------- ####
   ## 9 - Save data ####
 #### ------------------------------------- ####  
   ## save ####
-  save(df_night_model, df_night_pred, file = c(paste0(mypath, "/RData/df_model.RData")))
+  save(df_night_model, df_pred_complete, df_merged, file = c(paste0(mypath, "/RData/df_model.RData")))
   
