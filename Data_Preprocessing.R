@@ -784,8 +784,8 @@
   
   # summary(df_pred)
   
-  df_night_model <- df_night_model[, -c(2:7, 25, 38:40, 44)]
-  df_pred_complete <- df_pred_complete[, -c(2:7, 25, 38:40, 44)]
+  df_night_model <- df_night_model[, -c(2:7, 31, 38:40, 44)]
+  df_pred_complete <- df_pred_complete[, -c(2:7, 31, 38:40, 44)]
   
   # summary(df_night_model$NEE_cor)
   # sum(is.na(df_night$NEE_cor)) / nrow(df_night) ## 78 % gaps
