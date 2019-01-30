@@ -31,9 +31,9 @@
 #### predictor pre analysis ##
 #### ----------------------- ##
 
-  pred_analysis <- TargetPreAnalysisPredictors(df_train = df_night_model)
+  pred_analysis_11 <- TargetPreAnalysisPredictors(df_train = df_night_model)
   df_train.1 <- pred_analysis[[1]]
-  # save(pred_analysis, file = paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
+  # save(pred_analysis_11, file = paste0(mypath, "/RData/results_pred_pre_analysis_11.RData"))
   # load(paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
   
 #### ----------------------- ##
