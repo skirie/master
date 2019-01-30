@@ -48,26 +48,29 @@
 #### Bootstrap best model for error estimation ##
 #### ----------------------- ##
   
-  df_results_boot <- BootstrapPrediction(pre_predictor_results = pred_analysis, 
-                                         model_selection_results = results_resp_all_b, prediction_data = df_pred_complete, rep = 5)
+  df_results_boot_2 <- BootstrapPrediction(pre_predictor_results = pred_analysis, 
+                                           model_selection_results = results_resp_all_b, prediction_data = df_pred_complete, rep = 5)
   
-  df_merged$NEE_gap_filled <- NA
-  df_merged$NEE_final <- NA
+  df_merged$NEE_gap_filled2 <- NA
+  df_merged$NEE_final2 <- NA
   summary(df_merged$dt[which(df_merged$dt %in% df_results_boot$dt)] == df_results_boot$dt)
   
+  df_results_boot <- df_results_boot[order(df_results_boot$dt), ]
+  
   df_merged$NEE_gap_filled[which(df_merged$dt %in% df_results_boot$dt)] <- df_results_boot$mean
-  df_merged$NEE_final <- df_merged$NEE_cor
-  df_merged$NEE_final[which(df_merged$dt %in% df_results_boot$dt)] <- df_results_boot$mean
+  df_merged$NEE_final2 <- df_merged$NEE_cor
+  df_merged$NEE_final2[which(df_merged$dt %in% df_results_boot$dt)] <- df_results_boot_2$mean
   
   summary(df_merged$NEE_final)
+  summary(df_merged$NEE_final2)
   summary(df_merged$NEE)
 
   sum(df_merged$NEE, na.rm = T)
-  sum(df_merged$NEE_final)
+  sum(df_merged$NEE_final2)
 
   plot(df_merged$NEE[which(df_merged$dt %in% df_results_boot$dt)] ~ df_merged$dt[which(df_merged$dt %in% df_results_boot$dt)],
        type = "l", ylim = c(-30,30))  
-  plot(df_merged$NEE_final[which(df_merged$dt %in% df_results_boot$dt)] ~ df_merged$dt[which(df_merged$dt %in% df_results_boot$dt)],
+  plot(df_merged$NEE_final2[which(df_merged$dt %in% df_results_boot$dt)] ~ df_merged$dt[which(df_merged$dt %in% df_results_boot$dt)],
        type = "l", ylim = c(-30,30))  
   lines(df_merged$NEE_final ~df_merged$dt, col = "red")
   
