@@ -691,6 +691,8 @@ ComputeModel <- function(df_train, params, type = "full"){
         # min and max for mormalization
         mins_data <- min(partial_train_data, na.rm = T)
         maxs_data <- max(partial_train_data, na.rm = T)
+        mean_data <- mean(partial_train_data, na.rm = T)
+        sd_data <- sd(partial_train_data, na.rm = T)
       } else {
         val_test_data <- as.matrix(df_train[val_test_indices, -ncol(df_train)])
         partial_train_data <- as.matrix(df_train[-val_test_indices, -ncol(df_train)])
@@ -698,6 +700,8 @@ ComputeModel <- function(df_train, params, type = "full"){
         # min and max for mormalization
         mins_data <- apply(partial_train_data, 2, min, na.rm = T)
         maxs_data <- apply(partial_train_data, 2, max, na.rm = T)
+        mean_data <- apply(partial_train_data, 2, mean, na.rm = T)
+        sd_data <- apply(partial_train_data, 2, sd, na.rm = T)
       }
       
       ## same for target data
@@ -707,6 +711,8 @@ ComputeModel <- function(df_train, params, type = "full"){
       # normalize all data
       mins_targets <- min(partial_train_targets, na.rm = T)
       maxs_targets <- max(partial_train_targets, na.rm = T)
+      mean_targets <- mean(partial_train_targets, na.rm = T)
+      sd_targets <- sd(partial_train_targets, na.rm = T)
       
       # split combined val_test-data into separate validation and test data
       set.seed(i * 5)
@@ -727,21 +733,37 @@ ComputeModel <- function(df_train, params, type = "full"){
       val_targets <- val_test_targets[val_test_indices_2]
       test_targets <- val_test_targets[-val_test_indices_2]
       
+      # # predict = x
+      # partial_train_data <- scale(partial_train_data, center = mins_data,
+      #                             scale = maxs_data - mins_data)
+      # val_data <- scale(val_data, center = mins_data, 
+      #                   scale = maxs_data - mins_data)
+      # test_data <- scale(test_data, center = mins_data, 
+      #                    scale = maxs_data - mins_data)
+      # 
+      # # target = y
+      # partial_train_targets <- scale(partial_train_targets, center = mins_targets, 
+      #                                scale = maxs_targets - mins_targets)
+      # val_targets <- scale(val_targets, center = mins_targets, 
+      #                      scale = maxs_targets - mins_targets)
+      # test_targets <- scale(test_targets, center = mins_targets, 
+      #                       scale = maxs_targets - mins_targets)
+      # 
       # predict = x
-      partial_train_data <- scale(partial_train_data, center = mins_data,
-                                  scale = maxs_data - mins_data)
-      val_data <- scale(val_data, center = mins_data, 
-                        scale = maxs_data - mins_data)
-      test_data <- scale(test_data, center = mins_data, 
-                         scale = maxs_data - mins_data)
+      partial_train_data <- scale(partial_train_data, center = mean_data,
+                                  scale = sd_data)
+      val_data <- scale(val_data, center = mean_data, 
+                        scale = sd_data)
+      test_data <- scale(test_data, center = mean_data, 
+                         scale = sd_data)
       
       # target = y
-      partial_train_targets <- scale(partial_train_targets, center = mins_targets, 
-                                     scale = maxs_targets - mins_targets)
-      val_targets <- scale(val_targets, center = mins_targets, 
-                           scale = maxs_targets - mins_targets)
-      test_targets <- scale(test_targets, center = mins_targets, 
-                            scale = maxs_targets - mins_targets)
+      partial_train_targets <- scale(partial_train_targets, center = mean_targets, 
+                                     scale = sd_targets)
+      val_targets <- scale(val_targets, center = mean_targets, 
+                           scale = sd_targets)
+      test_targets <- scale(test_targets, center = mean_targets, 
+                            scale = sd_targets)
       
       # fit model
       history <- model %>% fit(
@@ -991,12 +1013,19 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   # min and max for mormalization
   mins_data <- apply(df_final_train, 2, min, na.rm = T)
   maxs_data <- apply(df_final_train, 2, max, na.rm = T)
+  mean_data <- apply(df_final_train, 2, mean, na.rm = T)
+  sd_data <- apply(df_final_train, 2, sd, na.rm = T)
   
   # normalization
-  df_final_train_n <- scale(df_final_train, center = mins_data,
-                            scale = maxs_data - mins_data)
-  df_final_pred_n <- scale(df_final_pred, center = mins_data,
-                           scale = maxs_data - mins_data)
+  # df_final_train_n <- scale(df_final_train, center = mins_data,
+  #                           scale = maxs_data - mins_data)
+  # df_final_pred_n <- scale(df_final_pred, center = mins_data,
+  #                          scale = maxs_data - mins_data)
+  
+  df_final_train_n <- scale(df_final_train, center = mean_data,
+                            scale = sd_data)
+  df_final_pred_n <- scale(df_final_pred, center = mean_data,
+                           scale = sd_data)
   
   # change class
   train_data_model <- as.matrix(df_final_train_n[, -ncol(df_final_train_n)])
@@ -1027,8 +1056,8 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     
     # predict and "re-normalization" 
     test_predictions <- model %>% predict(pred_data_model)
-    final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
-    
+    # final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
+    final_result <- test_predictions[,1] * sd_data + mean_data
     pred_mat[,,i] <- final_result
     
     # clear session
