@@ -33,13 +33,23 @@
 
   pred_analysis <- TargetPreAnalysisPredictors(df_train = df_night_model)
   df_train.1 <- pred_analysis[[1]]
-
+  # save(pred_analysis, file = paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
+  # load(paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
+  
 #### ----------------------- ##
 #### Model Selection Respiration whole time span ##
 #### ----------------------- ##
   
   results_resp_all_b <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T, ANN = "LSTM")
-  save(results_resp_all_b, file = paste0(mypath, "/RData/results_complete.RData"))
+  # save(results_resp_all_b, file = paste0(mypath, "/RData/results_complete_", format(Sys.time(), "%d.%m"), ".RData"))
+  # load(paste0(mypath, "/RData/results_complete_24.01.RData"))
+  
+#### ----------------------- ##
+#### Bootstrap best model for error estimation ##
+#### ----------------------- ##
+  
+  df_results_boot <- BootstrapPrediction(pre_predictor_results = pred_analysis, 
+                                         model_selection_results = results_resp_all_b, prediction_data = df_pred_complete)
   
 #### ----------------------- ##
 #### Model Selection for an moving window of 4 years ##
