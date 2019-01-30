@@ -980,6 +980,77 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
   return(df_results)
 }
 
+## Function for Bootstrapping the best model -> error evaluation ##
+BootstrapPrediction <- function(pre_predictor_results, model_selection_results, prediction_data, rep = 100){
+  
+  df_train.1 <- pre_predictor_results[[1]]
+  df_final_train <- df_train.1[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  
+  df_final_pred <- prediction_data[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  
+  # min and max for mormalization
+  mins_data <- apply(df_final_train, 2, min, na.rm = T)
+  maxs_data <- apply(df_final_train, 2, max, na.rm = T)
+  
+  # normalization
+  df_final_train_n <- scale(df_final_train, center = mins_data,
+                            scale = maxs_data - mins_data)
+  df_final_pred_n <- scale(df_final_pred, center = mins_data,
+                           scale = maxs_data - mins_data)
+  
+  # change class
+  train_data_model <- as.matrix(df_final_train_n[, -ncol(df_final_train_n)])
+  train_targets_model <- as.array(df_final_train_n[, ncol(df_final_train_n)])
+  pred_data_model <- as.matrix(df_final_pred_n[, -ncol(df_final_pred_n)])
+  
+  # index_gas <- which(is.na(data_pred[,flux]))
+  pred_mat <- array(dim=c(nrow(df_final_pred_n), 1, rep))
+  
+  # callback
+  callback_list <- list(callback_early_stopping(patience = 6))
+  
+  for(i in 1:rep){
+    # build model
+    model <- BuildModel(df_train = df_final_train_n, layer = results_resp_all_b[[3]]$best$layer,
+                        units = c(results_resp_all_b[[3]]$best$units, results_resp_all_b[[3]]$best$units / 2),
+                        optimizer = "adam", lr = 1e-3)
+    
+    # bootstrap data
+    index_ <- sample(1:nrow(train_data_model), nrow(train_data_model), replace = T)
+    
+    # train model
+    model %>% fit(
+      train_data_model[index_, ], train_targets_model[index_], 
+      epochs = 100, batch_size = results_resp_all_b[[3]]$best$batch_size, 
+      validation_split = 0.2, verbose = 0,
+      callbacks = callback_list)
+    
+    # predict and "re-normalization" 
+    test_predictions <- model %>% predict(pred_data_model)
+    final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
+    
+    pred_mat[,,i] <- final_result
+    
+    # clear session
+    K <- backend()
+    K$clear_session()
+    
+    print(paste("Bootstrap", i, "completed."))
+  }
+  
+  pred_mean <- apply(pred_mat, 1, mean)
+  pred_quan <- apply(pred_mat, 1, quantile, c(0.025, 0.5, 0.975))
+  pred_se <- apply(pred_mat, 1, sd)
+  
+  ## 95 % konfidenzintervall
+  pred_qt <- data.frame(t(pred_quan))
+  pred_qt$konf <- (pred_qt[,3] - pred_qt[,1]) / 2
+  
+  df_results <- cbind("dt" = prediction_data$dt, "mean" = pred_mean, pred_qt, "se" = pred_se)
+  
+  return(df_results)
+}
+
 #### ----------------------- ##
 #### 6 - Additional Functions ##
 #### ----------------------- ##
