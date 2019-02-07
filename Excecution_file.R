@@ -32,7 +32,7 @@
 #### ----------------------- ##
   
   df_night_model <-  df_night_model[, ]
-  pred_analysis_11 <- TargetPreAnalysisPredictors(df_train = df_night_model)
+  pred_analysis <- TargetPreAnalysisPredictors(df_train = df_night_model)
   df_train.1 <- pred_analysis[[1]]
   # save(pred_analysis, file = paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
   # load(paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
@@ -41,20 +41,19 @@
 #### Model Selection Respiration whole time span ##
 #### ----------------------- ##
   
-  results_resp_all_b_11 <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T, ANN = "seq")
-  results_resp_all_b_11[[1]]
+  results_resp_all_b <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T, ANN = "seq")
   
-  # save(results_resp_all_b_11, file = paste0(mypath, "/RData/results_complete_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(results_resp_all_b, file = paste0(mypath, "/RData/results_complete_", format(Sys.time(), "%d.%m"), ".RData"))
   # load(paste0(mypath, "/RData/results_complete_24.01.RData"))
   
 #### ----------------------- ##
 #### Bootstrap best model for error estimation ##
 #### ----------------------- ##
   
-  df_results_boot_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis, 
-                                              model_selection_results = results_resp_all_b_11, 
+  df_results_boot_r0.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis, 
+                                              model_selection_results = results_resp_all_b, 
                                               prediction_data = df_pred_complete, 
-                                              complete_data = df_merged, rep = 5)
+                                              complete_data = df_merged, rep = 100)
 
   plot(df_merged$NEE[which(df_merged$dt %in% df_results_boot$dt)] ~ df_merged$dt[which(df_merged$dt %in% df_results_boot$dt)],
        type = "l", ylim = c(-30,30))  
