@@ -1016,12 +1016,19 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   mean_data <- apply(df_final_train, 2, mean, na.rm = T)
   sd_data <- apply(df_final_train, 2, sd, na.rm = T)
   
-  # normalization
+  # normalization 0 - 1
   # df_final_train_n <- scale(df_final_train, center = mins_data,
   #                           scale = maxs_data - mins_data)
   # df_final_pred_n <- scale(df_final_pred, center = mins_data,
   #                          scale = maxs_data - mins_data)
   
+  # normalization -1 - 1
+  # df_final_train_n <- scale(df_final_train, center = mins_data,
+  #                           scale = maxs_data - mins_data) * 2 - 1
+  # df_final_pred_n <- scale(df_final_pred, center = mins_data,
+  #                          scale = maxs_data - mins_data) * 2 - 1
+  
+  # normalization mean = 0, sd = 1
   df_final_train_n <- scale(df_final_train, center = mean_data,
                             scale = sd_data)
   df_final_pred_n <- scale(df_final_pred, center = mean_data,
@@ -1057,6 +1064,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     # predict and "re-normalization" 
     test_predictions <- model %>% predict(pred_data_model)
     # final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
+    # final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[10] - mins_data[10]) + mins_data[10]
     final_result <- test_predictions[,1] * sd_data + mean_data
     pred_mat[,,i] <- final_result
     
