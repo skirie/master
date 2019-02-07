@@ -1003,7 +1003,7 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
 }
 
 ## Function for Bootstrapping the best model -> error evaluation ##
-BootstrapPrediction <- function(pre_predictor_results, model_selection_results, prediction_data, rep = 100){
+BootstrapPrediction <- function(pre_predictor_results, model_selection_results, prediction_data, complete_data, rep = 100){
   
   df_train.1 <- pre_predictor_results[[1]]
   df_final_train <- df_train.1[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
@@ -1047,8 +1047,8 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   
   for(i in 1:rep){
     # build model
-    model <- BuildModel(df_train = df_final_train_n, layer = results_resp_all_b[[3]]$best$layer,
-                        units = c(results_resp_all_b[[3]]$best$units, results_resp_all_b[[3]]$best$units / 2),
+    model <- BuildModel(df_train = df_final_train_n, layer = model_selection_results[[3]]$best$layer,
+                        units = c(model_selection_results[[3]]$best$units, model_selection_results[[3]]$best$units / 2),
                         optimizer = "adam", lr = 1e-3)
     
     # bootstrap data
@@ -1057,7 +1057,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     # train model
     model %>% fit(
       train_data_model[index_, ], train_targets_model[index_], 
-      epochs = 100, batch_size = results_resp_all_b[[3]]$best$batch_size, 
+      epochs = 100, batch_size = model_selection_results[[3]]$best$batch_size, 
       validation_split = 0.2, verbose = 0,
       callbacks = callback_list)
     
@@ -1065,7 +1065,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     test_predictions <- model %>% predict(pred_data_model)
     # final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
     # final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[10] - mins_data[10]) + mins_data[10]
-    final_result <- test_predictions[,1] * sd_data + mean_data
+    final_result <- test_predictions[,1] * sd_data[10] + mean_data[10]
     pred_mat[,,i] <- final_result
     
     # clear session
@@ -1075,17 +1075,43 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     print(paste("Bootstrap", i, "completed."))
   }
   
-  pred_mean <- apply(pred_mat, 1, mean)
-  pred_quan <- apply(pred_mat, 1, quantile, c(0.025, 0.5, 0.975))
-  pred_se <- apply(pred_mat, 1, sd)
-  
+  pred_mean <- apply(pred_mat, 1, mean, na.rm = T)
+  pred_quan <- apply(pred_mat, 1, quantile, c(0.025, 0.5, 0.975), na.rm = T)
+  pred_se <- apply(pred_mat, 1, sd, na.rm = T)
+
   ## 95 % konfidenzintervall
   pred_qt <- data.frame(t(pred_quan))
   pred_qt$konf <- (pred_qt[,3] - pred_qt[,1]) / 2
-  
+
   df_results <- cbind("dt" = prediction_data$dt, "mean" = pred_mean, pred_qt, "se" = pred_se)
   
-  return(df_results)
+  ## final data frame
+  complete_data$NEE_gap_filled <- NA
+  complete_data$NEE_gap_filled_sd <- NA
+  complete_data$NEE_gap_filled_95.conf <- NA
+  
+  if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
+    complete_data$NEE_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+    complete_data$NEE_final <- complete_data$NEE_cor
+    complete_data$NEE_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+    
+    complete_data$NEE_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
+    complete_data$NEE_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
+  } else {
+    print("Order of rows do not match.")
+    df_results <- df_results[order(df_results$dt), ]
+    try(if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
+      print("Reordered and matched.")
+      complete_data$NEE_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+      complete_data$NEE_final <- complete_data$NEE_cor
+      complete_data$NEE_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+      
+      complete_data$NEE_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
+      complete_data$NEE_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
+    })
+  }
+  
+  return(list(df_results, complete_data))
 }
 
 #### ----------------------- ##
