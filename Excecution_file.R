@@ -31,35 +31,42 @@
 #### predictor pre analysis ##
 #### ----------------------- ##
   
-  df_night_model <-  df_night_model[, ]
-  pred_analysis <- TargetPreAnalysisPredictors(df_train = df_night_model)
-  df_train.1 <- pred_analysis[[1]]
-  # save(pred_analysis, file = paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
-  # load(paste0(mypath, "/RData/results_pred_pre_analysis.RData"))
+  pred_analysis_r0.1 <- TargetPreAnalysisPredictors(df_train = df_night_model)
+  df_train.1 <- pred_analysis_r0.1[[1]]
+  
+  # save(pred_analysis_r0.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_r0.1.RData"))
+  # load(paste0(mypath, "/RData/results_pred_pre_analysis_r0.1.RData"))
   
 #### ----------------------- ##
 #### Model Selection Respiration whole time span ##
 #### ----------------------- ##
   
-  results_resp_all_b <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T, ANN = "seq")
-  
-  # save(results_resp_all_b, file = paste0(mypath, "/RData/results_complete_", format(Sys.time(), "%d.%m"), ".RData"))
+  results_resp_all_b_r0.1 <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T, ANN = "seq")
+
+  # save(results_resp_all_b_r0.1, file = paste0(mypath, "/RData/results_complete_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
   # load(paste0(mypath, "/RData/results_complete_24.01.RData"))
   
 #### ----------------------- ##
 #### Bootstrap best model for error estimation ##
 #### ----------------------- ##
   
-  df_results_boot_r0.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis, 
-                                              model_selection_results = results_resp_all_b, 
+  df_results_boot_r0.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_r0.1, 
+                                              model_selection_results = results_resp_all_b_r0.1, 
                                               prediction_data = df_pred_complete, 
                                               complete_data = df_merged, rep = 100)
 
-  plot(df_merged$NEE[which(df_merged$dt %in% df_results_boot$dt)] ~ df_merged$dt[which(df_merged$dt %in% df_results_boot$dt)],
+  summary(df_results_boot_r0.1[[2]])
+  sum(df_results_boot_r0.1[[2]]$NEE, na.rm = T)
+  sum(df_results_boot_r0.1[[2]]$NEE_final, na.rm = T)
+  
+  plot(df_results_boot_r0.1[[2]]$NEE[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r0.1[[2]]$dt[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)],
        type = "l", ylim = c(-30,30))  
-  plot(df_merged$NEE_final2[which(df_merged$dt %in% df_results_boot$dt)] ~ df_merged$dt[which(df_merged$dt %in% df_results_boot$dt)],
+  plot(df_results_boot_r0.1[[2]]$NEE_final[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r0.1[[2]]$dt[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)],
        type = "l", ylim = c(-30,30))  
-  lines(df_merged$NEE_final ~df_merged$dt, col = "red")
+  lines(df_results_boot_r0.1[[2]]$NEE_final ~ df_results_boot_r0.1[[2]]$dt, col = "red")
+  
+  summary(df_night_model) ## NEE_cor mit fast ausschließlich positiven Werten -> ANN wird kann nicht auf negative Werte trainiert werden.
+  length(df_night_model$NEE_cor[df_night_model$NEE_cor < 0]) ## möglicherweise doch k-means? kurzer versuch notwendig.
   
 #### ----------------------- ##
 #### Model Selection for an moving window of 4 years ##
