@@ -29,6 +29,10 @@
   ## 1 - add time ####
 #### ------------------------------------- ####
   
+  ## First change "NaN" to NA
+  ## NaN to NA ####
+  df_raw_2[df_raw_2 == "NaN"] <- NA
+  
   ## Time format ####
   df_comox$dt <- as.POSIXct(substr(as.character(df_comox$date_time_local), 1, 16), format = "%Y-%m-%e %H:%M", tz = "America/Vancouver")
   
@@ -47,9 +51,6 @@
   ## 2 - First check of raw data ####
 #### ------------------------------------- ####  
   
-  ## NaN to NA ####
-  df_raw_2[df_raw_2 == "NaN"] <- NA
-
   ## expand df_comox to halfhour intervall ####
   dt <- paste0(substr(as.character(df_comox$date_time_local), 1, 14), "30:00")
   dt <- as.POSIXct(dt, format="%Y-%m-%e %H:%M", "America/Vancouver")
@@ -654,7 +655,7 @@
   # summary(preds)
   df_merged[which(is.na(df_merged$RH)),"RH"] <- unname(preds)
   
-  rm(preds, betareg_rh, fit_gam)
+  rm(preds, betareg_rh)
   # rm(preds, betareg_rh, fit_norm, fit_lnorm, fit_beta, fit_weibull, fit_chi, fit_gam)
   
 ## Precipitation ####
@@ -676,6 +677,7 @@
 #### ------------------------------------- ####
   ## 6 - Calculate SWin, mean TS, mean MS and fill gaps ####
 #### ------------------------------------- ####   
+  
   ## Short wave in ####
   df_merged$SWin <- df_merged$Rnet - (df_merged$LWin - df_merged$LWout) + df_merged$SWout
   
@@ -807,6 +809,7 @@
 #### ------------------------------------- ####
   ## 9 - Save data ####
 #### ------------------------------------- ####  
+  
   ## save ####
   save(df_night_model, df_pred_complete, df_merged, file = c(paste0(mypath, "/RData/df_model.RData")))
   
