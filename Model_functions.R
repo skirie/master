@@ -734,21 +734,32 @@ ComputeModel <- function(df_train, params, type = "full"){
       test_targets <- val_test_targets[-val_test_indices_2]
       
       ## normalisation range 0 - 1
+      # # predict = x
+      # partial_train_data <- scale(partial_train_data, center = mins_data,
+      #                             scale = maxs_data - mins_data)
+      # val_data <- scale(val_data, center = mins_data,
+      #                   scale = maxs_data - mins_data)
+      # test_data <- scale(test_data, center = mins_data,
+      #                    scale = maxs_data - mins_data)
+      # 
+      # # target = y
+      # partial_train_targets <- scale(partial_train_targets, center = mins_targets,
+      #                                scale = maxs_targets - mins_targets)
+      # val_targets <- scale(val_targets, center = mins_targets,
+      #                      scale = maxs_targets - mins_targets)
+      # test_targets <- scale(test_targets, center = mins_targets,
+      #                       scale = maxs_targets - mins_targets)
+      
+      ## normalisation range -1 to 1
       # predict = x
-      partial_train_data <- scale(partial_train_data, center = mins_data,
-                                  scale = maxs_data - mins_data)
-      val_data <- scale(val_data, center = mins_data,
-                        scale = maxs_data - mins_data)
-      test_data <- scale(test_data, center = mins_data,
-                         scale = maxs_data - mins_data)
-
+      partial_train_data <-   as.matrix(2 * (partial_train_data - mins_data) / (maxs_data - mins_data) - 1)
+      val_data <-             as.matrix(2 * (val_data - mins_data) / (maxs_data - mins_data) - 1)
+      test_data <-            as.matrix(2 * (test_data - mins_data) / (maxs_data - mins_data) - 1)
+      
       # target = y
-      partial_train_targets <- scale(partial_train_targets, center = mins_targets,
-                                     scale = maxs_targets - mins_targets)
-      val_targets <- scale(val_targets, center = mins_targets,
-                           scale = maxs_targets - mins_targets)
-      test_targets <- scale(test_targets, center = mins_targets,
-                            scale = maxs_targets - mins_targets)
+      partial_train_targets <-  as.matrix(2 * (partial_train_targets - mins_targets) / (maxs_targets - mins_targets) - 1)
+      val_targets <-            as.matrix(2 * (val_targets - mins_targets) / (maxs_targets - mins_targets) - 1)
+      test_targets <-           as.matrix(2 * (test_targets - mins_targets) / (maxs_targets - mins_targets) - 1)
 
       ## normalisation mean = 0, sd =  1
       # predict = x
@@ -1018,17 +1029,15 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   mean_data <- apply(df_final_train, 2, mean, na.rm = T)
   sd_data <- apply(df_final_train, 2, sd, na.rm = T)
   
-  # normalization 0 - 1
-  df_final_train_n <- scale(df_final_train, center = mins_data,
-                            scale = maxs_data - mins_data)
-  df_final_pred_n <- scale(df_final_pred, center = mins_data,
-                           scale = maxs_data - mins_data)
-  
-  # normalization -1 - 1
+  # normalization range 0 - 1
   # df_final_train_n <- scale(df_final_train, center = mins_data,
-  #                           scale = maxs_data - mins_data) * 2 - 1
+  #                           scale = maxs_data - mins_data)
   # df_final_pred_n <- scale(df_final_pred, center = mins_data,
-  #                          scale = maxs_data - mins_data) * 2 - 1
+  #                          scale = maxs_data - mins_data)
+  
+  # normalization range -1 - 1
+  df_final_train_n <- 2 * (df_final_train - mins_data) / (maxs_data - mins_data) - 1
+  df_final_pred_n <- 2 * (df_final_pred - mins_data) / (maxs_data - mins_data) - 1
   
   # normalization mean = 0, sd = 1
   # df_final_train_n <- scale(df_final_train, center = mean_data,
@@ -1047,11 +1056,22 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   # callback
   callback_list <- list(callback_early_stopping(patience = 6))
   
+  # units
+  layer <- model_selection_results[[3]]$best$layer
+  units <- model_selection_results[[3]]$best$units
+  batch <- model_selection_results[[3]]$best$batch_size
+  
+  units <- as.integer(rep(units, layer))
+  if (layer > 1){
+    units[2] <- as.integer(units[2] * 0.5)
+    if (layer == 3){
+      units[3] <- as.integer(units[2] * 0.5)
+    }
+  }
+  
   for(i in 1:rep){
     # build model
-    model <- BuildModel(df_train = df_final_train_n, layer = model_selection_results[[3]]$best$layer,
-                        units = c(model_selection_results[[3]]$best$units, model_selection_results[[3]]$best$units / 2),
-                        optimizer = "adam", lr = 1e-3)
+    model <- BuildModel(df_train = df_final_train_n, layer = layer, units = units, optimizer = "adam", lr = 1e-3)
     
     # bootstrap data
     index_ <- sample(1:nrow(train_data_model), nrow(train_data_model), replace = T)
@@ -1059,14 +1079,14 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     # train model
     model %>% fit(
       train_data_model[index_, ], train_targets_model[index_], 
-      epochs = 100, batch_size = model_selection_results[[3]]$best$batch_size, 
+      epochs = 100, batch_size = batch, 
       validation_split = 0.2, verbose = 0,
       callbacks = callback_list)
     
     # predict and "re-normalization" 
     test_predictions <- model %>% predict(pred_data_model)
-    final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
-    # final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[10] - mins_data[10]) + mins_data[10]
+    # final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
+    final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[10] - mins_data[10]) + mins_data[10]
     # final_result <- test_predictions[,1] * sd_data[10] + mean_data[10]
     pred_mat[,,i] <- final_result
     
