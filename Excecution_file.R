@@ -25,45 +25,48 @@
 #### Check for preprocessed data  ##
 #### ----------------------- ##
   
-  CheckData()
+  # CheckData()
 
 #### ----------------------- ##
 #### predictor pre analysis ##
 #### ----------------------- ##
   
-  pred_analysis_r0.1 <- TargetPreAnalysisPredictors(df_train = df_night_model)
-  df_train.1 <- pred_analysis_r0.1[[1]]
+  pred_analysis_r1.1 <- TargetPreAnalysisPredictors(df_train = df_night_model)
+  df_train.1 <- pred_analysis_r1.1[[1]]
   
-  # save(pred_analysis_r0.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_r0.1.RData"))
+  save(pred_analysis_r1.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_r1.1.RData"))
   # load(paste0(mypath, "/RData/results_pred_pre_analysis_r0.1.RData"))
   
 #### ----------------------- ##
 #### Model Selection Respiration whole time span ##
 #### ----------------------- ##
   
-  results_resp_all_b_r0.1 <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T, ANN = "seq")
+  results_resp_all_b_r1.1 <- TargetFunBO(df_train = df_train.1, path = mypath, opt.batch = T, ANN = "seq")
 
-  # save(results_resp_all_b_r0.1, file = paste0(mypath, "/RData/results_complete_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_r1.1, file = paste0(mypath, "/RData/results_complete_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
   # load(paste0(mypath, "/RData/results_complete_24.01.RData"))
   
 #### ----------------------- ##
 #### Bootstrap best model for error estimation ##
 #### ----------------------- ##
   
-  df_results_boot_r0.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_r0.1, 
-                                              model_selection_results = results_resp_all_b_r0.1, 
+  df_results_boot_r1.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_r1.1, 
+                                              model_selection_results = results_resp_all_b_r1.1, 
                                               prediction_data = df_pred_complete, 
                                               complete_data = df_merged, rep = 100)
-
-  summary(df_results_boot_r0.1[[2]])
-  sum(df_results_boot_r0.1[[2]]$NEE, na.rm = T)
-  sum(df_results_boot_r0.1[[2]]$NEE_final, na.rm = T)
   
-  plot(df_results_boot_r0.1[[2]]$NEE[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r0.1[[2]]$dt[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)],
+  
+  save(df_results_boot_r1.1, file = paste0(mypath, "/RData/results_boots_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  
+  summary(df_results_boot_r1.1[[2]])
+  sum(df_results_boot_r1.1[[2]]$NEE, na.rm = T)
+  sum(df_results_boot_r1.1[[2]]$NEE_final, na.rm = T)
+  
+  plot(df_results_boot_r1.1[[2]]$NEE[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
        type = "l", ylim = c(-30,30))  
-  plot(df_results_boot_r0.1[[2]]$NEE_final[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r0.1[[2]]$dt[!is.na(df_results_boot_r0.1[[2]]$NEE_gap_filled)],
+  plot(df_results_boot_r1.1[[2]]$NEE_final[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
        type = "l", ylim = c(-30,30))  
-  lines(df_results_boot_r0.1[[2]]$NEE_final ~ df_results_boot_r0.1[[2]]$dt, col = "red")
+  lines(df_results_boot_r1.1[[2]]$NEE_final ~ df_results_boot_r1.1[[2]]$dt, col = "red")
   
   summary(df_night_model) ## NEE_cor mit fast ausschließlich positiven Werten -> ANN wird kann nicht auf negative Werte trainiert werden.
   length(df_night_model$NEE_cor[df_night_model$NEE_cor < 0]) ## möglicherweise doch k-means? kurzer versuch notwendig.
