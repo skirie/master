@@ -1085,9 +1085,9 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     
     # predict and "re-normalization" 
     test_predictions <- model %>% predict(pred_data_model)
-    # final_result <- test_predictions[,1] * (maxs_data[10] - mins_data[10]) + mins_data[10]
-    final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[10] - mins_data[10]) + mins_data[10]
-    # final_result <- test_predictions[,1] * sd_data[10] + mean_data[10]
+    # final_result <- test_predictions[,1] * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
+    final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
+    # final_result <- test_predictions[,1] * sd_data[length(sd_data)] + mean_data[length(mean_data)]
     pred_mat[,,i] <- final_result
     
     # clear session
