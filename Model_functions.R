@@ -752,14 +752,14 @@ ComputeModel <- function(df_train, params, type = "full"){
       
       ## normalisation range -1 to 1
       # predict = x
-      partial_train_data <-   as.matrix(2 * (partial_train_data - mins_data) / (maxs_data - mins_data) - 1)
-      val_data <-             as.matrix(2 * (val_data - mins_data) / (maxs_data - mins_data) - 1)
-      test_data <-            as.matrix(2 * (test_data - mins_data) / (maxs_data - mins_data) - 1)
+      partial_train_data <-   as.matrix(2 *  t(t(t(t(partial_train_data) - mins_data)) / (maxs_data - mins_data)) - 1)
+      val_data <-             as.matrix(2 *  t(t(t(t(val_data)           - mins_data)) / (maxs_data - mins_data)) - 1)
+      test_data <-            as.matrix(2 *  t(t(t(t(test_data)          - mins_data)) / (maxs_data - mins_data)) - 1)
       
       # target = y
-      partial_train_targets <-  as.matrix(2 * (partial_train_targets - mins_targets) / (maxs_targets - mins_targets) - 1)
-      val_targets <-            as.matrix(2 * (val_targets - mins_targets) / (maxs_targets - mins_targets) - 1)
-      test_targets <-           as.matrix(2 * (test_targets - mins_targets) / (maxs_targets - mins_targets) - 1)
+      partial_train_targets <-  as.matrix(2 * t(t(t(t(partial_train_targets) - mins_targets)) / (maxs_targets - mins_targets)) - 1)
+      val_targets <-            as.matrix(2 * t(t(t(t(val_targets)           - mins_targets)) / (maxs_targets - mins_targets)) - 1)
+      test_targets <-           as.matrix(2 * t(t(t(t(test_targets)          - mins_targets)) / (maxs_targets - mins_targets)) - 1)
 
       ## normalisation mean = 0, sd =  1
       # predict = x
@@ -1036,8 +1036,8 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   #                          scale = maxs_data - mins_data)
   
   # normalization range -1 - 1
-  df_final_train_n <- 2 * (df_final_train - mins_data) / (maxs_data - mins_data) - 1
-  df_final_pred_n <- 2 * (df_final_pred - mins_data) / (maxs_data - mins_data) - 1
+  df_final_train_n <- 2 * t(t(t(t(df_final_train) - mins_data)) / (maxs_data - mins_data)) - 1
+  df_final_pred_n <- 2 * t(t(t(t(df_final_pred) - mins_data)) / (maxs_data - mins_data)) - 1
   
   # normalization mean = 0, sd = 1
   # df_final_train_n <- scale(df_final_train, center = mean_data,
