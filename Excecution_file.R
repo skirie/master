@@ -65,8 +65,14 @@
   plot(df_results_boot_r1.1[[2]]$NEE[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
        type = "l", ylim = c(-30,30))  
   plot(df_results_boot_r1.1[[2]]$NEE_final[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
+       type = "l", ylim = c(-30,30))
+  plot(df_results_boot_r1.1[[2]]$Ts1[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
        type = "l", ylim = c(-30,30))  
   lines(df_results_boot_r1.1[[2]]$NEE_final ~ df_results_boot_r1.1[[2]]$dt, col = "red")
+  
+  plot(df_results_boot_r1.1[[2]]$NEE_final[1:20000] ~ df_results_boot_r1.1[[2]]$dt[1:20000],
+       type = "l", ylim = c(-30,30))  
+  
   
   summary(df_night_model) ## NEE_cor mit fast ausschließlich positiven Werten -> ANN wird kann nicht auf negative Werte trainiert werden.
   length(df_night_model$NEE_cor[df_night_model$NEE_cor < 0]) ## möglicherweise doch k-means? kurzer versuch notwendig.
