@@ -211,7 +211,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
 ## Function Parameter ##
 ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, 
                        Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 6, iters_bo = 25,
-                       dropout = F){
+                       dropout = F, cluster = F){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -226,6 +226,7 @@ ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", 
   params[["times_cv"]] <- times_cv
   params[["iters_bo"]] <- iters_bo
   params[["dropout"]] <- dropout
+  params[["cluster"]] <- cluster
   return(params)
 }
 
@@ -632,6 +633,7 @@ ComputeModel <- function(df_train, params, type = "full"){
   layer <- params[["layer"]]
   batch <- params[["batchsize"]]
   dropout <- params[["dropout"]]
+  cluster <- params[["cluster"]]
   
   if (type == "pred"){
     times_cv <- 4
@@ -667,9 +669,22 @@ ComputeModel <- function(df_train, params, type = "full"){
   ## Callback - early stopping 
   callback_list <- list(callback_early_stopping(patience = 6))
   
+  ## cluster 
+  clusters <- kmeans(df_train[, ncol(df_train)], 4)
+  
   ## Crossvalidation j times k-fold crossvalidation
   for (j in 1:times_cv){
     set.seed(j * 5)
+    
+    if(cluster == T){
+      c_1 <- sample(which(clusters$cluster == 1), as.integer(0.9 * min(clusters$size)))
+      c_3 <- sample(which(clusters$cluster == 2), as.integer(0.9 * min(clusters$size)))
+      c_3 <- sample(which(clusters$cluster == 3), as.integer(0.9 * min(clusters$size)))
+      c_4 <- sample(which(clusters$cluster == 4), as.integer(0.9 * min(clusters$size)))
+      
+      df_train <- df_train[c(c_1, c_2, c_3, c_4),]
+    }
+    
     indices <- sample(1:nrow(df_train))
     folds <- cut(indices, breaks = k, labels = FALSE)
     
