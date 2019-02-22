@@ -44,11 +44,6 @@ CheckData <- function(){
 
 ## Pre analysis Predictors ##
 PreAnalysisPredictors <- function(df_train, params){
-  ## params 
-  params[["layer"]] <- 2
-  params[["batchsize"]] <- 30
-  params[["units"]] <- 40
-  
   ## required empty features / target 
   all_mse <- vector("list", ncol(df_train) - 1)
   all_r2 <- vector("list", ncol(df_train) - 1)
@@ -79,7 +74,8 @@ PreAnalysisPredictors <- function(df_train, params){
 }
 
 ## Predictor preanalysis target data frame ##
-TargetPreAnalysisPredictors <- function(df_train){
+TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "range_1_1", 
+                                        batchsize = 30, units = 40, layer = 2){
   names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_main", "TS_mean")
   names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
   # names_rad <- c("SWin", "PPFDin")
@@ -89,7 +85,7 @@ TargetPreAnalysisPredictors <- function(df_train){
   w_soil_m <- which(names_ %in% names_soil_m)
   # w_rad <- which(names_ %in% names_rad)
   
-  params <- ParamsFun()
+  params <- ParamsFun(layer = layer, batchsize = batchsize, units = units, cluster = cluster, method_norm = method_norm)
   
   res_soil_t <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_t, ncol(df_train))], params = params)
   res_soil_m <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_m, ncol(df_train))], params = params)
@@ -167,10 +163,10 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
 
 ## Target function Bayesian Opitimization ##
 TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, 
-                        optimizer = "adam", path, opt.batch = T, ANN = "seq"){
+                        optimizer = "adam", path, opt.batch = T, ANN = "seq", cluster = T, method_norm = "range_1_1"){
   results_ms <- list()
   df_results_ms <- NULL
-  params <- ParamsFun(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer)
+  params <- ParamsFun(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer, cluster = cluster, method_norm = method_norm)
   
   ## Best Model structure (Layers & Nodes)
   ## modelrun for different batchsizes
@@ -188,7 +184,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
     df_results_ms <- data.frame(results_ms$x$layer, results_ms$x$units, results_ms$x$batch, results_ms$y)
   }
   
-  save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData")))
+  # save(df_results_ms, results_ms, file = c(paste0(path, "/RData/results_model_", layer, "l_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData")))
   
   ## Best Model (Layers & Nodes)
   params[["best"]]$layer <- df_results_ms[which(df_results_ms[, 4] == min(df_results_ms[, 4])), 1]
@@ -200,7 +196,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
   df_results_pa <- RunModel.PredictorAnalysis(df_train = df_train, params = params, ANN = ANN)
   params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
-  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
+  # save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
   return(list(df_results_ms, df_results_pa, params))
 }
 
@@ -209,9 +205,9 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
 #### ----------------------- ##
 
 ## Function Parameter ##
-ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, 
+ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, units = 30,
                        Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 6, iters_bo = 25,
-                       dropout = F, cluster = F){
+                       dropout = F, cluster = T, method_norm = "range_1_1"){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -219,6 +215,7 @@ ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", 
   params[["optimizer"]] <- optimizer
   params[["lr"]] <- lr
   params[["layer"]] <- layer
+  params[["units"]] <- units
   params[["Nmin"]] <- Nmin
   params[["Nmax"]] <- Nmax
   params[["by_"]] <- by_
@@ -227,6 +224,7 @@ ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", 
   params[["iters_bo"]] <- iters_bo
   params[["dropout"]] <- dropout
   params[["cluster"]] <- cluster
+  params[["method_norm"]] <- method_norm
   return(params)
 }
 
@@ -634,6 +632,7 @@ ComputeModel <- function(df_train, params, type = "full"){
   batch <- params[["batchsize"]]
   dropout <- params[["dropout"]]
   cluster <- params[["cluster"]]
+  method_norm <- params[["method_norm"]]
   
   if (type == "pred"){
     times_cv <- 4
@@ -677,12 +676,12 @@ ComputeModel <- function(df_train, params, type = "full"){
     set.seed(j * 5)
     
     if(cluster == T){
-      c_1 <- sample(which(clusters$cluster == 1), as.integer(0.9 * min(clusters$size)))
-      c_3 <- sample(which(clusters$cluster == 2), as.integer(0.9 * min(clusters$size)))
-      c_3 <- sample(which(clusters$cluster == 3), as.integer(0.9 * min(clusters$size)))
-      c_4 <- sample(which(clusters$cluster == 4), as.integer(0.9 * min(clusters$size)))
+      c_1 <- sample(which(clusters$cluster == 1), as.integer(0.9 * min(clusters$size, na.rm = T)))
+      c_2 <- sample(which(clusters$cluster == 2), as.integer(0.9 * min(clusters$size, na.rm = T)))
+      c_3 <- sample(which(clusters$cluster == 3), as.integer(0.9 * min(clusters$size, na.rm = T)))
+      c_4 <- sample(which(clusters$cluster == 4), as.integer(0.9 * min(clusters$size, na.rm = T)))
       
-      df_train <- df_train[c(c_1, c_2, c_3, c_4),]
+      df_train <- df_train[c(c_1, c_2, c_3, c_4), ]
     }
     
     indices <- sample(1:nrow(df_train))
@@ -748,51 +747,54 @@ ComputeModel <- function(df_train, params, type = "full"){
       val_targets <- val_test_targets[val_test_indices_2]
       test_targets <- val_test_targets[-val_test_indices_2]
       
-      ## normalisation range 0 - 1
-      # # predict = x
-      # partial_train_data <- scale(partial_train_data, center = mins_data,
-      #                             scale = maxs_data - mins_data)
-      # val_data <- scale(val_data, center = mins_data,
-      #                   scale = maxs_data - mins_data)
-      # test_data <- scale(test_data, center = mins_data,
-      #                    scale = maxs_data - mins_data)
-      # 
-      # # target = y
-      # partial_train_targets <- scale(partial_train_targets, center = mins_targets,
-      #                                scale = maxs_targets - mins_targets)
-      # val_targets <- scale(val_targets, center = mins_targets,
-      #                      scale = maxs_targets - mins_targets)
-      # test_targets <- scale(test_targets, center = mins_targets,
-      #                       scale = maxs_targets - mins_targets)
-      
-      ## normalisation range -1 to 1
-      # predict = x
-      partial_train_data <-   as.matrix(2 *  t(t(t(t(partial_train_data) - mins_data)) / (maxs_data - mins_data)) - 1)
-      val_data <-             as.matrix(2 *  t(t(t(t(val_data)           - mins_data)) / (maxs_data - mins_data)) - 1)
-      test_data <-            as.matrix(2 *  t(t(t(t(test_data)          - mins_data)) / (maxs_data - mins_data)) - 1)
-      
-      # target = y
-      partial_train_targets <-  as.matrix(2 * t(t(t(t(partial_train_targets) - mins_targets)) / (maxs_targets - mins_targets)) - 1)
-      val_targets <-            as.matrix(2 * t(t(t(t(val_targets)           - mins_targets)) / (maxs_targets - mins_targets)) - 1)
-      test_targets <-           as.matrix(2 * t(t(t(t(test_targets)          - mins_targets)) / (maxs_targets - mins_targets)) - 1)
+      ## normalisation
+      if(method_norm == "range_0_1"){
+        ## normalisation range 0 - 1
+        # predict = x
+        partial_train_data <- scale(partial_train_data, center = mins_data,
+                                    scale = maxs_data - mins_data)
+        val_data <- scale(val_data, center = mins_data,
+                          scale = maxs_data - mins_data)
+        test_data <- scale(test_data, center = mins_data,
+                           scale = maxs_data - mins_data)
+        
+        # target = y
+        partial_train_targets <- scale(partial_train_targets, center = mins_targets,
+                                       scale = maxs_targets - mins_targets)
+        val_targets <- scale(val_targets, center = mins_targets,
+                             scale = maxs_targets - mins_targets)
+        test_targets <- scale(test_targets, center = mins_targets,
+                              scale = maxs_targets - mins_targets)
+      } else if(method_norm == "range_1_1"){
+        ## normalisation range -1 to 1
+        # predict = x
+        partial_train_data <-   as.matrix(2 *  t(t(t(t(partial_train_data) - mins_data)) / (maxs_data - mins_data)) - 1)
+        val_data <-             as.matrix(2 *  t(t(t(t(val_data)           - mins_data)) / (maxs_data - mins_data)) - 1)
+        test_data <-            as.matrix(2 *  t(t(t(t(test_data)          - mins_data)) / (maxs_data - mins_data)) - 1)
+        
+        # target = y
+        partial_train_targets <-  as.matrix(2 * t(t(t(t(partial_train_targets) - mins_targets)) / (maxs_targets - mins_targets)) - 1)
+        val_targets <-            as.matrix(2 * t(t(t(t(val_targets)           - mins_targets)) / (maxs_targets - mins_targets)) - 1)
+        test_targets <-           as.matrix(2 * t(t(t(t(test_targets)          - mins_targets)) / (maxs_targets - mins_targets)) - 1)
+      } else if(method_norm == "standarize"){
+        ## normalisation mean = 0, sd =  1
+        # predict = x
+        partial_train_data <- scale(partial_train_data, center = mean_data,
+                                    scale = sd_data)
+        val_data <- scale(val_data, center = mean_data,
+                          scale = sd_data)
+        test_data <- scale(test_data, center = mean_data,
+                           scale = sd_data)
 
-      ## normalisation mean = 0, sd =  1
-      # predict = x
-      # partial_train_data <- scale(partial_train_data, center = mean_data,
-      #                             scale = sd_data)
-      # val_data <- scale(val_data, center = mean_data, 
-      #                   scale = sd_data)
-      # test_data <- scale(test_data, center = mean_data, 
-      #                    scale = sd_data)
-      # 
-      # # target = y
-      # partial_train_targets <- scale(partial_train_targets, center = mean_targets, 
-      #                                scale = sd_targets)
-      # val_targets <- scale(val_targets, center = mean_targets, 
-      #                      scale = sd_targets)
-      # test_targets <- scale(test_targets, center = mean_targets, 
-      #                       scale = sd_targets)
-      
+        # target = y
+        partial_train_targets <- scale(partial_train_targets, center = mean_targets,
+                                       scale = sd_targets)
+        val_targets <- scale(val_targets, center = mean_targets,
+                             scale = sd_targets)
+        test_targets <- scale(test_targets, center = mean_targets,
+                              scale = sd_targets)
+      }
+
       # fit model
       history <- model %>% fit(
         partial_train_data, partial_train_targets,
@@ -1033,41 +1035,6 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
 ## Function for Bootstrapping the best model -> error evaluation ##
 BootstrapPrediction <- function(pre_predictor_results, model_selection_results, prediction_data, complete_data, rep = 100){
   
-  df_train.1 <- pre_predictor_results[[1]]
-  df_final_train <- df_train.1[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
-  
-  df_final_pred <- prediction_data[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
-  
-  # min and max for mormalization
-  mins_data <- apply(df_final_train, 2, min, na.rm = T)
-  maxs_data <- apply(df_final_train, 2, max, na.rm = T)
-  mean_data <- apply(df_final_train, 2, mean, na.rm = T)
-  sd_data <- apply(df_final_train, 2, sd, na.rm = T)
-  
-  # normalization range 0 - 1
-  # df_final_train_n <- scale(df_final_train, center = mins_data,
-  #                           scale = maxs_data - mins_data)
-  # df_final_pred_n <- scale(df_final_pred, center = mins_data,
-  #                          scale = maxs_data - mins_data)
-  
-  # normalization range -1 - 1
-  df_final_train_n <- 2 * t(t(t(t(df_final_train) - mins_data)) / (maxs_data - mins_data)) - 1
-  df_final_pred_n <- 2 * t(t(t(t(df_final_pred) - mins_data)) / (maxs_data - mins_data)) - 1
-  
-  # normalization mean = 0, sd = 1
-  # df_final_train_n <- scale(df_final_train, center = mean_data,
-  #                           scale = sd_data)
-  # df_final_pred_n <- scale(df_final_pred, center = mean_data,
-  #                          scale = sd_data)
-  
-  # change class
-  train_data_model <- as.matrix(df_final_train_n[, -ncol(df_final_train_n)])
-  train_targets_model <- as.array(df_final_train_n[, ncol(df_final_train_n)])
-  pred_data_model <- as.matrix(df_final_pred_n[, -ncol(df_final_pred_n)])
-  
-  # index_gas <- which(is.na(data_pred[,flux]))
-  pred_mat <- array(dim=c(nrow(df_final_pred_n), 1, rep))
-  
   # callback
   callback_list <- list(callback_early_stopping(patience = 6))
   
@@ -1084,7 +1051,67 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     }
   }
   
+  # extract columns
+  df_train.1 <- pre_predictor_results[[1]]
+  df_final_train <- df_train.1[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  
+  df_final_pred <- prediction_data[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  
+  # cluster
+  cluster <- model_selection_results[[3]]$cluster
+  clusters <- kmeans(df_final_train[, ncol(df_final_train)], 4)
+  
+  # normalization method
+  method_norm <- model_selection_results[[3]]$method_norm
+  # prediction matrix 
+  pred_mat <- array(dim=c(nrow(df_final_pred), 1, rep))
+  
+  ## bootstrap loop
   for(i in 1:rep){
+    set.seed(i * 5)
+    
+    if(cluster == T){
+      c_1 <- sample(which(clusters$cluster == 1), as.integer(0.9 * min(clusters$size, na.rm = T)))
+      c_2 <- sample(which(clusters$cluster == 2), as.integer(0.9 * min(clusters$size, na.rm = T)))
+      c_3 <- sample(which(clusters$cluster == 3), as.integer(0.9 * min(clusters$size, na.rm = T)))
+      c_4 <- sample(which(clusters$cluster == 4), as.integer(0.9 * min(clusters$size, na.rm = T)))
+      
+      df_final_train_2 <- df_final_train[c(c_1, c_2, c_3, c_4), ]
+    } else {
+      df_final_train_2 <- df_final_train
+    }
+   
+    # min and max for mormalization
+    mins_data <- apply(df_final_train_2, 2, min, na.rm = T)
+    maxs_data <- apply(df_final_train_2, 2, max, na.rm = T)
+    mean_data <- apply(df_final_train_2, 2, mean, na.rm = T)
+    sd_data <- apply(df_final_train_2, 2, sd, na.rm = T)
+    
+    ## normalization
+    if(method_norm == "range_0_1"){
+      # normalization range 0 - 1
+      df_final_train_n <- scale(df_final_train, center = mins_data,
+                                scale = maxs_data - mins_data)
+      df_final_pred_n <- scale(df_final_pred, center = mins_data,
+                               scale = maxs_data - mins_data)
+    } else if(method_norm == "range_1_1"){
+      # normalization range -1 - 1
+      df_final_train_n <- 2 * t(t(t(t(df_final_train_2) - mins_data)) / (maxs_data - mins_data)) - 1
+      df_final_pred_n <- 2 * t(t(t(t(df_final_pred) - mins_data)) / (maxs_data - mins_data)) - 1
+    } else if(method_norm == "standarize"){
+      # normalization mean = 0, sd = 1
+      df_final_train_n <- scale(df_final_train, center = mean_data,
+                                scale = sd_data)
+      df_final_pred_n <- scale(df_final_pred, center = mean_data,
+                               scale = sd_data)
+    }
+    
+    # change class
+    train_data_model <- as.matrix(df_final_train_n[, -ncol(df_final_train_n)])
+    train_targets_model <- as.array(df_final_train_n[, ncol(df_final_train_n)])
+    pred_data_model <- as.matrix(df_final_pred_n[, -ncol(df_final_pred_n)])
+    
+    # index_gas <- which(is.na(data_pred[,flux]))
     # build model
     model <- BuildModel(df_train = df_final_train_n, layer = layer, units = units, optimizer = "adam", lr = 1e-3)
     
