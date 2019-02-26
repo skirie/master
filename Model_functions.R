@@ -1033,7 +1033,7 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
 }
 
 ## Function for Bootstrapping the best model -> error evaluation ##
-BootstrapPrediction <- function(pre_predictor_results, model_selection_results, prediction_data, complete_data, rep = 100){
+BootstrapPrediction <- function(pre_predictor_results, model_selection_results, complete_data, rep = 100){
   
   # callback
   callback_list <- list(callback_early_stopping(patience = 6))
@@ -1052,10 +1052,23 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   }
   
   # extract columns
-  df_train.1 <- pre_predictor_results[[1]]
-  df_final_train <- df_train.1[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  # prediction data (all data which is not in train data)
+  # Extract Night and Day Data ####
+  df_night <- complete_data[complete_data$flag_night == 1, ]
+  # night data without PPFDin > 5, not used in model
+  df_night <- df_night[-which(df_night$PPFDin > 5),]
+  # u* correction 
+  # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
+  df_night$NEE_cor[df_night$ustar < 0.19] <- NA
   
-  df_final_pred <- prediction_data[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  # data frame for model
+  df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
+  
+  df_final_pred <- complete_data[-which(complete_data$dt %in% df_night_model$dt),]
+  df_final_pred_2 <- df_final_pred[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  
+  # train data
+  df_final_train <- pre_predictor_results[[1]][,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
   
   # cluster
   cluster <- model_selection_results[[3]]$cluster
@@ -1063,8 +1076,9 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   
   # normalization method
   method_norm <- model_selection_results[[3]]$method_norm
+  
   # prediction matrix 
-  pred_mat <- array(dim=c(nrow(df_final_pred), 1, rep))
+  pred_mat <- array(dim=c(nrow(df_final_pred_2), 1, rep))
   
   ## bootstrap loop
   for(i in 1:rep){
@@ -1090,19 +1104,19 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     ## normalization
     if(method_norm == "range_0_1"){
       # normalization range 0 - 1
-      df_final_train_n <- scale(df_final_train, center = mins_data,
+      df_final_train_n <- scale(df_final_train_2, center = mins_data,
                                 scale = maxs_data - mins_data)
-      df_final_pred_n <- scale(df_final_pred, center = mins_data,
+      df_final_pred_n <- scale(df_final_pred_2, center = mins_data,
                                scale = maxs_data - mins_data)
     } else if(method_norm == "range_1_1"){
       # normalization range -1 - 1
       df_final_train_n <- 2 * t(t(t(t(df_final_train_2) - mins_data)) / (maxs_data - mins_data)) - 1
-      df_final_pred_n <- 2 * t(t(t(t(df_final_pred) - mins_data)) / (maxs_data - mins_data)) - 1
+      df_final_pred_n <- 2 * t(t(t(t(df_final_pred_2) - mins_data)) / (maxs_data - mins_data)) - 1
     } else if(method_norm == "standarize"){
       # normalization mean = 0, sd = 1
-      df_final_train_n <- scale(df_final_train, center = mean_data,
+      df_final_train_n <- scale(df_final_train_2, center = mean_data,
                                 scale = sd_data)
-      df_final_pred_n <- scale(df_final_pred, center = mean_data,
+      df_final_pred_n <- scale(df_final_pred_2, center = mean_data,
                                scale = sd_data)
     }
     
@@ -1127,9 +1141,16 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     
     # predict and "re-normalization" 
     test_predictions <- model %>% predict(pred_data_model)
-    # final_result <- test_predictions[,1] * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
-    final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
-    # final_result <- test_predictions[,1] * sd_data[length(sd_data)] + mean_data[length(mean_data)]
+    
+    # back scaliling
+    if(method_norm == "range_0_1"){
+      # normalization range 0 - 1
+      final_result <- test_predictions[,1] * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
+    } else if(method_norm == "range_1_1"){
+      final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
+    } else if(method_norm == "standarize"){
+      final_result <- test_predictions[,1] * sd_data[length(sd_data)] + mean_data[length(mean_data)]
+    }
     pred_mat[,,i] <- final_result
     
     # clear session
@@ -1147,31 +1168,32 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   pred_qt <- data.frame(t(pred_quan))
   pred_qt$konf <- (pred_qt[,3] - pred_qt[,1]) / 2
 
-  df_results <- cbind("dt" = prediction_data$dt, "mean" = pred_mean, pred_qt, "se" = pred_se)
+  df_results <- cbind("dt" = df_final_pred$dt, "mean" = pred_mean, pred_qt, "se" = pred_se)
   
   ## final data frame
-  complete_data$NEE_gap_filled <- NA
-  complete_data$NEE_gap_filled_sd <- NA
-  complete_data$NEE_gap_filled_95.conf <- NA
+  complete_data$Re_gap_filled <- NA
+  complete_data$Re_gap_filled_sd <- NA
+  complete_data$Re_gap_filled_95.conf <- NA
+  complete_data$Re_final <- NA
   
   if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
-    complete_data$NEE_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
-    complete_data$NEE_final <- complete_data$NEE_cor
-    complete_data$NEE_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+    complete_data$Re_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+    complete_data$Re_final[which(complete_data$dt %in% df_night_model$dt)] <- df_night_model$NEE_cor
+    complete_data$Re_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
     
-    complete_data$NEE_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
-    complete_data$NEE_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
+    complete_data$Re_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
+    complete_data$Re_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
   } else {
     print("Order of rows do not match.")
     df_results <- df_results[order(df_results$dt), ]
     try(if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
       print("Reordered and matched.")
-      complete_data$NEE_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
-      complete_data$NEE_final <- complete_data$NEE_cor
-      complete_data$NEE_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+      complete_data$Re_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+      complete_data$Re_final[which(complete_data$dt %in% df_night_model$dt)] <- df_night_model$NEE_cor
+      complete_data$Re_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
       
-      complete_data$NEE_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
-      complete_data$NEE_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
+      complete_data$Re_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
+      complete_data$Re_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
     })
   }
   
