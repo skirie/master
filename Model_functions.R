@@ -75,7 +75,7 @@ PreAnalysisPredictors <- function(df_train, params){
 
 ## Predictor preanalysis target data frame ##
 TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "range_1_1", 
-                                        batchsize = 30, units = 40, layer = 2){
+                                        batchsize = 30, units = 40, layer = 2, variable = "NEE_cor"){
   names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_main", "TS_mean")
   names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
   # names_rad <- c("SWin", "PPFDin")
@@ -85,7 +85,8 @@ TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "ra
   w_soil_m <- which(names_ %in% names_soil_m)
   # w_rad <- which(names_ %in% names_rad)
   
-  params <- ParamsFun(layer = layer, batchsize = batchsize, units = units, cluster = cluster, method_norm = method_norm)
+  params <- ParamsFun(layer = layer, batchsize = batchsize, units = units, cluster = cluster, method_norm = method_norm,
+                      variable = variable)
   
   res_soil_t <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_t, ncol(df_train))], params = params)
   res_soil_m <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_m, ncol(df_train))], params = params)
@@ -100,7 +101,7 @@ TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "ra
   # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
   
   pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
-                                    "year_ws_sin", "year_sa_sin", "day_sin", "NEE_cor"))
+                                    "year_ws_sin", "year_sa_sin", "day_sin"), variable)
   df_train_ <- df_train[, pred_model]
   return(list(df_train_, res_soil_t, res_soil_m))
 }
@@ -163,10 +164,12 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
 
 ## Target function Bayesian Opitimization ##
 TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200, lr = 1e-3, layer = 3, 
-                        optimizer = "adam", path, opt.batch = T, ANN = "seq", cluster = T, method_norm = "range_1_1"){
+                        optimizer = "adam", path, opt.batch = T, ANN = "seq", cluster = T, method_norm = "range_1_1",
+                        variable = "NEE_cor"){
   results_ms <- list()
   df_results_ms <- NULL
-  params <- ParamsFun(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer, cluster = cluster, method_norm = method_norm)
+  params <- ParamsFun(k = k, epochs = epochs, lr = lr, layer = layer, optimizer = optimizer, cluster = cluster, method_norm = method_norm,
+                      variable = variable)
   
   ## Best Model structure (Layers & Nodes)
   ## modelrun for different batchsizes
@@ -207,7 +210,7 @@ TargetFunBO <- function(df_train, batchsize = c(20, 40, 80), k = 5, epochs = 200
 ## Function Parameter ##
 ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", lr = 1e-3, layer = 3L, units = 30,
                        Nmin = 50L, Nmax = 120L, by_ = 12, layer_balance = 0.5, times_cv = 6, iters_bo = 25,
-                       dropout = F, cluster = T, method_norm = "range_1_1"){
+                       dropout = F, cluster = T, method_norm = "range_1_1", variable = "NEE_cor"){
   params <- list()
   params[["batchsize"]] <- batchsize
   params[["k"]] <- k
@@ -225,6 +228,7 @@ ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", 
   params[["dropout"]] <- dropout
   params[["cluster"]] <- cluster
   params[["method_norm"]] <- method_norm
+  params[["variable"]] <- variable
   return(params)
 }
 
@@ -668,14 +672,14 @@ ComputeModel <- function(df_train, params, type = "full"){
   ## Callback - early stopping 
   callback_list <- list(callback_early_stopping(patience = 6))
   
-  ## cluster 
-  clusters <- kmeans(df_train[, ncol(df_train)], 4)
-  
   ## Crossvalidation j times k-fold crossvalidation
   for (j in 1:times_cv){
     set.seed(j * 5)
     
     if(cluster == T){
+      ## cluster 
+      clusters <- kmeans(df_train[, ncol(df_train)], 4)
+      
       c_1 <- sample(which(clusters$cluster == 1), as.integer(0.9 * min(clusters$size, na.rm = T)))
       c_2 <- sample(which(clusters$cluster == 2), as.integer(0.9 * min(clusters$size, na.rm = T)))
       c_3 <- sample(which(clusters$cluster == 3), as.integer(0.9 * min(clusters$size, na.rm = T)))
@@ -1052,27 +1056,39 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   }
   
   # extract columns
-  # prediction data (all data which is not in train data)
-  # Extract Night and Day Data ####
-  df_night <- complete_data[complete_data$flag_night == 1, ]
-  # night data without PPFDin > 5, not used in model
-  df_night <- df_night[-which(df_night$PPFDin > 5),]
-  # u* correction 
-  # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
-  df_night$NEE_cor[df_night$ustar < 0.19] <- NA
-  
-  # data frame for model
-  df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
-  
-  df_final_pred <- complete_data[-which(complete_data$dt %in% df_night_model$dt),]
-  df_final_pred_2 <- df_final_pred[,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
-  
-  # train data
-  df_final_train <- pre_predictor_results[[1]][,c(model_selection_results[[3]]$best_preds_full$predictors, "NEE_cor")]
+  if (variable == "NEE_cor"){
+    # prediction data (all data which is not in train data)
+    # Extract Night and Day Data ####
+    df_night <- complete_data[which(complete_data$flag_night == 1), ]
+    # night data without PPFDin > 5, not used in model
+    df_night <- df_night[-which(df_night$PPFDin > 5),]
+    # u* correction 
+    # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
+    df_night$NEE_cor[df_night$ustar < 0.19] <- NA
+    
+    # data frame for model
+    df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
+    
+    df_final_pred <- complete_data[-which(complete_data$dt %in% df_night_model$dt),]
+    df_final_pred_2 <- df_final_pred[,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+    
+    # train data
+    df_final_train <- pre_predictor_results[[1]][,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+  } else if(variable == "GPP"){
+    # Extract Day Data and PPFDin > 5 ####
+    df_day <- complete_data[which(complete_data$flag_night == 0 & df_day$PPFDin > 5), ]
+    df_final_pred <- df_day[which(is.na(df_day$GPP)), ]
+    df_final_pred_2 <- df_final_pred[,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+    
+    df_final_train <- pre_predictor_results[[1]][,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+  }
+
   
   # cluster
   cluster <- model_selection_results[[3]]$cluster
-  clusters <- kmeans(df_final_train[, ncol(df_final_train)], 4)
+  
+  # variable 
+  variable <- model_selection_results[[3]]$variable
   
   # normalization method
   method_norm <- model_selection_results[[3]]$method_norm
@@ -1085,6 +1101,8 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     set.seed(i * 5)
     
     if(cluster == T){
+      clusters <- kmeans(df_final_train[, ncol(df_final_train)], 4)
+      
       c_1 <- sample(which(clusters$cluster == 1), as.integer(0.9 * min(clusters$size, na.rm = T)))
       c_2 <- sample(which(clusters$cluster == 2), as.integer(0.9 * min(clusters$size, na.rm = T)))
       c_3 <- sample(which(clusters$cluster == 3), as.integer(0.9 * min(clusters$size, na.rm = T)))
@@ -1170,33 +1188,66 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
 
   df_results <- cbind("dt" = df_final_pred$dt, "mean" = pred_mean, pred_qt, "se" = pred_se)
   
-  ## final data frame
-  complete_data$Re_gap_filled <- NA
-  complete_data$Re_gap_filled_sd <- NA
-  complete_data$Re_gap_filled_95.conf <- NA
-  complete_data$Re_final <- NA
-  
-  if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
-    complete_data$Re_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
-    complete_data$Re_final[which(complete_data$dt %in% df_night_model$dt)] <- df_night_model$NEE_cor
-    complete_data$Re_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+  if (variable == "NEE_cor"){
+    ## final data frame
+    complete_data$Re_gap_filled <- NA
+    complete_data$Re_gap_filled_sd <- NA
+    complete_data$Re_gap_filled_95.conf <- NA
+    complete_data$Re_final <- NA
     
-    complete_data$Re_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
-    complete_data$Re_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
-  } else {
-    print("Order of rows do not match.")
-    df_results <- df_results[order(df_results$dt), ]
-    try(if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
-      print("Reordered and matched.")
+    if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
       complete_data$Re_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+      
       complete_data$Re_final[which(complete_data$dt %in% df_night_model$dt)] <- df_night_model$NEE_cor
       complete_data$Re_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
       
       complete_data$Re_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
       complete_data$Re_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
-    })
+    } else {
+      print("Order of rows do not match.")
+      df_results <- df_results[order(df_results$dt), ]
+      try(if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
+        print("Reordered and matched.")
+        complete_data$Re_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+        
+        complete_data$Re_final[which(complete_data$dt %in% df_night_model$dt)] <- df_night_model$NEE_cor
+        complete_data$Re_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+        
+        complete_data$Re_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
+        complete_data$Re_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
+      })
+    }
+  } else if (variable == "GPP"){
+    ## final data frame
+    complete_data$GPP_gap_filled <- NA
+    complete_data$GPP_gap_filled_sd <- NA
+    complete_data$GPP_gap_filled_95.conf <- NA
+    complete_data$GPP_final <- NA
+    
+    if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
+      complete_data$GPP_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+      
+      complete_data$GPP_final[which(complete_data$dt %in% df_final_train$dt)] <- df_final_train$GPP
+      complete_data$GPP_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+      
+      complete_data$GPP_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
+      complete_data$GPP_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
+    } else {
+      print("Order of rows do not match.")
+      df_results <- df_results[order(df_results$dt), ]
+      try(if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
+        print("Reordered and matched.")
+        complete_data$GPP_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+        
+        complete_data$GPP_final[which(complete_data$dt %in% df_final_train$dt)] <- df_final_train$GPP
+        complete_data$GPP_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
+        
+        complete_data$GPP_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
+        complete_data$GPP_gap_filled_95.conf[which(complete_data$dt %in% df_results$dt)] <- df_results$konf
+      })
+    }
   }
-  
+
   return(list(df_results, complete_data))
 }
 
