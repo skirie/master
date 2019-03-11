@@ -78,7 +78,6 @@
   save(df_results_boot_r0.1, file =   paste0(mypath, "/RData/results_boots_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
   save(df_results_boot_m0s1, file =   paste0(mypath, "/RData/results_boots_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
-  pred_analysis_r0.1[[1]]
   # summary(df_results_boot_r1.1_c[[2]])
   # summary(df_results_boot_r1.1[[2]])
   # 
@@ -149,7 +148,9 @@
     df_re_m0s1$Re_final[which(df_re_m0s1$flag_night == 0 & df_re_m0s1$PPFDin > 5)]
   
   # summary(df_re_m0s1$GPP)
-
+  
+  rm(df_results_boot_m0s1, df_results_boot_r0.1, df_results_boot_r1.1)
+  
 #### ----------------------- ##
 #### Gap filling GPP ##
 #### ----------------------- ##  
@@ -164,7 +165,7 @@
 #### ----------------------- ##
 #### predictor pre analysis GPP ##
 #### ----------------------- ##
-  summary(df_re_r1.1_day)
+
   pred_analysis_gpp_r1.1 <- TargetPreAnalysisPredictors(df_train = df_re_r1.1_day, cluster = F, 
                                                         method_norm = "range_1_1", variable = "GPP")
   pred_analysis_gpp_r0.1 <- TargetPreAnalysisPredictors(df_train = df_re_r0.1_day, cluster = F, 
@@ -201,21 +202,22 @@
   df_results_boot_gpp_r1.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_r1.1, 
                                                   model_selection_results = results_resp_all_b_gpp_r1.1, 
                                                   complete_data = df_re_r1.1, 
-                                                  rep = 100)
+                                                  rep = 100, variable = "GPP")
   df_results_boot_gpp_r0.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_r0.1, 
                                                   model_selection_results = results_resp_all_b_gpp_r0.1, 
                                                   complete_data = df_re_r0.1, 
-                                                  rep = 100)
+                                                  rep = 100, variable = "GPP")
   df_results_boot_gpp_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_m0s1, 
                                                   model_selection_results = results_resp_all_b_gpp_m0s1, 
                                                   complete_data = df_re_m0s1, 
-                                                  rep = 100)
-  
+                                                  rep = 100, variable = "GPP")
   
   save(df_results_boot_gpp_r1.1, file = paste0(mypath, "/RData/results_boots_gpp_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
   save(df_results_boot_gpp_r0.1, file = paste0(mypath, "/RData/results_boots_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
   save(df_results_boot_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
+  summary(df_results_boot_gpp_r0.1[[2]])
+
 #### ----------------------- ##
 #### Model Selection for an moving window of 4 years ##
 #### ----------------------- ##
