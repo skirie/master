@@ -100,8 +100,14 @@ TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "ra
   pred_m <-  as.character(res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse))])
   # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
   
-  pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
-                                    "year_ws_sin", "year_sa_sin", "day_sin"), variable)
+  if (variable == "NEE_cor"){
+    pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
+                                      "year_ws_sin", "year_sa_sin", "day_sin"), variable)
+  } else if (variable == "GPP"){
+    pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "SWin", "PPFDin", "h_last_precip", "precip_30d", 
+                                      "year_ws_sin", "year_sa_sin", "day_sin"), variable)
+  }
+
   df_train_ <- df_train[, pred_model]
   return(list(df_train_, res_soil_t, res_soil_m))
 }
@@ -217,8 +223,8 @@ ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", 
   params[["epochs"]] <- epochs
   params[["optimizer"]] <- optimizer
   params[["lr"]] <- lr
-  params[["layer"]] <- layer
   params[["units"]] <- units
+  params[["layer"]] <- layer
   params[["Nmin"]] <- Nmin
   params[["Nmax"]] <- Nmax
   params[["by_"]] <- by_
@@ -229,6 +235,16 @@ ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", 
   params[["cluster"]] <- cluster
   params[["method_norm"]] <- method_norm
   params[["variable"]] <- variable
+  
+  # if (variable == "NEE_cor"){
+  #   params[["layer"]] <- layer
+  #   params[["Nmin"]] <- Nmin
+  #   params[["Nmax"]] <- Nmax
+  # } else if (variable == "GPP"){
+  #   params[["layer"]] <- 4L
+  #   params[["Nmin"]] <- Nmin
+  #   params[["Nmax"]] <- 150L
+  # }
   return(params)
 }
 
@@ -543,7 +559,7 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
     makeIntegerParam("layer", 1, params[["layer"]]),
     makeIntegerParam("units", params[["Nmin"]], params[["Nmax"]]),
     makeIntegerParam("batch", 5, 80))
-  
+
   ## create learner -> dicekriging (GaussianProcess)
   surr.km <- makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
   
@@ -1037,7 +1053,7 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
 }
 
 ## Function for Bootstrapping the best model -> error evaluation ##
-BootstrapPrediction <- function(pre_predictor_results, model_selection_results, complete_data, rep = 100){
+BootstrapPrediction <- function(pre_predictor_results, model_selection_results, complete_data, rep = 100, variable){
   
   # callback
   callback_list <- list(callback_early_stopping(patience = 6))
@@ -1070,19 +1086,18 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
     
     df_final_pred <- complete_data[-which(complete_data$dt %in% df_night_model$dt),]
-    df_final_pred_2 <- df_final_pred[,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+    df_final_pred_2 <- df_final_pred[, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
     
     # train data
-    df_final_train <- pre_predictor_results[[1]][,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+    df_final_train <- pre_predictor_results[[1]][, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
   } else if(variable == "GPP"){
     # Extract Day Data and PPFDin > 5 ####
-    df_day <- complete_data[which(complete_data$flag_night == 0 & df_day$PPFDin > 5), ]
+    df_day <- complete_data[which(complete_data$flag_night == 0 & complete_data$PPFDin > 5), ]
     df_final_pred <- df_day[which(is.na(df_day$GPP)), ]
-    df_final_pred_2 <- df_final_pred[,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+    df_final_pred_2 <- df_final_pred[, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
     
-    df_final_train <- pre_predictor_results[[1]][,c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
+    df_final_train <- pre_predictor_results[[1]][, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
   }
-
   
   # cluster
   cluster <- model_selection_results[[3]]$cluster
@@ -1222,12 +1237,11 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     complete_data$GPP_gap_filled <- NA
     complete_data$GPP_gap_filled_sd <- NA
     complete_data$GPP_gap_filled_95.conf <- NA
-    complete_data$GPP_final <- NA
     
     if (summary(complete_data$dt[which(complete_data$dt %in% df_results$dt)] == df_results$dt)[[2]] == nrow(df_results)) {
       complete_data$GPP_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
       
-      complete_data$GPP_final[which(complete_data$dt %in% df_final_train$dt)] <- df_final_train$GPP
+      complete_data$GPP_final<- complete_data$GPP
       complete_data$GPP_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
       
       complete_data$GPP_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
@@ -1239,7 +1253,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
         print("Reordered and matched.")
         complete_data$GPP_gap_filled[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
         
-        complete_data$GPP_final[which(complete_data$dt %in% df_final_train$dt)] <- df_final_train$GPP
+        complete_data$GPP_final<- complete_data$GPP
         complete_data$GPP_final[which(complete_data$dt %in% df_results$dt)] <- df_results$mean
         
         complete_data$GPP_gap_filled_sd[which(complete_data$dt %in% df_results$dt)] <- df_results$se
