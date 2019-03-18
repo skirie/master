@@ -76,8 +76,8 @@ PreAnalysisPredictors <- function(df_train, params){
 ## Predictor preanalysis target data frame ##
 TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "range_1_1", 
                                         batchsize = 30, units = 40, layer = 2, variable = "NEE_cor"){
-  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_main", "TS_mean")
-  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
+  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "TS_mean")
+  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture_main", "MS_mean")
   # names_rad <- c("SWin", "PPFDin")
   
   names_ <- colnames(df_train)
@@ -101,10 +101,10 @@ TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "ra
   # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
   
   if (variable == "NEE_cor"){
-    pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "h_last_precip", "precip_30d", 
+    pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "h_last_precip", "precip_30d", 
                                       "year_ws_sin", "year_sa_sin", "day_sin"), variable)
   } else if (variable == "GPP"){
-    pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "SWin", "PPFDin", "h_last_precip", "precip_30d", 
+    pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "SWout", "PPFDin", "h_last_precip", "precip_30d", 
                                       "year_ws_sin", "year_sa_sin", "day_sin"), variable)
   }
 
