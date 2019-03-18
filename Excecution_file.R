@@ -78,40 +78,7 @@
   save(df_results_boot_r0.1, file =   paste0(mypath, "/RData/results_boots_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
   save(df_results_boot_m0s1, file =   paste0(mypath, "/RData/results_boots_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
-  # summary(df_results_boot_r1.1_c[[2]])
-  # summary(df_results_boot_r1.1[[2]])
-  # 
-  # summary(df_results_boot_r0.1_c[[2]])
-  # summary(df_results_boot_r0.1[[2]])
-  # 
-  # summary(df_results_boot_m0s1_c[[2]])
-  # summary(df_results_boot_m0s1[[2]])
-  # 
-  # mean(df_results_boot_r1.1_c[[2]]$Re_final, na.rm = T)
-  # mean(df_results_boot_r1.1[[2]]$Re_final, na.rm = T)
-  # mean(df_results_boot_r1.1[[2]]$Re_gap_filled_95.conf, na.rm = T)
-  # 
-  # mean(df_results_boot_r0.1_c[[2]]$Re_final, na.rm = T)
-  # mean(df_results_boot_r0.1[[2]]$Re_final, na.rm = T)
-  # mean(df_results_boot_r0.1[[2]]$Re_gap_filled_95.conf, na.rm = T)
-  # 
-  # mean(df_results_boot_m0s1_c[[2]]$Re_final, na.rm = T)
-  # mean(df_results_boot_m0s1[[2]]$Re_final, na.rm = T)
-  # mean(df_results_boot_m0s1[[2]]$Re_gap_filled_95.conf, na.rm = T)
-  
-  # plot(df_results_boot_r1.1[[2]]$NEE[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
-  #      type = "l", ylim = c(-30,30))  
-  # plot(df_results_boot_r1.1[[2]]$NEE_final[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
-  #      type = "l", ylim = c(-30,30))
-  # plot(df_results_boot_r1.1[[2]]$Ts1[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)] ~ df_results_boot_r1.1[[2]]$dt[!is.na(df_results_boot_r1.1[[2]]$NEE_gap_filled)],
-  #      type = "l", ylim = c(-30,30))  
-  # lines(df_results_boot_r1.1[[2]]$NEE_final ~ df_results_boot_r1.1[[2]]$dt, col = "red")
-  # 
-  # plot(df_results_boot_r1.1[[2]]$NEE_cor[1:20000] ~ df_results_boot_r1.1[[2]]$dt[1:20000],
-  #      type = "l", ylim = c(-30,30))  
-  # plot(df_results_boot_r1.1[[2]]$NEE_gap_filled[1:20000] ~ df_results_boot_r1.1[[2]]$dt[1:20000],
-  #      type = "l", ylim = c(-30,30)) 
-  
+
 #### ----------------------- ##
 #### Calculate GPP ##
 #### ----------------------- ##
@@ -168,13 +135,13 @@
 
   pred_analysis_gpp_r1.1 <- TargetPreAnalysisPredictors(df_train = df_re_r1.1_day, cluster = F, 
                                                         method_norm = "range_1_1", variable = "GPP")
-  pred_analysis_gpp_r0.1 <- TargetPreAnalysisPredictors(df_train = df_re_r0.1_day, cluster = F, 
-                                                        method_norm = "range_0_1", variable = "GPP")
+  # pred_analysis_gpp_r0.1 <- TargetPreAnalysisPredictors(df_train = df_re_r0.1_day, cluster = F, 
+  #                                                       method_norm = "range_0_1", variable = "GPP")
   pred_analysis_gpp_m0s1 <- TargetPreAnalysisPredictors(df_train = df_re_m0s1_day, cluster = F, 
                                                         method_norm = "standarize", variable = "GPP")
   
   save(pred_analysis_gpp_r1.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_r1.1.RData"))
-  save(pred_analysis_gpp_r0.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_r0.1.RData"))
+  # save(pred_analysis_gpp_r0.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_r0.1.RData"))
   save(pred_analysis_gpp_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_m0s1.RData"))
   
   # load(paste0(mypath, "/RData/results_pred_pre_analysis_r0.1.RData"))
@@ -185,13 +152,13 @@
   
   results_resp_all_b_gpp_r1.1 <- TargetFunBO(df_train = pred_analysis_gpp_r1.1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                              cluster = F, method_norm = "range_1_1", variable = "GPP")
-  results_resp_all_b_gpp_r0.1 <- TargetFunBO(df_train = pred_analysis_gpp_r0.1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
-                                             cluster = F, method_norm = "range_0_1", variable = "GPP")
+  # results_resp_all_b_gpp_r0.1 <- TargetFunBO(df_train = pred_analysis_gpp_r0.1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
+  #                                            cluster = F, method_norm = "range_0_1", variable = "GPP")
   results_resp_all_b_gpp_m0s1 <- TargetFunBO(df_train = pred_analysis_gpp_m0s1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                              cluster = F, method_norm = "standarize", variable = "GPP")
   
   save(results_resp_all_b_gpp_r1.1, file = paste0(mypath, "/RData/results_complete_gpp_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(results_resp_all_b_gpp_r0.1, file = paste0(mypath, "/RData/results_complete_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(results_resp_all_b_gpp_r0.1, file = paste0(mypath, "/RData/results_complete_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
   save(results_resp_all_b_gpp_m0s1, file = paste0(mypath, "/RData/results_complete_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   # load(paste0(mypath, "/RData/results_complete_24.01.RData"))
   
@@ -203,20 +170,36 @@
                                                   model_selection_results = results_resp_all_b_gpp_r1.1, 
                                                   complete_data = df_re_r1.1, 
                                                   rep = 100, variable = "GPP")
-  df_results_boot_gpp_r0.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_r0.1, 
-                                                  model_selection_results = results_resp_all_b_gpp_r0.1, 
-                                                  complete_data = df_re_r0.1, 
-                                                  rep = 100, variable = "GPP")
+  # df_results_boot_gpp_r0.1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_r0.1, 
+  #                                                 model_selection_results = results_resp_all_b_gpp_r0.1, 
+  #                                                 complete_data = df_re_r0.1, 
+  #                                                 rep = 100, variable = "GPP")
   df_results_boot_gpp_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_m0s1, 
                                                   model_selection_results = results_resp_all_b_gpp_m0s1, 
                                                   complete_data = df_re_m0s1, 
                                                   rep = 100, variable = "GPP")
   
   save(df_results_boot_gpp_r1.1, file = paste0(mypath, "/RData/results_boots_gpp_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(df_results_boot_gpp_r0.1, file = paste0(mypath, "/RData/results_boots_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_gpp_r0.1, file = paste0(mypath, "/RData/results_boots_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
   save(df_results_boot_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
+  summary(df_results_boot_gpp_r1.1[[2]])
   summary(df_results_boot_gpp_r0.1[[2]])
+  summary(df_results_boot_gpp_m0s1[[2]])
+  
+  summary(df_results_boot_r1.1[[2]])
+  summary(df_results_boot_r0.1[[2]])
+  summary(df_results_boot_m0s1[[2]])
+  
+  df_results_boot_gpp_r1.1[[2]]$NEE_final <- df_results_boot_gpp_r1.1[[2]]$NEE_measure
+  df_results_boot_gpp_r1.1[[2]]$NEE_final[which(is.na(df_results_boot_gpp_r1.1[[2]]$NEE_final))] <- 
+    df_results_boot_gpp_r1.1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_r1.1[[2]]$NEE_final))] - 
+    df_results_boot_gpp_r1.1[[2]]$Re_final[which(is.na(df_results_boot_gpp_r1.1[[2]]$NEE_final))]
+  
+  df_results_boot_gpp_m0s1[[2]]$NEE_final <- df_results_boot_gpp_m0s1[[2]]$NEE_measure
+  df_results_boot_gpp_m0s1[[2]]$NEE_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] <- 
+    df_results_boot_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] - 
+    df_results_boot_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))]
 
 #### ----------------------- ##
 #### Model Selection for an moving window of 4 years ##
