@@ -76,8 +76,8 @@ PreAnalysisPredictors <- function(df_train, params){
 ## Predictor preanalysis target data frame ##
 TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "range_1_1", 
                                         batchsize = 30, units = 40, layer = 2, variable = "NEE_cor"){
-  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "TS_mean")
-  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture_main", "MS_mean")
+  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_mean")
+  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
   # names_rad <- c("SWin", "PPFDin")
   
   names_ <- colnames(df_train)
@@ -1053,7 +1053,7 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
 }
 
 ## Function for Bootstrapping the best model -> error evaluation ##
-BootstrapPrediction <- function(pre_predictor_results, model_selection_results, complete_data, rep = 100, variable){
+BootstrapPrediction <- function(pre_predictor_results, model_selection_results, complete_data, rep = 100, variable = "NEE_cor"){
   
   # callback
   callback_list <- list(callback_early_stopping(patience = 6))
