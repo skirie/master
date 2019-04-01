@@ -575,11 +575,11 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
   
   ## design -> pre hyperparameter calulations
   set.seed(352)
-  des <- generateDesign(n = 5, par.set = getParamSet(obj.fun))
+  des <- generateDesign(n = 20, par.set = getParamSet(obj.fun))
   
   ## control
   ctrl <- makeMBOControl()
-  ctrl <- setMBOControlTermination(ctrl, iters = 3)#params[["iters_bo"]])
+  ctrl <- setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
   ctrl <- setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
   #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
   
@@ -677,7 +677,7 @@ ComputeModel <- function(df_train, params, type = "full"){
     }
   } else {
     #times_cv <- params[["times_cv"]]
-    times_cv <- 1
+    times_cv <- 5
     units <- params[["units"]]
   }
   
