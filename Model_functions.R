@@ -45,7 +45,8 @@ CheckData <- function(){
 ## Pre analysis Predictors ##
 PreAnalysisPredictors <- function(df_train, params){
   ## required empty features / target 
-  all_mse <- vector("list", ncol(df_train) - 1)
+  all_mse_n <- vector("list", ncol(df_train) - 1)
+  all_mse_bs <- vector("list", ncol(df_train) - 1)
   all_r2 <- vector("list", ncol(df_train) - 1)
   k <- ncol(df_train) - 1
   col_ <- colnames(df_train)
@@ -60,15 +61,17 @@ PreAnalysisPredictors <- function(df_train, params){
     
     # compute Model for this predictor composition
     cv_ <- ComputeModel(df_train = train_, params = params, type = "prepred")
-    mse_ <- mean(cv_[[1]], na.rm = T)
-    r2_ <- mean(cv_[[2]], na.rm = T)
-    all_mse[[i]] <- c(all_mse[[i]], mse_)
+    mse_n <- mean(cv_[[1]], na.rm = T)
+    mse_bs <- mean(cv_[[2]], na.rm = T)
+    r2_ <- mean(cv_[[3]], na.rm = T)
+    all_mse_n[[i]] <- c(all_mse_n[[i]], mse_n)
+    all_mse_bs[[i]] <- c(all_mse_bs[[i]], mse_bs)
     all_r2[[i]] <- c(all_r2[[i]], r2_)
   }
   
-  df_results <- data.frame(predictors = col_[1:k], mse = unlist(all_mse, use.names=FALSE), 
-                           r2 = unlist(all_r2, use.names=FALSE))
-  df_results <- df_results[order(df_results$mse), ]
+  df_results <- data.frame(predictors = col_[1:k], mse_n = unlist(all_mse_n, use.names=FALSE), 
+                           mse_bs = unlist(all_mse_bs, use.names=FALSE), r2 = unlist(all_r2, use.names=FALSE))
+  df_results <- df_results[order(df_results$mse_n), ]
   
   return(df_results)
 }
@@ -76,8 +79,8 @@ PreAnalysisPredictors <- function(df_train, params){
 ## Predictor preanalysis target data frame ##
 TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "range_1_1", 
                                         batchsize = 30, units = 40, layer = 2, variable = "NEE_cor"){
-  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_mean")
-  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
+  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5")#, "Ts6", "TS_mean")
+  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4")#, "Soil.moisture_main", "MS_mean")
   # names_rad <- c("SWin", "PPFDin")
   
   names_ <- colnames(df_train)
@@ -96,8 +99,8 @@ TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "ra
   print(res_soil_m)
   # print(res_rad)
   
-  pred_t <-  as.character(res_soil_t$predictors[which(res_soil_t$mse == min(res_soil_t$mse))])
-  pred_m <-  as.character(res_soil_m$predictors[which(res_soil_m$mse == min(res_soil_m$mse))])
+  pred_t <-  as.character(res_soil_t$predictors[which(res_soil_t$mse_n == min(res_soil_t$mse_n))])
+  pred_m <-  as.character(res_soil_m$predictors[which(res_soil_m$mse_n == min(res_soil_m$mse_n))])
   # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
   
   if (variable == "NEE_cor"){
@@ -551,7 +554,7 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
       results_ <- ComputeModelLSTM(df_train = df_train, params = params, type = "full")
     }
     
-    return(mean(results_[[1]], na.rm = T))
+    return(mean(results_[[2]], na.rm = T))
   }
   
   ## set hyperparameterspace
@@ -572,11 +575,11 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
   
   ## design -> pre hyperparameter calulations
   set.seed(352)
-  des <- generateDesign(n = 20, par.set = getParamSet(obj.fun))
+  des <- generateDesign(n = 5, par.set = getParamSet(obj.fun))
   
   ## control
   ctrl <- makeMBOControl()
-  ctrl <- setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
+  ctrl <- setMBOControlTermination(ctrl, iters = 3)#params[["iters_bo"]])
   ctrl <- setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
   #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
   
@@ -673,7 +676,8 @@ ComputeModel <- function(df_train, params, type = "full"){
       }
     }
   } else {
-    times_cv <- params[["times_cv"]]
+    #times_cv <- params[["times_cv"]]
+    times_cv <- 1
     units <- params[["units"]]
   }
   
@@ -682,7 +686,8 @@ ComputeModel <- function(df_train, params, type = "full"){
   
   ## empty vectors for Results
   all_mae_histories <- NULL
-  all_mse <- NULL
+  all_mse_n <- NULL
+  all_mse_bs <- NULL
   all_r2 <- NULL
   
   ## Callback - early stopping 
@@ -830,8 +835,24 @@ ComputeModel <- function(df_train, params, type = "full"){
       
       # predict and scale back
       pred_test <- model %>% predict(test_data)
-      mse_ <- mse(test_targets, pred_test)
-      all_mse <- rbind(all_mse, mse_)
+      
+      # back scaliling
+      if(method_norm == "range_0_1"){
+        # normalization range 0 - 1
+        final_result <- pred_test[, 1] * (maxs_targets - mins_targets) + mins_targets
+        test_targets_bs <- test_targets * (maxs_targets - mins_targets) + mins_targets
+      } else if(method_norm == "range_1_1"){
+        final_result <- (pred_test[, 1] + 1) / 2 * (maxs_targets - mins_targets) + mins_targets
+        test_targets_bs <- (test_targets + 1) / 2 * (maxs_targets - mins_targets) + mins_targets
+      } else if(method_norm == "standarize"){
+        final_result <- pred_test[, 1] * sd_targets + mean_targets
+        test_targets_bs <- test_targets * sd_targets + mean_targets
+      }
+      
+      mse_n <- mse(test_targets, pred_test)
+      mse_bs <- mse(test_targets_bs, final_result)
+      all_mse_n <- rbind(all_mse_n, mse_n)
+      all_mse_bs <- rbind(all_mse_bs, mse_bs)
       r2 <- cor(test_targets, pred_test) ^ 2
       all_r2 <- rbind(all_r2, r2)
       
@@ -840,7 +861,7 @@ ComputeModel <- function(df_train, params, type = "full"){
       gc()
     }
   }
-  return(list(all_mse, all_r2, all_mae_histories))
+  return(list(all_mse_n, all_mse_bs, all_r2, all_mae_histories))
 }
 
 ## Function model compute full for LSTM ##
@@ -982,7 +1003,8 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
   }
   
   ## required empty features / target 
-  all_mse <- vector("list", ncol(df_train) - 1)
+  all_mse_n <- vector("list", ncol(df_train) - 1)
+  all_mse_bs <- vector("list", ncol(df_train) - 1)
   all_r2 <- vector("list", ncol(df_train) - 1)
   k <- ncol(df_train) - 1
   col_ <- colnames(df_train)
@@ -1016,16 +1038,18 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
       } else if (ANN == "LSTM"){
         cv_ <- ComputeModelLSTM(df_train = all_train, params = params, type = "pred")
       }
-      mse_ <- mean(cv_[[1]], na.rm = T)
-      r2_ <- mean(cv_[[2]], na.rm = T)
-      all_mse[[i]] <- c(all_mse[[i]], mse_)
+      mse_n <- mean(cv_[[1]], na.rm = T)
+      mse_bs <- mean(cv_[[2]], na.rm = T)
+      r2_ <- mean(cv_[[3]], na.rm = T)
+      all_mse_n[[i]] <- c(all_mse_n[[i]], mse_n)
+      all_mse_bs[[i]] <- c(all_mse_bs[[i]], mse_bs)
       all_r2[[i]] <- c(all_r2[[i]], r2_)
       level_ <- rbind(level_, i)
       
       count <- count + 1
     }
     # best model / predictor
-    w_best <- which(all_mse[[i]] == min(all_mse[[i]], na.rm = T))
+    w_best <- which(all_mse_n[[i]] == min(all_mse_n[[i]], na.rm = T))
     
     # extract best predictor
     best_pred <- data.frame("dummy" = df_train[, w_best])
@@ -1047,7 +1071,9 @@ RunModel.PredictorAnalysis <- function(df_train, params, ANN = "seq"){
   }
   
   df_results <- data.frame(key = key, level = level_, predictors = pred_, 
-                           mse = unlist(all_mse, use.names=FALSE), r2 = unlist(all_r2, use.names=FALSE))
+                           mse_n = unlist(all_mse_n, use.names=FALSE), 
+                           mse_bs = unlist(all_mse_bs, use.names=FALSE),
+                           r2 = unlist(all_r2, use.names=FALSE))
   
   return(df_results)
 }
@@ -1074,7 +1100,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   # extract columns
   if (variable == "NEE_cor"){
     # prediction data (all data which is not in train data)
-    # Extract Night and Day Data ####
+    # Extract Night and Day Data 
     df_night <- complete_data[which(complete_data$flag_night == 1), ]
     # night data without PPFDin > 5, not used in model
     df_night <- df_night[-which(df_night$PPFDin > 5),]
@@ -1091,7 +1117,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     # train data
     df_final_train <- pre_predictor_results[[1]][, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
   } else if(variable == "GPP"){
-    # Extract Day Data and PPFDin > 5 ####
+    # Extract Day Data and PPFDin > 5 
     df_day <- complete_data[which(complete_data$flag_night == 0 & complete_data$PPFDin > 5), ]
     df_final_pred <- df_day[which(is.na(df_day$GPP)), ]
     df_final_pred_2 <- df_final_pred[, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
@@ -1178,11 +1204,11 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     # back scaliling
     if(method_norm == "range_0_1"){
       # normalization range 0 - 1
-      final_result <- test_predictions[,1] * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
+      final_result <- test_predictions[, 1] * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
     } else if(method_norm == "range_1_1"){
-      final_result <- (test_predictions[,1] + 1) / 2 * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
+      final_result <- (test_predictions[, 1] + 1) / 2 * (maxs_data[length(maxs_data)] - mins_data[length(mins_data)]) + mins_data[length(mins_data)]
     } else if(method_norm == "standarize"){
-      final_result <- test_predictions[,1] * sd_data[length(sd_data)] + mean_data[length(mean_data)]
+      final_result <- test_predictions[, 1] * sd_data[length(sd_data)] + mean_data[length(mean_data)]
     }
     pred_mat[,,i] <- final_result
     
