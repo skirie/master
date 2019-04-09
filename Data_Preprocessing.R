@@ -20,9 +20,6 @@
   ## Weather data from Comox airport ####
   df_comox <- read.csv(paste0(mypath, "/Daten/weatherstats_comox_hourly.csv"))
   
-  ## Sun rise / set ####
-  df_hel <- read.csv(paste0(mypath, "/Daten/sunsetrise.csv"),
-                     header=T, sep=";")
   ####  ####
   
 #### ------------------------------------- ####
@@ -705,71 +702,15 @@
   #### ####
   
 #### ------------------------------------- ####
-  ## 7 - Sun rise / set ####
-#### ------------------------------------- ####    
-  
-  ## Sun rise / set ####
-  df_hel$Datum <- as.character(df_hel$Datum)
-  df_hel$Sunrise <- as.character(df_hel$Sunrise)
-  df_hel$Sunset <- as.character(df_hel$Sunset)
-  
-  df_hel_2 <- data.frame(df_hel, as.numeric(do.call(rbind, strsplit(df_hel$Datum,' '))[, 1]))
-  names(df_hel_2)[5] <- "day"
-  
-  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunset,':'))[, 1]))
-  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunset,':'))[, 2]))
-  names(df_hel_2)[6:7] <- paste("set", c("h","m"), sep = "_")
-  
-  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunrise,':'))[, 1]))
-  df_hel_2 <- data.frame(df_hel_2, as.numeric(do.call(rbind, strsplit(df_hel$Sunrise,':'))[, 2]))
-  names(df_hel_2)[8:9] <- paste("rise", c("h","m"), sep = "_")
-  
-  df_hel_2 <- df_hel_2[, -c(2:4)]
-  
-  ## flag night time data ####
-  FlagNightData <- function(df_flux, df_sun){
-    hm_flux <- as.numeric(format(df_flux$dt, "%H")) * 60 + as.numeric(format(df_flux$dt, "%M"))
-    hm_sun_r <- df_sun$rise_h * 60 + df_sun$rise_m
-    hm_sun_s <- df_sun$set_h * 60 + df_sun$set_m
-    
-    flag_ <- rep(0, nrow(df_flux))
-    
-    for (i in 1:12){
-      w_m_raw <- which(as.numeric(format(df_flux$dt, "%m")) == i) # which month
-      w_m_sun <- which(df_sun$month == i) # which month
-      
-      for (j in 1:length(w_m_sun)){
-        w_d_raw <- which(as.numeric(format(df_flux$dt, "%d")) == j) # which day
-        w_raw <- w_m_raw[which(w_m_raw %in% w_d_raw)] # match of month and day
-        
-        flag_[w_raw][hm_flux[w_raw] < hm_sun_r[w_m_sun][j] | hm_flux[w_raw] > hm_sun_s[w_m_sun][j]] <- 1
-      }
-    }
-    return(flag_)
-  }
-  
-  df_merged$flag_night <- FlagNightData(df_flux = df_merged, df_sun = df_hel_2)
-  
-  rm(df_hel, df_hel_2, FlagNightData)
-  
-  #### ####
-
-#### ------------------------------------- ####
-  ## 8 - Prepare Data for Respiration Model ####
+  ## 7 - Prepare Data for Respiration Model ####
 #### ------------------------------------- ####  
   
   
   df_merged$NEE_cor <- df_merged$NEE_measure
   
-  ## Extract Night and Day Data ####
-  df_night <- df_merged[df_merged$flag_night == 1, ]
-  df_day <- df_merged[df_merged$flag_night == 0, ]
-  
-  # night data with PPFDin > 5, not used in model
-  df_night_pred_PPFD <- df_night[which(df_night$PPFDin > 5), ]
-  
-  # night data without PPFDin > 5, not used in model
-  df_night <- df_night[-which(df_night$PPFDin > 5), ]
+  ## Extract Night and Day Data  / night data with PPFDin < 5####
+  df_night <- df_merged[which(df_merged$PPFDin < 5), ]
+  df_day <- df_merged[which(df_merged$PPFDin >= 5), ]
   
   # u* correction 
   # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
@@ -807,7 +748,7 @@
   #### ####
   
 #### ------------------------------------- ####
-  ## 9 - Save data ####
+  ## 8 - Save data ####
 #### ------------------------------------- ####  
   
   ## save ####
