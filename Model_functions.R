@@ -365,14 +365,14 @@ BuildModelLSTM <- function(df_train, layer, optimizer, units, lr){
 BestModelSelection <- function(df_results, params, type){
   # print ordered results
   print("Best Models")
-  print(df_results[order(df_results$mse),][1:10, ])
+  print(df_results[order(df_results$mse_bs),][1:10, ])
   #print("Best Performance")
   #print(df_results[order(df_results$performance),][1:10,])
   
   # extract layer, nodes and batchsize from key
   if (type == "nodes"){
     # models with MSE < lowest mse + sem | One standard error rule
-    w_best <- which(df_results$mse < min(df_results$mse, na.rm = T) + df_results$sem[which(df_results$mse == min(df_results$mse, na.rm = T))])
+    w_best <- which(df_results$mse_bs < min(df_results$mse_bs, na.rm = T) + df_results$sem[which(df_results$mse_bs == min(df_results$mse_bs, na.rm = T))])
     w_perf <- w_best[which(df_results$performance[w_best] == min(df_results$performance[w_best], na.rm = T))]
     
     str <- suppressWarnings(as.numeric(strsplit(as.character(df_results$key[w_perf]), "_")[[1]]))
@@ -383,13 +383,13 @@ BestModelSelection <- function(df_results, params, type){
     
     params[["best"]] <- list("layer" = layer, "nodes" = nodes, "batch_size" = batch_size, "model" = df_results[w_perf, ]) 
   } else if(type == "pred"){
-    w_best <- which(df_results$mse == min(df_results$mse, na.rm = T))
+    w_best <- which(df_results$mse_bs == min(df_results$mse_bs, na.rm = T))
     
     str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best, ]) 
     
-    w_best_5 <- which(df_results$mse[df_results$level <= 5] == min(df_results$mse[df_results$level <= 5], na.rm = T))
-    #w_best_12 <- which(df_results$mse[df_results$level <= 12] == min(df_results$mse[df_results$level <= 12], na.rm = T))
+    w_best_5 <- which(df_results$mse_bs[df_results$level <= 5] == min(df_results$mse_bs[df_results$level <= 5], na.rm = T))
+    #w_best_12 <- which(df_results$mse_bs[df_results$level <= 12] == min(df_results$mse_bs[df_results$level <= 12], na.rm = T))
     str_5 <- strsplit(as.character(df_results$predictors[w_best_5]), "+", fixed = TRUE)[[1]][-1]
     #str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_5"]] <- list("predictors" = str_5, "model" = df_results[w_best_5, ]) 
