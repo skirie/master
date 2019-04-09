@@ -144,7 +144,7 @@
     df_raw_2$day_sin[which_] <- sin_seq[i]
   }
   
-  #summary(df_raw_2$day_sin)
+  # summary(df_raw_2$day_sin)
   df_raw_2 <- df_raw_2[, -which(names(df_raw_2) == "hours_mins_")]
   
   rm(hours_mins_, i, sin_seq, which_, years_)
@@ -766,10 +766,10 @@
   df_day <- df_merged[df_merged$flag_night == 0, ]
   
   # night data with PPFDin > 5, not used in model
-  df_night_pred_PPFD <- df_night[which(df_night$PPFDin > 5),]
+  df_night_pred_PPFD <- df_night[which(df_night$PPFDin > 5), ]
   
   # night data without PPFDin > 5, not used in model
-  df_night <- df_night[-which(df_night$PPFDin > 5),]
+  df_night <- df_night[-which(df_night$PPFDin > 5), ]
   
   # u* correction 
   # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
