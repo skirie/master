@@ -1101,9 +1101,9 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   if (variable == "NEE_cor"){
     # prediction data (all data which is not in train data)
     # Extract Night and Day Data 
-    df_night <- complete_data[which(complete_data$flag_night == 1), ]
-    # night data without PPFDin > 5, not used in model
-    df_night <- df_night[-which(df_night$PPFDin > 5),]
+    # night data with PPFDin < 5
+    df_night <- complete_data[which(complete_data$PPFDin < 5), ]
+    
     # u* correction 
     # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
     df_night$NEE_cor[df_night$ustar < 0.19] <- NA
@@ -1118,7 +1118,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     df_final_train <- pre_predictor_results[[1]][, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
   } else if(variable == "GPP"){
     # Extract Day Data and PPFDin > 5 
-    df_day <- complete_data[which(complete_data$flag_night == 0 & complete_data$PPFDin > 5), ]
+    df_day <- complete_data[which(complete_data$PPFDin >= 5), ]
     df_final_pred <- df_day[which(is.na(df_day$GPP)), ]
     df_final_pred_2 <- df_final_pred[, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
     
