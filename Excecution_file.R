@@ -323,19 +323,64 @@
 #### 5. Moving Window over Years: Model Selection for an moving window of 4 years ####
 #### ----------------------- ####
   
-  df_train.1 <- cbind("dt" = df_night_model$dt, df_train.1)
-  years_ <- unique(as.numeric(format(df_train.1$dt, "%Y")))
-  results_pa <- vector("list", length(years_) - 3)
-  results_ms <- vector("list", length(years_) - 3)
+  years_ <- unique(as.numeric(format(df_merged$dt, "%Y")))
   
-  for (i in 1:(length(years_) - 3)){
+  pred_analysis_year <- list()
+  results_resp_all_year <- list()
+  df_results_boot_year <- list()
+  pred_analysis_gpp_year <- list()
+  results_gpp_all_year <- list()
+  df_results_boot_gpp_year <- list()
+  
+  for (i in 1:(length(years_) - 4)){
     window_ <- years_[i:(i + 3)]
-    df_train.2 <- df_train.1[which(as.numeric(format(df_train.1$dt, "%Y")) %in% window_), ]
     
-    #results_pa[[i]] <- TargetPreAnalysisPredictors(df_train = df_train.2)
-    #df_train.3 <- results_pa[[i]][[1]]
-    
-    results_ms[[i]] <- TargetFunBO(df_train = df_train.2[,2:ncol(df_train.2)], path = mypath, opt.batch = T) 
-  }
+    df_mer <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% window_), ]
+    df_nig <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% window_), ]
   
-  save(results_ms, file = paste0(mypath, "/RData/results_movingwindow.RData"))
+    ## Respiration: Predictor pre analysis
+    pred_analysis_year[[i]] <- TargetPreAnalysisPredictors(df_train = df_nig, cluster = F, method_norm = "standarize")
+    
+    ## Respiration: model selection and predictor selection
+    results_resp_all_year[[i]] <- TargetFunBO(df_train = pred_analysis_year[[i]][[1]], path = mypath, opt.batch = T, ANN = "seq", 
+                                                cluster = F, method_norm = "standarize")
+    
+    ## Respiration: bootstrap
+    df_results_boot_year[[i]] <- BootstrapPrediction(pre_predictor_results = pred_analysis_year[[i]], 
+                                                       model_selection_results = results_resp_all_year[[i]], 
+                                                       complete_data = df_mer, rep = 100, variable = "NEE_cor")
+    ## calculate GPP
+    df_re_year <- df_results_boot_year[[i]][[2]]
+    df_re_year$GPP <- NA
+    df_re_year$GPP[which(df_re_year$flag_night == 1)] <- 0
+    df_re_year$GPP[which(df_re_year$PPFDin < 5)] <- 0
+    
+    df_re_year$GPP[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5)] <- - 
+      df_re_year$NEE_measure[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5)] + 
+      df_re_year$Re_final[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5)]
+    
+    df_re_year_day <- df_re_year[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5), ]
+    df_re_year_day <- df_re_year_day[-which(is.na(df_re_year_day$GPP)), ]
+    
+    ## GPP: Predictor pre analysis
+    pred_analysis_gpp_year[[i]] <- TargetPreAnalysisPredictors(df_train = df_re_year_day, cluster = F,
+                                                                 method_norm = "standarize", variable = "GPP")
+    
+    ## Respiration: model selection and predictor selection
+    results_gpp_all_year[[i]] <- TargetFunBO(df_train = pred_analysis_gpp_year[[i]][[1]], path = mypath, opt.batch = T, ANN = "seq", 
+                                               cluster = F, method_norm = "standarize", variable = "GPP")
+    
+    ## Respiration: bootstrap
+    df_results_boot_gpp_year[[i]] <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_year[[i]], 
+                                                           model_selection_results = results_gpp_all_year[[i]], 
+                                                           complete_data = df_re_year, rep = 100, variable = "GPP")
+    
+    df_results_boot_gpp_year[[i]][[2]]$NEE_final <- df_results_boot_gpp_year[[i]][[2]]$NEE_measure
+    df_results_boot_gpp_year[[i]][[2]]$NEE_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))] <- 
+      df_results_boot_gpp_year[[i]][[2]]$GPP_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))] - 
+      df_results_boot_gpp_year[[i]][[2]]$Re_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))]
+  }
+
+  save(pred_analysis_year, results_resp_all_year, df_results_boot_year, pred_analysis_gpp_year, 
+       results_gpp_all_year, df_results_boot_gpp_year, 
+       file = paste0(mypath, "/RData/results_full_year_", format(Sys.time(), "%d.%m"), ".RData"))
