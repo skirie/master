@@ -558,10 +558,17 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
   }
   
   ## set hyperparameterspace
-  par.set <- makeParamSet(
-    makeIntegerParam("layer", 1, params[["layer"]]),
-    makeIntegerParam("units", params[["Nmin"]], params[["Nmax"]]),
-    makeIntegerParam("batch", 5, 80))
+  if (params[["variable"]] == "NEE_cor"){
+    par.set <- makeParamSet(
+      makeIntegerParam("layer", 1, params[["layer"]]),
+      makeIntegerParam("units", params[["Nmin"]], params[["Nmax"]]),
+      makeIntegerParam("batch", 5, 80))
+  } else if (params[["variable"]] == "GPP"){
+    par.set <- makeParamSet(
+      makeIntegerParam("layer", 1, params[["layer"]]),
+      makeIntegerParam("units", 80, 150),
+      makeIntegerParam("batch", 30, 110))
+  }
 
   ## create learner -> dicekriging (GaussianProcess)
   surr.km <- makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
