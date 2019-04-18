@@ -324,6 +324,7 @@
 #### ----------------------- ####
   
   years_ <- unique(as.numeric(format(df_merged$dt, "%Y")))
+  years_ <- years_[-1]
   
   pred_analysis_year <- list()
   results_resp_all_year <- list()
@@ -332,12 +333,17 @@
   results_gpp_all_year <- list()
   df_results_boot_gpp_year <- list()
   
-  for (i in 1:(length(years_) - 4)){
+  for (i in 1:(length(years_) - 3)){
     window_ <- years_[i:(i + 3)]
     
-    df_mer <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% window_), ]
-    df_nig <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% window_), ]
-  
+    if (i == 1){
+      df_mer <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% c(2001, window_)), ]
+      df_nig <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% c(2001, window_)), ]
+    } else {
+      df_mer <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% window_), ]
+      df_nig <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% window_), ]
+    }
+
     ## Respiration: Predictor pre analysis
     pred_analysis_year[[i]] <- TargetPreAnalysisPredictors(df_train = df_nig, cluster = F, method_norm = "standarize")
     
