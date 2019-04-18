@@ -19,6 +19,9 @@
   packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg", "MASS")
   CheckPackages(packages) 
   use_condaenv("r-tensorflow")
+  
+  ## data ##
+  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/df_model.RData")
   #### ####
   
 #### ----------------------- ####
@@ -314,6 +317,7 @@
        results_gpp_all_season, df_results_boot_gpp_season, 
        file = paste0(mypath, "/RData/results_full_season_", format(Sys.time(), "%d.%m"), ".RData"))
   
+  #### ####
   
 #### ----------------------- ####
 #### 5. Moving Window over Years: Model Selection for an moving window of 4 years ####
