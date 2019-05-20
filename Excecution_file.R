@@ -400,6 +400,9 @@
   df_mer_f <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% c(2001:2006)), ]
   df_nig_f <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% c(2001:2006)), ]
   
+  df_mer_post_f <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% c(2007:2016)), ]
+  df_nig_post_f <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% c(2007:2016)), ]
+  
   ## Predictor Pre-Analysis Re
   pred_analysis_fert_m0s1 <- TargetPreAnalysisPredictors(df_train = df_nig_f, cluster = F, method_norm = "standarize")
   save(pred_analysis_fert_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_fert_m0s1.RData"))
