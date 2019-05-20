@@ -113,7 +113,6 @@
   save(df_results_boot_m0s1_c, file =   paste0(mypath, "/RData/results_boots_m0s1_c_", format(Sys.time(), "%d.%m"), ".RData"))
   #### ####
   
-  
 #### ----------------------- ####
 #### 3.1 GPP: Calculate GPP ####
 #### ----------------------- ####
@@ -397,26 +396,27 @@
 #### 6. Fertilazation Effect ####
 #### ----------------------- ####
   
+  ## get pre-fertilazation data 
   df_mer_f <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% c(2001:2006)), ]
   df_nig_f <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% c(2001:2006)), ]
   
   ## Predictor Pre-Analysis Re
-  pred_analysis_m0s1 <- TargetPreAnalysisPredictors(df_train = df_nig_f, cluster = F, method_norm = "standarize")
-  save(pred_analysis_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_m0s1.RData"))
+  pred_analysis_fert_m0s1 <- TargetPreAnalysisPredictors(df_train = df_nig_f, cluster = F, method_norm = "standarize")
+  save(pred_analysis_fert_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_fert_m0s1.RData"))
   
   ## Bayesian Optimization and predictor Analysis Re
-  results_resp_all_b_m0s1 <- TargetFunBO(df_train = pred_analysis_m0s1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
+  results_resp_all_b_fert_m0s1 <- TargetFunBO(df_train = pred_analysis_fert_m0s1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                          cluster = F, method_norm = "standarize")
-  save(results_resp_all_b_m0s1, file = paste0(mypath, "/RData/results_complete_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_fert_m0s1, file = paste0(mypath, "/RData/results_complete_fert_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
   ## Bootstrap Re
-  df_results_boot_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_m0s1, 
-                                              model_selection_results = results_resp_all_b_m0s1, 
+  df_results_boot_fert_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_fert_m0s1, 
+                                              model_selection_results = results_resp_all_b_fert_m0s1, 
                                               complete_data = df_mer_f, rep = 100)
-  save(df_results_boot_m0s1, file =   paste0(mypath, "/RData/results_boots_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(df_results_boot_fert_m0s1, file = paste0(mypath, "/RData/results_boots_fert_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
   ## GPP Calculation
-  df_re_r0.1 <- df_results_boot_r0.1[[2]]
+  df_re_r0.1 <- df_results_boot_fert_m0s1[[2]]
   df_re_r0.1$GPP <- NA
   df_re_r0.1$GPP[which(df_re_r0.1$flag_night == 1)] <- 0
   df_re_r0.1$GPP[which(df_re_r0.1$PPFDin < 5)] <- 0
@@ -429,26 +429,26 @@
   df_re_m0s1_day <- df_re_m0s1_day[-which(is.na(df_re_m0s1_day$GPP)), ]
   
   ## Predictor Pre-Analysis GPP
-  pred_analysis_gpp_m0s1 <- TargetPreAnalysisPredictors(df_train = df_re_m0s1_day, cluster = F, 
+  pred_analysis_fert_gpp_m0s1 <- TargetPreAnalysisPredictors(df_train = df_re_m0s1_day, cluster = F, 
                                                         method_norm = "standarize", variable = "GPP")
-  save(pred_analysis_gpp_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_m0s1.RData"))
+  save(pred_analysis_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_fert_gpp_m0s1.RData"))
   
   ## Bayesian Optimization and predictor Analysis GPP
-  results_resp_all_b_gpp_m0s1 <- TargetFunBO(df_train = pred_analysis_gpp_m0s1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
+  results_resp_all_b_fert_gpp_m0s1 <- TargetFunBO(df_train = pred_analysis_fert_gpp_m0s1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                              cluster = F, method_norm = "standarize", variable = "GPP")
-  save(results_resp_all_b_gpp_m0s1, file = paste0(mypath, "/RData/results_complete_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_complete_fert_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
   ## Bootstrap GPP
-  df_results_boot_gpp_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_m0s1, 
-                                                  model_selection_results = results_resp_all_b_gpp_m0s1, 
+  df_results_boot_fert_gpp_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_fert_gpp_m0s1, 
+                                                  model_selection_results = results_resp_all_b_fert_gpp_m0s1, 
                                                   complete_data = df_re_m0s1, 
                                                   rep = 100, variable = "GPP")
-  save(df_results_boot_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
-  
-  ## final gap fill NEP
+
   ## final gap filled NEE
-  df_results_boot_gpp_m0s1[[2]]$NEE_final <- df_results_boot_gpp_m0s1[[2]]$NEE_measure
-  df_results_boot_gpp_m0s1[[2]]$NEE_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] <- 
-    df_results_boot_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] - 
-    df_results_boot_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))]
+  df_results_boot_fert_gpp_m0s1[[2]]$NEE_final <- df_results_boot_fert_gpp_m0s1[[2]]$NEE_measure
+  df_results_boot_fert_gpp_m0s1[[2]]$NEE_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] <- 
+    df_results_boot_fert_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] - 
+    df_results_boot_fert_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))]
+  
+  save(df_results_boot_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_fert_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
