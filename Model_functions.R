@@ -1118,7 +1118,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     # data frame for model
     df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
     
-    df_final_pred <- complete_data[-which(complete_data$dt %in% df_night_model$dt),]
+    df_final_pred <- complete_data[-which(complete_data$dt %in% df_night_model$dt), ]
     df_final_pred_2 <- df_final_pred[, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
     
     # train data
@@ -1142,7 +1142,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
   method_norm <- model_selection_results[[3]]$method_norm
   
   # prediction matrix 
-  pred_mat <- array(dim=c(nrow(df_final_pred_2), 1, rep))
+  pred_mat <- array(dim = c(nrow(df_final_pred_2), 1, rep))
   
   ## bootstrap loop
   for(i in 1:rep){
@@ -1217,7 +1217,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     } else if(method_norm == "standarize"){
       final_result <- test_predictions[, 1] * sd_data[length(sd_data)] + mean_data[length(mean_data)]
     }
-    pred_mat[,,i] <- final_result
+    pred_mat[, , i] <- final_result
     
     # clear session
     K <- backend()
@@ -1232,7 +1232,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
 
   ## 95 % konfidenzintervall
   pred_qt <- data.frame(t(pred_quan))
-  pred_qt$konf <- (pred_qt[,3] - pred_qt[,1]) / 2
+  pred_qt$konf <- (pred_qt[, 3] - pred_qt[, 1]) / 2
 
   df_results <- cbind("dt" = df_final_pred$dt, "mean" = pred_mean, pred_qt, "se" = pred_se)
   
