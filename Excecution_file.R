@@ -21,7 +21,7 @@
   use_condaenv("r-tensorflow")
   
   ## data ##
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/df_model.RData")
+  load(paste0(mypath, "/RData/df_model.RData"))
   #### ####
   
 #### ----------------------- ####
