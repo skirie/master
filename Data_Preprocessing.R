@@ -707,20 +707,21 @@
   
   
   df_merged$NEE_cor <- df_merged$NEE_measure
-  
+  df_merged$NEE_cor[which(df_merged$ustar < 0.19)] <- NA 
+
   ## Extract Night and Day Data  / night data with PPFDin < 5####
   df_night <- df_merged[which(df_merged$PPFDin < 5), ]
   df_day <- df_merged[which(df_merged$PPFDin >= 5), ]
   
   # u* correction 
   # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
-  df_night$NEE_cor[df_night$ustar < 0.19] <- NA
+  # df_night$NEE_cor[df_night$ustar < 0.19] <- NA
   
   # data frame for model
   df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
   
   # data frame for NEE perdiction
-  df_night_pred <-  df_night[is.na(df_night$NEE_cor), ]
+  # df_night_pred <-  df_night[is.na(df_night$NEE_cor), ]
   
   df_pred <- rbind(df_day, df_night_pred_PPFD, df_night_pred)
   df_pred_complete <- df_pred[is.na(df_pred$NEE_cor), ]
