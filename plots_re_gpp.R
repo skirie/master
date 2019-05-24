@@ -7,6 +7,12 @@
   library(tidyr)
   library(readr)
   
+
+  ## packages ####
+  library(tidyr)
+  library(dplyr)
+  library(readr)
+
 #### ------------------------- ####
 #### 1. Respiration and GPP - Predictor Relevance ####
 #### ------------------------- ####
@@ -111,15 +117,15 @@
   
   ## create data.frame ####
   df_results <- df_results_boot_gpp_m0s1[[2]]
-  df_results$Re_final_m0s1 <- df_results_boot_gpp_m0s1[[2]]$Re_final
-  df_results$GPP_final_m0s1 <- df_results_boot_gpp_m0s1[[2]]$GPP_final
-  
-  df_results$Re_final_m0s1_ci <- df_results_boot_gpp_m0s1[[2]]$Re_gap_filled_95.conf
-  df_results$GPP_final_m0s1_ci <- df_results_boot_gpp_m0s1[[2]]$GPP_gap_filled_95.conf
+  # df_results$Re_final_m0s1 <- df_results_boot_gpp_m0s1[[2]]$Re_final
+  # df_results$GPP_final_m0s1 <- df_results_boot_gpp_m0s1[[2]]$GPP_final
+  # 
+  # df_results$Re_final_m0s1_ci <- df_results_boot_gpp_m0s1[[2]]$Re_gap_filled_95.conf
+  # df_results$GPP_final_m0s1_ci <- df_results_boot_gpp_m0s1[[2]]$GPP_gap_filled_95.conf
   
   df_results$NEE_filled_m0s1 <- df_results$NEE_cor
-  df_results$NEE_filled_m0s1[which(is.na(df_results$NEE_filled_m0s1))] <- -df_results$GPP_final_m0s1[which(is.na(df_results$NEE_filled_m0s1))] + df_results$Re_final_m0s1[which(is.na(df_results$NEE_filled_m0s1))]
-  df_results$NEE_model_m0s1 <- -df_results$GPP_final_m0s1 + df_results$Re_final_m0s1
+  df_results$NEE_filled_m0s1[which(is.na(df_results$NEE_filled_m0s1))] <- -df_results$GPP_final[which(is.na(df_results$NEE_filled_m0s1))] + df_results$Re_final[which(is.na(df_results$NEE_filled_m0s1))]
+  df_results$NEE_model_m0s1 <- -df_results$GPP_final + df_results$Re_final
   df_results$NEE_lee <- df_results$NEE
   
   summary(df_results$NEE_cor)
@@ -171,6 +177,9 @@
               NEE_model_m0s1_ci = fun.error(NEE_model_m0s1),
               GPP_m0s1_ci = fun.error(GPP_final_m0s1, GPP_final_m0s1_ci), 
               Re_m0s1_ci = fun.error(Re_final_m0s1, Re_final_m0s1_ci),
+              # gap filled
+              NEE_gapfilled_sum = fun.sum(NEE_filled_m0s1),
+              # lee
               NEE_lee_sum = fun.sum(NEE_lee))
   
   df_results_m <- df_results_m[-181, ]
@@ -193,6 +202,9 @@
               NEE_model_m0s1_ci = mean(NEE_model_m0s1_ci, na.rm = T),
               GPP_m0s1_ci = mean(GPP_m0s1_ci, na.rm = T),
               Re_m0s1_ci = mean(Re_m0s1_ci, na.rm = T),
+              # gap filled
+              NEE_gapfilled_sum = mean(NEE_gapfilled_sum, na.rm = T),
+              # lee
               Re_lee = mean(Re, na.rm = T),
               GPP_lee = mean(GPP, na.rm = T),
               NEP_lee = mean(NEP, na.rm = T))
@@ -204,8 +216,6 @@
        ylab = "g C m-2 y-1", ylim = c(-300, 700))
   lines(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, type = "l", xlab = "year", 
         ylab = "g C m-2 y-1", col = "blue")
-  lines(df_results_y$NEE_model_1.1_sum * -1 ~ df_results_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "orange")
   lines(df_results_y$NEE_lee_sum * -1 ~ df_results_y$year, type = "l", xlab = "year", 
         ylab = "g C m-2 y-1", col = "red")
   lines(df_daytime$A_NEP ~ df_results_y$year, type = "l", xlab = "year", 
@@ -248,7 +258,20 @@
   
   apply(df_results_y[, c("NEE_model_m0s1_sum", "GPP_m0s1_sum", "GPP_m0s1_ci", "Re_m0s1_sum", "Re_m0s1_ci")],
         2, mean)
-
+  
+  ## First Overview Plots month ####
+  plot(df_monthly_m$NEE_model_m0s1_sum * -1 ~ df_monthly_m$month, type = "l", xlab = "year", 
+       ylab = "g C m-2 y-1", ylim = c(-100, 200))
+  lines(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, type = "l", xlab = "year", 
+        ylab = "g C m-2 y-1", col = "blue")
+  lines(df_monthly_m$NEP_lee ~ df_monthly_m$month, type = "l", xlab = "year", 
+        ylab = "g C m-2 y-1", col = "red")
+  lines(df_monthly_m$A_NEP ~ df_monthly_m$month, type = "l", xlab = "year", 
+        ylab = "g C m-2 y-1", col = "grey")
+  lines(df_monthly_m$NEP ~ df_monthly_m$month, type = "l", xlab = "year", 
+        ylab = "g C m-2 y-1", col = "green")
+  title("NEE")
+  
   ## Plot PDF year ####
   pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/NEE_year.pdf",
       family = "Times", width = 16, height = 12, bg = "white")
@@ -608,13 +631,16 @@
     points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
     lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
     points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
-    text(x = 1.5, y = 0.8, labels = "a)", cex = cex_fig)
+    text(x = 0.8, y = 0.35, labels = "(a)", cex = cex_fig)
     abline(h = seq(0, 0.4, 0.1), lty = 3, col = "grey70")
     abline(h = 0)
     axis(3, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_fig)
     axis(4, at = seq(0, 0.4, 0.1), labels = rep("", 5), las = 2, cex.axis = cex_axis)
     axis(4, at = seq(0, 0.4, 0.2), labels = seq(0, 0.4, 0.2), las = 2, cex.axis = cex_axis)
     mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+    
+    legend(x = 0.5, y = 0.16, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+           col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
     
     ## rank
     #par(mar = c(4, 5, 3, 3))
@@ -633,14 +659,15 @@
     # points(df_3$year_sa_sin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "firebrick1")
     abline(h = seq(1, 11, 1), lty = 3, col = "grey70")
     
+    text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
     axis(1, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_axis)
     axis(2, at = seq(1, 11, length.out = 11), labels = 1:11, cex.axis = cex_axis, las = 2)
-    legend(x = 1, y = 4, legend = label_legend[-5], lty = 1, pch = 1,
+    legend(x = 5.5, y = 8, legend = label_legend[-5], lty = 1, pch = 1, ncol = 2,
            col = c("cyan", "blue", "black", "brown"), bg = F, bty = "n", cex = 2.5, lwd = c(3))
     
     ## box 
     par(new = T, mfrow = c(1, 1), mgp = c(3, 1, 0), mar = c(2.5, 5, 3, 5.5))
-    plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, add = T, ylim = c(-2, -1))
+    plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
     
     dev.off()
     
@@ -729,12 +756,15 @@
     points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
     lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
     points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
-    text(x = 0.8, y = 0.9, labels = "a)", cex = cex_fig)
+    text(x = 0.7, y = 0.9, labels = "(a)", cex = cex_fig)
     abline(h = seq(0, 1, 0.2), lty = 3, col = "grey70")
     abline(h = 0)
     axis(3, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_fig)
     axis(4, at = seq(0, 1, 0.2), labels = seq(0, 1, 0.2), las = 2, cex.axis = cex_axis)
     mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+    
+    legend(x = 0.5, y = 0.45, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+           col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
     
     ## ranking
     par(fig = c(0, 1, 0, 0.7), new = TRUE)
@@ -752,15 +782,15 @@
     points(df_3$Tsoil[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "cyan")
     abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
     
-    text(x = 0.8, y = 0.6, labels = "b)", cex = cex_fig)
+    text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
     axis(1, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_axis)
     axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
-    legend(x = 10.5, y = 6, legend = label_legend, lty = 1, pch = 1,
+    legend(x = 1, y = -1, legend = label_legend, lty = 1, pch = 1, ncol = 5,
            col = c("green", "grey", "black", "brown", "cyan"), bg = F, bty = "n", cex = 2.4, lwd = c(3))
     
     ## box 
     par(new = T, mfrow = c(1, 1), mgp = c(3, 1, 0), mar = c(2.5, 5, 3, 5.5))
-    plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, add = T, ylim = c(-2, -1))
+    plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
     
     dev.off()
     
@@ -863,12 +893,15 @@
   points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
   lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
   points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
-  text(x = 0.8, y = 0.5, labels = "a)", cex = cex_fig)
+  text(x = 0.7, y = 0.5, labels = "(a)", cex = cex_fig)
   abline(h = seq(0, 0.6, 0.2), lty = 3, col = "grey70")
   abline(h = 0)
   axis(3, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_fig)
   axis(4, at = seq(0, 0.6, 0.2), labels = seq(0, 0.6, 0.2), las = 2, cex.axis = cex_axis)
   mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+  
+  legend(x = 0.5, y = 0.3, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+         col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
   
   ## ranking
   par(fig = c(0, 1, 0, 0.7), new = TRUE)
@@ -886,10 +919,10 @@
   points(df_3$year_ws_sin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "gold")
   abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
   
-  text(x = 0.8, y = 0.6, labels = "b)", cex = cex_fig)
+  text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
   axis(1, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
-  legend(x = 1, y = 6, legend = label_legend, lty = 1, pch = 1,
+  legend(x = 1, y = 9.8, legend = label_legend, lty = 1, pch = 1, ncol = 3,
          col = c("cyan", "brown", "black", "firebrick1", "gold"), bg = F, bty = "n", cex = 2.4, lwd = c(3))
   
   ## box 
@@ -988,12 +1021,15 @@
   points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
   lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
   points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
-  text(x = 0.8, y = 0.9, labels = "a)", cex = cex_fig)
+  text(x = 0.7, y = 0.9, labels = "(a)", cex = cex_fig)
   abline(h = seq(0, 1, 0.2), lty = 3, col = "grey70")
   abline(h = 0)
   axis(3, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_fig)
   axis(4, at = seq(0, 1, 0.2), labels = seq(0, 1, 0.2), las = 2, cex.axis = cex_axis)
   mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+  
+  legend(x = 0.5, y = 0.45, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+         col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
   
   ## ranking
   par(fig = c(0, 1, 0, 0.7), new = TRUE)
@@ -1011,7 +1047,7 @@
   points(df_3$airT[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "cyan")
   abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
   
-  text(x = 0.8, y = 0.6, labels = "b)", cex = cex_fig)
+  text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
   axis(1, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
   legend(x = 1, y = 11.5, legend = label_legend, lty = 1, pch = 1, ncol = 5, 
