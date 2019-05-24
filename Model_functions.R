@@ -1113,7 +1113,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     
     # u* correction 
     # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
-    df_night$NEE_cor[df_night$ustar < 0.19] <- NA
+    # df_night$NEE_cor[df_night$ustar < 0.19] <- NA
     
     # data frame for model
     df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
