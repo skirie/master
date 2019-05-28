@@ -402,7 +402,7 @@
   df_nig_f <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% c(2001:2006)), ]
   
   df_mer_post_f <- df_merged
-  df_mer_post_f$NEE_cor[which(as.numeric(format(df_mer_post_f$dt,"%Y")) %in% c(2007:2016))] <- NA
+  df_mer_post_f$NEE_cor[which(as.numeric(format(df_mer_post_f$dt, "%Y")) %in% c(2007:2016))] <- NA
   summary(df_mer_post_f$NEE_cor[which(as.numeric(format(df_mer_post_f$dt,"%Y")) %in% c(2007:2016))])
   
   df_nig_post_f <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% c(2007:2016)), ]
@@ -424,19 +424,19 @@
   save(df_results_boot_fert_m0s1, file = paste0(mypath, "/RData/results_boots_fert_m0s1_", 
                                                 format(Sys.time(), "%d.%m"), ".RData"))
   
-  summary(df_results_boot_fert_m0s1[[2]])
+  # summary(df_results_boot_fert_m0s1[[2]])
   
   ## GPP Calculation
   df_re_m0s1 <- df_results_boot_fert_m0s1[[2]]
   df_re_m0s1$GPP <- NA
-  df_re_m0s1$GPP[which(df_re_m0s1$flag_night == 1)] <- 0
+  # df_re_m0s1$GPP[which(df_re_m0s1$flag_night == 1)] <- 0
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin < 5)] <- 0
   
-  df_re_m0s1$GPP[which(df_re_m0s1$flag_night == 0 & df_re_m0s1$PPFDin > 5)] <- - 
-    df_re_m0s1$NEE_measure[which(df_re_m0s1$flag_night == 0 & df_re_m0s1$PPFDin > 5)] + 
-    df_re_m0s1$Re_final[which(df_re_m0s1$flag_night == 0 & df_re_m0s1$PPFDin > 5)]
+  df_re_m0s1$GPP[which(df_re_m0s1$PPFDin > 5)] <- - 
+    df_re_m0s1$NEE_measure[which(df_re_m0s1$PPFDin > 5)] + 
+    df_re_m0s1$Re_final[which(df_re_m0s1$PPFDin > 5)]
   
-  df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$flag_night == 0 & df_re_m0s1$PPFDin > 5), ]
+  df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$PPFDin > 5), ]
   df_re_m0s1_day <- df_re_m0s1_day[-which(is.na(df_re_m0s1_day$GPP)), ]
   
   summary(df_re_m0s1)
