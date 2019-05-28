@@ -705,7 +705,6 @@
   ## 7 - Prepare Data for Respiration Model ####
 #### ------------------------------------- ####  
   
-  
   df_merged$NEE_cor <- df_merged$NEE_measure
   df_merged$NEE_cor[which(df_merged$ustar < 0.19)] <- NA 
 
