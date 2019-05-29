@@ -323,6 +323,10 @@
 #### 5. Moving Window over Years: Model Selection for an moving window of 4 years ####
 #### ----------------------- ####
   
+  load(paste0(mypath, "/RData/GPP/final_3/results_pred_pre_analysis_gpp_m0s1.RData"))
+  load(paste0(mypath, "/RData/RE/final_3/results_pred_pre_analysis_m0s1.RData"))
+  load(paste0(mypath, "/RData/df_model.RData"))
+  
   years_ <- unique(as.numeric(format(df_merged$dt, "%Y")))
   years_ <- years_[-1]
   
@@ -332,9 +336,10 @@
   pred_analysis_gpp_year <- list()
   results_gpp_all_year <- list()
   df_results_boot_gpp_year <- list()
-  
-  for (i in 1:(length(years_) - 3)){
-    window_ <- years_[i:(i + 3)]
+
+   
+  for (i in 1:(length(years_) - 1)){
+    window_ <- years_[i:(i + 1)]
     
     if (i == 1){
       df_mer <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% c(2001, window_)), ]
@@ -343,45 +348,62 @@
       df_mer <- df_merged[which(as.numeric(format(df_merged$dt,"%Y")) %in% window_), ]
       df_nig <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% window_), ]
     }
-
-    ## Respiration: Predictor pre analysis
-    pred_analysis_year[[i]] <- TargetPreAnalysisPredictors(df_train = df_nig, cluster = F, method_norm = "standarize")
+    
+    # if (i == 1){
+    #   ## Respiration: Predictor pre analysis
+    #   pred_analysis_year <- TargetPreAnalysisPredictors(df_train = df_nig, cluster = F, method_norm = "standarize")
+    #   
+    # }
+    
+    ## chosse predictors by hand -> save time
+    pred_model_re <- c("Ts1", "MS_mean", "airT", "RH", "LWin", "LWout", "h_last_precip", "precip_30d",
+                    "year_ws_sin", "year_sa_sin", "day_sin", "NEE_cor")
+    
+    pred_analysis_year[[1]] <- df_nig[, pred_model_re]
     
     ## Respiration: model selection and predictor selection
-    results_resp_all_year[[i]] <- TargetFunBO(df_train = pred_analysis_year[[i]][[1]], path = mypath, opt.batch = T, ANN = "seq", 
+    results_resp_all_year[[i]] <- TargetFunBO(df_train = pred_analysis_year[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                                 cluster = F, method_norm = "standarize")
     
     ## Respiration: bootstrap
-    df_results_boot_year[[i]] <- BootstrapPrediction(pre_predictor_results = pred_analysis_year[[i]], 
+    df_results_boot_year[[i]] <- BootstrapPrediction(pre_predictor_results = pred_analysis_year, 
                                                        model_selection_results = results_resp_all_year[[i]], 
                                                        complete_data = df_mer, rep = 100, variable = "NEE_cor")
     ## calculate GPP
     df_re_year <- df_results_boot_year[[i]][[2]]
     df_re_year$GPP <- NA
-    df_re_year$GPP[which(df_re_year$flag_night == 1)] <- 0
+    # df_re_year$GPP[which(df_re_year$flag_night == 1)] <- 0
     df_re_year$GPP[which(df_re_year$PPFDin < 5)] <- 0
     
-    df_re_year$GPP[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5)] <- - 
-      df_re_year$NEE_measure[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5)] + 
-      df_re_year$Re_final[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5)]
+    df_re_year$GPP[which(df_re_year$PPFDin > 5)] <- 
+      -df_re_year$NEE_measure[which(df_re_year$PPFDin > 5)] + 
+      df_re_year$Re_final[which(df_re_year$PPFDin > 5)]
     
-    df_re_year_day <- df_re_year[which(df_re_year$flag_night == 0 & df_re_year$PPFDin > 5), ]
+    df_re_year_day <- df_re_year[which(df_re_year$PPFDin > 5), ]
     df_re_year_day <- df_re_year_day[-which(is.na(df_re_year_day$GPP)), ]
     
     ## GPP: Predictor pre analysis
-    pred_analysis_gpp_year[[i]] <- TargetPreAnalysisPredictors(df_train = df_re_year_day, cluster = F,
-                                                                 method_norm = "standarize", variable = "GPP")
+    # if (i == 1){
+    #   pred_analysis_gpp_year <- TargetPreAnalysisPredictors(df_train = df_re_year_day, cluster = F,
+    #                                                              method_norm = "standarize", variable = "GPP")
+    # }
+    
+    ## chosse predictors by hand -> save time
+    pred_model_gpp <- c("Ts1", "Soil.moisture_main", "airT", "RH", "LWin", "LWout", "SWout", "PPFDin", 
+                    "h_last_precip", "precip_30d", "year_ws_sin", "year_sa_sin", "day_sin", "GPP")
+    
+    pred_analysis_gpp_year[[1]] <- df_re_year_day[, pred_model_gpp]
     
     ## Respiration: model selection and predictor selection
-    results_gpp_all_year[[i]] <- TargetFunBO(df_train = pred_analysis_gpp_year[[i]][[1]], path = mypath, opt.batch = T, ANN = "seq", 
+    results_gpp_all_year[[i]] <- TargetFunBO(df_train = pred_analysis_gpp_year[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                                cluster = F, method_norm = "standarize", variable = "GPP")
     
     ## Respiration: bootstrap
-    df_results_boot_gpp_year[[i]] <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_year[[i]], 
+    df_results_boot_gpp_year[[i]] <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_year, 
                                                            model_selection_results = results_gpp_all_year[[i]], 
                                                            complete_data = df_re_year, rep = 100, variable = "GPP")
     
-    df_results_boot_gpp_year[[i]][[2]]$NEE_final <- df_results_boot_gpp_year[[i]][[2]]$NEE_measure
+    df_results_boot_gpp_year[[i]][[2]]$NEE_final <- df_results_boot_gpp_year[[i]][[2]]$NEE_cor
     df_results_boot_gpp_year[[i]][[2]]$NEE_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))] <- 
       df_results_boot_gpp_year[[i]][[2]]$GPP_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))] - 
       df_results_boot_gpp_year[[i]][[2]]$Re_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))]
