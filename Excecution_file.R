@@ -323,8 +323,6 @@
 #### 5. Moving Window over Years: Model Selection for an moving window of 4 years ####
 #### ----------------------- ####
   
-  load(paste0(mypath, "/RData/GPP/final_3/results_pred_pre_analysis_gpp_m0s1.RData"))
-  load(paste0(mypath, "/RData/RE/final_3/results_pred_pre_analysis_m0s1.RData"))
   load(paste0(mypath, "/RData/df_model.RData"))
   
   years_ <- unique(as.numeric(format(df_merged$dt, "%Y")))
@@ -337,7 +335,6 @@
   results_gpp_all_year <- list()
   df_results_boot_gpp_year <- list()
 
-   
   for (i in 1:(length(years_) - 1)){
     window_ <- years_[i:(i + 1)]
     
