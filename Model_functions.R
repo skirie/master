@@ -48,6 +48,7 @@ PreAnalysisPredictors <- function(df_train, params){
   all_mse_n <- vector("list", ncol(df_train) - 1)
   all_mse_bs <- vector("list", ncol(df_train) - 1)
   all_r2 <- vector("list", ncol(df_train) - 1)
+  all_rmse_bs <- vector("list", ncol(df_train) - 1)
   k <- ncol(df_train) - 1
   col_ <- colnames(df_train)
   
@@ -64,13 +65,16 @@ PreAnalysisPredictors <- function(df_train, params){
     mse_n <- mean(cv_[[1]], na.rm = T)
     mse_bs <- mean(cv_[[2]], na.rm = T)
     r2_ <- mean(cv_[[3]], na.rm = T)
+    rmse_bs <- mean(cv_[[5]], na.rm = T)
     all_mse_n[[i]] <- c(all_mse_n[[i]], mse_n)
     all_mse_bs[[i]] <- c(all_mse_bs[[i]], mse_bs)
     all_r2[[i]] <- c(all_r2[[i]], r2_)
+    all_rmse_bs[[i]] <- c(all_rmse_bs[[i]], rmse_bs)
   }
   
-  df_results <- data.frame(predictors = col_[1:k], mse_n = unlist(all_mse_n, use.names=FALSE), 
-                           mse_bs = unlist(all_mse_bs, use.names=FALSE), r2 = unlist(all_r2, use.names=FALSE))
+  df_results <- data.frame(predictors = col_[1:k], mse_n = unlist(all_mse_n, use.names = FALSE), 
+                           mse_bs = unlist(all_mse_bs, use.names = FALSE), r2 = unlist(all_r2, use.names = FALSE),
+                           rmse_bs = unlist(all_rmse_bs, use.names = FALSE))
   df_results <- df_results[order(df_results$mse_n), ]
   
   return(df_results)
@@ -79,8 +83,8 @@ PreAnalysisPredictors <- function(df_train, params){
 ## Predictor preanalysis target data frame ##
 TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "range_1_1", 
                                         batchsize = 30, units = 40, layer = 2, variable = "NEE_cor"){
-  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_mean")
-  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
+  names_soil_t <- c("Ts1", "Ts2", "Ts3")#, "Ts4", "Ts5", "Ts6", "TS_mean")
+  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3")#, "Soil.moisture4", "Soil.moisture_main", "MS_mean")
   # names_rad <- c("SWin", "PPFDin")
   
   names_ <- colnames(df_train)
@@ -695,6 +699,7 @@ ComputeModel <- function(df_train, params, type = "full"){
   all_mae_histories <- NULL
   all_mse_n <- NULL
   all_mse_bs <- NULL
+  all_rmse <- NULL
   all_r2 <- NULL
   
   ## Callback - early stopping 
@@ -858,8 +863,10 @@ ComputeModel <- function(df_train, params, type = "full"){
       
       mse_n <- mse(test_targets, pred_test)
       mse_bs <- mse(test_targets_bs, final_result)
+      rmse_bs <- rmse(test_targets_bs, final_result)
       all_mse_n <- rbind(all_mse_n, mse_n)
       all_mse_bs <- rbind(all_mse_bs, mse_bs)
+      all_rmse <- rbind(all_rmse, rmse_bs)
       r2 <- cor(test_targets, pred_test) ^ 2
       all_r2 <- rbind(all_r2, r2)
       
@@ -868,7 +875,7 @@ ComputeModel <- function(df_train, params, type = "full"){
       gc()
     }
   }
-  return(list(all_mse_n, all_mse_bs, all_r2, all_mae_histories))
+  return(list(all_mse_n, all_mse_bs, all_r2, all_mae_histories, all_rmse))
 }
 
 ## Function model compute full for LSTM ##
