@@ -835,7 +835,7 @@
 #### 4. Respiration and GPP - Annual predictor change ####
 #### ------------------------- ####
   ## load data ####
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/results_full_year_05.05.RData")
+  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/results_full_year_06.06.RData")
   
   ## Respiration: list with predictor and ranking ####
   ## target data.frame with predictors and months for ranking
@@ -848,16 +848,16 @@
   
   unique_pred <- unique(pred_all)
   df_ <- data.frame("predictor" = unique_pred)
-  df_[, 2:13] <- NA
+  df_[, 2:15] <- NA
   
   ## loop to determine "rank" of every predictor
   for (i in 1:length(results_resp_all_year)){
-    if (i < 6){
-      colnames(df_)[i + 1] <- paste0(200, i + 1, "-", 200, i + 4)
-    } else if (i > 5 && i < 9){
-      colnames(df_)[i + 1] <- paste0(200, i + 1, "-", 20, i + 4)
+    if (i < 8){
+      colnames(df_)[i + 1] <- paste0(200, i + 1, "/", 200, i + 2)
+    } else if (i == 8){
+      colnames(df_)[i + 1] <- paste0(200, i + 1, "/", 20, i + 2)
       } else {
-        colnames(df_)[i + 1] <- paste0(20, i + 1, "-", 20, i + 4)
+        colnames(df_)[i + 1] <- paste0(20, i + 1, "/", 20, i + 2)
       }
     
     for (j in 1:length(unique_pred)){
@@ -874,17 +874,17 @@
   df_$predictor <- as.character(df_$predictor)
   df_2 <- df_
   
-  ## one soil temperature
-  df_2[16, ] <- df_2[1, ]
-  df_2[16, 4] <- 1
-  df_2$predictor[16] <- "Tsoil"
-  
-  ## one soil moisture
-  df_2[17, ] <- df_2[15, ]
-  df_2$predictor[17] <- "Msoil"
-  df_2[17, c(2:5, 9, 11, 12)] <- c(2, 2, 2, 5, 2, 3, 3)
-  
-  df_2 <- df_2[-c(1, 2, 11, 13, 14, 15), ]
+  # ## one soil temperature
+  # df_2[16, ] <- df_2[1, ]
+  # df_2[16, 4] <- 1
+  # df_2$predictor[16] <- "Tsoil"
+  # 
+  # ## one soil moisture
+  # df_2[17, ] <- df_2[15, ]
+  # df_2$predictor[17] <- "Msoil"
+  # df_2[17, c(2:5, 9, 11, 12)] <- c(2, 2, 2, 5, 2, 3, 3)
+  # 
+  # df_2 <- df_2[-c(1, 2, 11, 13, 14, 15), ]
   
   ## final format
   df_2$relevance <- apply(df_2[, 2:13], 1, mean, na.rm = TRUE)
@@ -904,9 +904,9 @@
     df_3[1:12, i] <- as.integer(df_3[1:12, i])  
   }
   
-  ## Respiration: list with predictors andexplained variance ####
+  ## Respiration: list with predictors and explained variance ####
   r_2 <- data.frame("r_1" = double(), "r_2" = double(), "r_3" = double(), "r_4" = double(), "r_5" = double())
-  for (i in 1:12){
+  for (i in 1:14){
     w_lev_1 <- results_resp_all_year[[i]][[2]][results_resp_all_year[[i]][[2]]$level == 1, ]
     w_lev_2 <- results_resp_all_year[[i]][[2]][results_resp_all_year[[i]][[2]]$level == 2, ]
     w_lev_3 <- results_resp_all_year[[i]][[2]][results_resp_all_year[[i]][[2]]$level == 3, ]
@@ -925,20 +925,20 @@
   ## r2
   par(fig = c(0, 1, 0.7, 1))
   par(mar = c(0, 5, 3, 5.5))
-  plot(r_2$r_1 ~ c(1:12), ylim = c(0, 0.6), xlim = c(0.5, 12.5), type = "l", axes = F, xaxt = 'n', 
+  plot(r_2$r_1 ~ c(1:14), ylim = c(0, 0.6), xlim = c(0.5, 14.5), type = "l", axes = F, xaxt = 'n', 
        yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
 
   text(x = 0.7, y = 0.5, labels = "(a)", cex = cex_fig)
   abline(h = seq(0, 0.6, 0.2), lty = 3, col = "grey70")
   abline(h = 0)
-  axis(3, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_fig)
+  axis(3, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_fig)
   axis(4, at = seq(0, 0.6, 0.2), labels = seq(0, 0.6, 0.2), las = 2, cex.axis = cex_axis)
   mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
   
-  lines(r_2$r_1 ~ c(1:12), lty = 1, lwd = 2.5)
-  points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
-  lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
-  points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
+  lines(r_2$r_1 ~ c(1:14), lty = 1, lwd = 2.5)
+  points(r_2$r_1 ~ c(1:14), cex = cex_fig, lwd = 2)
+  lines(r_2$r_5 ~ c(1:14), lty = 2, lwd = 2.5)
+  points(r_2$r_5 ~ c(1:14), cex = cex_fig, lwd = 2)
   
   legend(x = 0.5, y = 0.3, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
          col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
@@ -946,24 +946,24 @@
   ## ranking
   par(fig = c(0, 1, 0, 0.7), new = TRUE)
   par(mar = c(2.5, 5, 0, 5.5))
-  plot(df_3$Tsoil[1:12] ~ c(1:12), type = "l", ylim = rev(range(c(0,13))), col = "cyan", lwd = 2.5, xaxt = 'n', xlab = "", 
+  plot(df_3$Ts1[1:14] ~ c(1:14), type = "l", ylim = rev(range(c(0,13))), col = "cyan", lwd = 2.5, xaxt = 'n', xlab = "", 
        ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
   abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
   text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
-  axis(1, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_axis)
+  axis(1, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
   
-  lines(df_3$Tsoil[1:12] ~ c(1:12), col = "cyan", lwd = 2.5)
-  points(df_3$Tsoil[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "cyan")
-  lines(df_3$Msoil[1:12] ~ c(1:12), col = "brown", lwd = 2.5)
-  points(df_3$Msoil[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "brown")
-  lines(df_3$LWin[1:12] ~ c(1:12), col = "black", lwd = 2.5)
-  points(df_3$LWin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "black")
-  lines(df_3$year_sa_sin[1:12] ~ c(1:12), col = "firebrick1", lwd = 2.5)
-  points(df_3$year_sa_sin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "firebrick1")
-  lines(df_3$year_ws_sin[1:12] ~ c(1:12), col = "gold", lwd = 2.5)
-  points(df_3$year_ws_sin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "gold")
+  lines(df_3$Ts1[1:14] ~ c(1:14), col = "cyan", lwd = 2.5)
+  points(df_3$Ts1[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "cyan")
+  lines(df_3$MS_mean[1:14] ~ c(1:14), col = "brown", lwd = 2.5)
+  points(df_3$MS_mean[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "brown")
+  lines(df_3$LWin[1:14] ~ c(1:14), col = "black", lwd = 2.5)
+  points(df_3$LWin[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "black")
+  lines(df_3$year_sa_sin[1:14] ~ c(1:14), col = "firebrick1", lwd = 2.5)
+  points(df_3$year_sa_sin[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "firebrick1")
+  lines(df_3$year_ws_sin[1:14] ~ c(1:14), col = "gold", lwd = 2.5)
+  points(df_3$year_ws_sin[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "gold")
   
   legend(x = 1, y = 9.8, legend = label_legend, lty = 1, pch = 1, ncol = 3,
          col = c("cyan", "brown", "black", "firebrick1", "gold"), bg = F, bty = "n", cex = 2.4, lwd = c(3))
@@ -984,16 +984,16 @@
   
   unique_pred <- unique(pred_all)
   df_ <- data.frame("predictor" = unique_pred)
-  df_[, 2:13] <- NA
+  df_[, 2:15] <- NA
   
   ## loop to determine "rank" of every predictor
   for (i in 1:length(results_gpp_all_year)){
-    if (i < 6){
-      colnames(df_)[i + 1] <- paste0(200, i + 1, "-", 200, i + 4)
-    } else if (i > 5 && i < 9){
-      colnames(df_)[i + 1] <- paste0(200, i + 1, "-", 20, i + 4)
+    if (i < 8){
+      colnames(df_)[i + 1] <- paste0(200, i + 1, "/", 200, i + 2)
+    } else if (i == 8){
+      colnames(df_)[i + 1] <- paste0(200, i + 1, "/", 20, i + 2)
     } else {
-      colnames(df_)[i + 1] <- paste0(20, i + 1, "-", 20, i + 4)
+      colnames(df_)[i + 1] <- paste0(20, i + 1, "/", 20, i + 2)
     }
     
     for (j in 1:length(unique_pred)){
@@ -1010,18 +1010,18 @@
   df_$predictor <- as.character(df_$predictor)
   df_2 <- df_
   
-  ## one soil temperature
-  df_2$predictor[2] <- "Tsoil"
-  
-  ## one soil moisture
-  df_2[16, ] <- df_2[4, ]
-  df_2$predictor[16] <- "Msoil"
-  df_2[16, c(10:13)] <- c(4, 2, 2, 6)
-  
-  df_2 <- df_2[-c(4, 14, 15), ]
+  # ## one soil temperature
+  # df_2$predictor[2] <- "Tsoil"
+  # 
+  # ## one soil moisture
+  # df_2[16, ] <- df_2[4, ]
+  # df_2$predictor[16] <- "Msoil"
+  # df_2[16, c(10:13)] <- c(4, 2, 2, 6)
+  # 
+  # df_2 <- df_2[-c(4, 14, 15), ]
   
   ## final format
-  df_2$relevance <- apply(df_2[, 2:13], 1, mean, na.rm = TRUE)
+  df_2$relevance <- apply(df_2[, 2:15], 1, mean, na.rm = TRUE)
   df_2 <- df_2[order(df_2$relevance), ]
   
   names <- df_2[, 1]
@@ -1035,12 +1035,12 @@
   colnames(df_3) <- c("Years", names)
   
   for (i in 2:14){
-    df_3[1:12, i] <- as.integer(df_3[1:12, i])  
+    df_3[1:14, i] <- as.integer(df_3[1:14, i])  
   }
   
-  ## GPP: list with predictors andexplained variance ####
+  ## GPP: list with predictors and explained variance ####
   r_2 <- data.frame("r_1" = double(), "r_2" = double(), "r_3" = double(), "r_4" = double(), "r_5" = double())
-  for (i in 1:12){
+  for (i in 1:14){
     w_lev_1 <- results_gpp_all_year[[i]][[2]][results_gpp_all_year[[i]][[2]]$level == 1, ]
     w_lev_2 <- results_gpp_all_year[[i]][[2]][results_gpp_all_year[[i]][[2]]$level == 2, ]
     w_lev_3 <- results_gpp_all_year[[i]][[2]][results_gpp_all_year[[i]][[2]]$level == 3, ]
@@ -1059,20 +1059,20 @@
   ## r2
   par(fig = c(0, 1, 0.7, 1))
   par(mar = c(0, 5, 3, 5.5))
-  plot(r_2$r_1 ~ c(1:12), ylim = c(0, 1), xlim = c(0.5, 12.5), type = "l", axes = F, xaxt = 'n', 
+  plot(r_2$r_1 ~ c(1:14), ylim = c(0, 1), xlim = c(0.5, 14.5), type = "l", axes = F, xaxt = 'n', 
        yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
   
   text(x = 0.7, y = 0.9, labels = "(a)", cex = cex_fig)
   abline(h = seq(0, 1, 0.2), lty = 3, col = "grey70")
   abline(h = 0)
-  axis(3, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_fig)
+  axis(3, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_fig)
   axis(4, at = seq(0, 1, 0.2), labels = seq(0, 1, 0.2), las = 2, cex.axis = cex_axis)
   mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
   
-  lines(r_2$r_1 ~ c(1:12), lty = 1, lwd = 2.5)
-  points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
-  lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
-  points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
+  lines(r_2$r_1 ~ c(1:14), lty = 1, lwd = 2.5)
+  points(r_2$r_1 ~ c(1:14), cex = cex_fig, lwd = 2)
+  lines(r_2$r_5 ~ c(1:14), lty = 2, lwd = 2.5)
+  points(r_2$r_5 ~ c(1:14), cex = cex_fig, lwd = 2)
   
   legend(x = 0.5, y = 0.45, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
          col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
@@ -1080,26 +1080,26 @@
   ## ranking
   par(fig = c(0, 1, 0, 0.7), new = TRUE)
   par(mar = c(2.5, 5, 0, 5.5))
-  plot(df_3$PPFDin[1:12] ~ c(1:12), type = "l", ylim = rev(range(c(0,13))), col = "green", lwd = 2.5, xaxt = 'n', xlab = "", 
+  plot(df_3$PPFDin[1:14] ~ c(1:14), type = "l", ylim = rev(range(c(0,13))), col = "green", lwd = 2.5, xaxt = 'n', xlab = "", 
        ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
   abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
   text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
-  axis(1, at = seq(1, 12, length.out = 12), labels = df_3$Years[1:12], cex.axis = cex_axis)
+  axis(1, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
   
-  lines(df_3$PPFDin[1:12] ~ c(1:12), col = "green", lwd = 2.5)
-  points(df_3$PPFDin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "green")
-  lines(df_3$LWin[1:12] ~ c(1:12), col = "black", lwd = 2.5)
-  points(df_3$LWin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "black")
-  lines(df_3$LWout[1:12] ~ c(1:12), col = "grey", lwd = 2.5)
-  points(df_3$LWout[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "grey")
-  lines(df_3$Msoil[1:12] ~ c(1:12), col = "brown", lwd = 2.5)
-  points(df_3$Msoil[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "brown")
-  lines(df_3$airT[1:12] ~ c(1:12), col = "cyan", lwd = 2.5)
-  points(df_3$airT[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "cyan")
+  lines(df_3$PPFDin[1:14] ~ c(1:14), col = "green", lwd = 2.5)
+  points(df_3$PPFDin[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "green")
+  lines(df_3$LWin[1:14] ~ c(1:14), col = "black", lwd = 2.5)
+  points(df_3$LWin[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "black")
+  lines(df_3$LWout[1:14] ~ c(1:14), col = "grey", lwd = 2.5)
+  points(df_3$LWout[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "grey")
+  lines(df_3$Soil.moisture_main[1:14] ~ c(1:14), col = "brown", lwd = 2.5)
+  points(df_3$Soil.moisture_main[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "brown")
+  lines(df_3$Ts1[1:14] ~ c(1:14), col = "cyan", lwd = 2.5)
+  points(df_3$Ts1[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "cyan")
   
-  legend(x = 1, y = 11.5, legend = label_legend, lty = 1, pch = 1, ncol = 5, 
+  legend(x = 3, y = 11.5, legend = label_legend, lty = 1, pch = 1, ncol = 5, 
          col = c("green", "black", "grey", "brown", "cyan"), bg = F, bty = "n", cex = 2.4, lwd = c(3))
   
   ## box 
@@ -1108,8 +1108,7 @@
   
   dev.off()
 
-  
-  
+
 #### ------------------------- ####
 #### 5. Respiration and GPP - Fertilization ####
 #### ------------------------- ####
