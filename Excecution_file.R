@@ -283,14 +283,14 @@
     ## calculate GPP
     df_re_season <- df_results_boot_season[[i]][[2]]
     df_re_season$GPP <- NA
-    df_re_season$GPP[which(df_re_season$flag_night == 1)] <- 0
+    # df_re_season$GPP[which(df_re_season$flag_night == 1)] <- 0
     df_re_season$GPP[which(df_re_season$PPFDin < 5)] <- 0
     
-    df_re_season$GPP[which(df_re_season$flag_night == 0 & df_re_season$PPFDin > 5)] <- - 
-      df_re_season$NEE_measure[which(df_re_season$flag_night == 0 & df_re_season$PPFDin > 5)] + 
-      df_re_season$Re_final[which(df_re_season$flag_night == 0 & df_re_season$PPFDin > 5)]
+    df_re_season$GPP[which(df_re_season$PPFDin > 5)] <- - 
+      df_re_season$NEE_measure[which(df_re_season$PPFDin > 5)] + 
+      df_re_season$Re_final[which(df_re_season$PPFDin > 5)]
     
-    df_re_season_day <- df_re_season[which(df_re_season$flag_night == 0 & df_re_season$PPFDin > 5), ]
+    df_re_season_day <- df_re_season[which(df_re_season$PPFDin > 5), ]
     df_re_season_day <- df_re_season_day[-which(is.na(df_re_season_day$GPP)), ]
     
     ## GPP: Predictor pre analysis
