@@ -145,7 +145,7 @@
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin < 5)] <- 0
   
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin > 5)] <- - 
-    df_re_m0s1$NEE_measure[which(df_re_m0s1$PPFDin > 5)] + 
+    df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin > 5)] + 
     df_re_m0s1$Re_final[which(df_re_m0s1$PPFDin > 5)]
   
   # summary(df_re_m0s1$GPP)
