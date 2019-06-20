@@ -109,7 +109,7 @@
 #### results as one data.frame ####
   ## load data ####
   load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_complete_gpp_m0s1_27.05.RData")
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_27.05.RData")
+  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData")
   
   ## Lee et al. 
   df_daytime <- read_delim("Daten/daytime_method_Annual.csv", 
@@ -1114,10 +1114,11 @@
 #### ------------------------- ####
   ## load data ####
   load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/Fertilization/results_boots_fert_gpp_m0s1_28.05.RData")
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_27.05.RData")
+  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData")
 
   ## create data.frame ####
   df_results_fert <- df_results_boot_fert_gpp_m0s1[[2]]
+  df_results <- df_results_boot_gpp_m0s1[[2]]
   # df_results_fert$Re_final_m0s1 <- df_results_fert_boot_gpp_m0s1[[2]]$Re_final
   # df_results_fert$GPP_final_m0s1 <- df_results_fert_boot_gpp_m0s1[[2]]$GPP_final
   # 
@@ -1137,8 +1138,8 @@
   df_results_fert$NEP_fert <- df_results$NEE_filled_m0s1
   
   summary(df_results_fert)
-  summary(df_results_fert$NEE_cor)
-  summary(df_results_fert$NEE_filled_m0s1)
+  summary(df_results_fert$NEE_unfert)
+  summary(df_results_fert$NEP_fert)
   
   ## exchange first years
   df_results_fert$NEE_unfert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
@@ -1272,4 +1273,91 @@
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
   
   dev.off()
+  
+#### ------------------------- ####
+#### 6. Respiration and GPP - Correlation Matrix ####
+#### ------------------------- ####
+  ## load data ####
+  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData")
+  df_results <- df_results_boot_gpp_m0s1[[2]]
+  
+  ## aggreagate data ####
+  df_month <- df_results %>%
+    group_by(year, month) %>%
+    summarize(# m0s1
+      NEE = fun.sum(NEE_final),
+      GPP = fun.sum(GPP_final),
+      Re = fun.sum(Re_final),
+      Ta = mean(airT, na.rm = T),
+      Ts = mean(Ts1, na.rm = T),
+      ppfd = mean(PPFDin, na.rm = T),
+      ms = mean(Soil.moisture_main, na.rm = T),
+      prec = sum(Precip, na.rm = T))
+  
+  df_month_y <- df_results %>%
+    group_by(month) %>%
+    summarize(# m0s1
+      NEE = fun.sum(NEE_final),
+      GPP = fun.sum(GPP_final),
+      Re = fun.sum(Re_final),
+      Ta = mean(airT, na.rm = T),
+      ppfd = mean(PPFDin, na.rm = T),
+      prec = mean(Precip, na.rm = T))
+  
+  df_spring <- df_month[df_month$month %in% c(3,4,5), ] %>%
+    group_by(year) %>%
+    summarize(# m0s1
+      NEE = fun.sum(NEE),
+      GPP = fun.sum(GPP),
+      Re = fun.sum(Re),
+      Ta = mean(Ta, na.rm = T),
+      Ts = mean(Ts, na.rm = T),
+      ppfd = mean(ppfd, na.rm = T),
+      prec = mean(prec))
+  
+  df_latwinter <- df_month[df_month$month %in% c(2,3,4), ] %>%
+    group_by(year) %>%
+    summarize(# m0s1
+      NEE = fun.sum(NEE),
+      GPP = fun.sum(GPP),
+      Re = fun.sum(Re),
+      Ta = mean(Ta, na.rm = T),
+      Ts = mean(Ts, na.rm = T),
+      ppfd = mean(ppfd, na.rm = T),
+      prec = mean(prec))
+  
+  df_summer <- df_month[df_month$month %in% c(6,7,8,9), ] %>%
+    group_by(year) %>%
+    summarize(# m0s1
+      NEE = fun.sum(NEE),
+      GPP = fun.sum(GPP),
+      Re = fun.sum(Re),
+      Ta = mean(Ta, na.rm = T),
+      Ts = mean(Ts, na.rm = T),
+      ppfd = mean(ppfd, na.rm = T), 
+      ms = mean(ms),
+      prec = mean(prec))
+  
+  df_year <- df_results %>%
+    group_by(year) %>%
+    summarize(# m0s1
+      Ts = mean(Ts1, na.rm = T),
+      Ta = mean(airT, na.rm = T),
+      soil.m = mean(Soil.moisture_main, na.rm = T),
+      ppfd = mean(PPFDin, na.rm = T),
+      prec = sum(Precip, na.rm = T),
+      LWin = mean(LWin, na.rm = T),
+      LWout = mean(LWout, na.rm = T), 
+      Re = fun.sum(Re_final))
+  
+  df_year <- df_year[-16, ]
+  
+  ## Correlation Matrix ####
+  cor(cbind("gpp_fert" = df_results_y$GPP_m0s1_sum, "Re_fert" = df_results_y$Re_m0s1_sum, "nee_fert" = df_results_y$NEE_gapfilled_sum, 
+            "ta" = df_year$Ta, "sp_ta" = df_spring$Ta, "su_ta" = df_summer$Ta, "wi_ta" = df_latwinter$Ta,
+            "ts" = df_year$Ts, "sp_ts" = df_spring$Ts, "su_ts" = df_summer$Ts, "wi_ts" = df_latwinter$Ts, 
+            "ms" = df_year$soil.m, "su_ms" = df_summer$ms,
+            "ppfd" = df_year$ppfd, "s_ppfd" = df_spring$ppfd, 
+            "prec" = df_year$prec, "sp_prec" = df_spring$prec, "su_prec" = df_summer$prec,
+            "Lwin" = df_year$LWin, "LWout" = df_year$LWout), method = "spearman")
   
