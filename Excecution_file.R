@@ -452,13 +452,14 @@
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin < 5)] <- 0
   
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin > 5)] <- - 
-    df_re_m0s1$NEE_measure[which(df_re_m0s1$PPFDin > 5)] + 
+    df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin > 5)] + 
     df_re_m0s1$Re_final[which(df_re_m0s1$PPFDin > 5)]
   
   df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$PPFDin > 5), ]
   df_re_m0s1_day <- df_re_m0s1_day[-which(is.na(df_re_m0s1_day$GPP)), ]
   
   summary(df_re_m0s1)
+  summary(df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin > 5)])
   
   ## Predictor Pre-Analysis GPP
   pred_analysis_fert_gpp_m0s1 <- TargetPreAnalysisPredictors(df_train = df_re_m0s1_day, cluster = F, 
@@ -478,11 +479,13 @@
                                                        rep = 100, variable = "GPP")
 
   ## final gap filled NEE
-  df_results_boot_fert_gpp_m0s1[[2]]$NEE_final <- df_results_boot_fert_gpp_m0s1[[2]]$NEE_measure
+  df_results_boot_fert_gpp_m0s1[[2]]$NEE_final <- df_results_boot_fert_gpp_m0s1[[2]]$NEE_cor
   df_results_boot_fert_gpp_m0s1[[2]]$NEE_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] <- 
     df_results_boot_fert_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] - 
     df_results_boot_fert_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))]
   
   save(df_results_boot_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_fert_gpp_m0s1_", 
                                                     format(Sys.time(), "%d.%m"), ".RData"))
+  summary(df_results_boot_fert_gpp_m0s1[[2]])
+  df_results_boot_fert_gpp_m0s1[[2]]$NEE_final_2 <- df_results_boot_fert_gpp_m0s1[[2]]$NEE_final
   
