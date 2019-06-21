@@ -82,7 +82,7 @@
   ii_y_p <- cut(df_weather_c_y$dif_p, breaks = seq(-550, 550, len = 100), 
               include.lowest = TRUE)
   
-  ii_m_p <- cut(df_weather_c_m$dif_p, breaks = seq(-90, 90, len = 100), 
+  ii_m_p <- cut(df_weather_c_m$dif_p, breaks = seq(-40, 40, len = 100), 
               include.lowest = TRUE)
   
   # Use bin indices, ii, to select color from vector of n-1 equally spaced colors
@@ -120,7 +120,7 @@
   abline(h = 0)
   axis(3, at = seq(0.75, 13.9, length.out = 12), labels = month, cex.axis = cex_fig)
   axis(2, at = seq(-20, 40, 10), labels = c(-20, "", 0, "", 20, "", 40), las = 2, cex.axis = cex_axis)
-  mtext(text = expression(Delta*'precip'*' [mm]'), side = 2, line = 5, cex = cex_legend)
+  mtext(text = expression(Delta*'P'*' [mm]'), side = 2, line = 5, cex = cex_legend)
   
   ## figure for the 30year mean
   par(mar = c(1, 7, 0, 7.5))
@@ -138,7 +138,7 @@
   abline(h = c(50, 100, 150, 200, 250),lty = 3, col = "grey30")
   axis(2, at = seq(0, 250, 50), labels = c(0, "", 100, "", 200, ""), las = 2,
        cex.axis = cex_axis)
-  mtext(text = "precip [mm]", side = 2, line = 5, cex = cex_legend)
+  mtext(text = "P [mm]", side = 2, line = 5, cex = cex_legend)
   
   # air temp
   par(mar=c(0, 7, 0, 7.5), new = T)
@@ -194,7 +194,7 @@
   abline(h = 0)
   axis(3, at = seq(0.75, 17.5, length.out = 15), labels = df_weather_c_y$year, cex.axis = cex_fig)
   axis(2, at = seq(-400, 500, 200), labels = seq(-400, 500, 200), las = 2, cex.axis = cex_axis)
-  mtext(text = expression(Delta*'precip'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
+  mtext(text = expression(Delta*'P'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
   
   ## figure for the 15 years
   # Precipitation
@@ -209,7 +209,7 @@
   text(x = 0.7, y = 1500, labels = "(b)", cex = cex_fig)
   axis(2, at = c(0, 500, 1000, 1500), labels = c(0, 500, 1000, 1500), las = 2,
        cex.axis = cex_axis)
-  mtext(text = "precip [mm]", side = 2, line = 5.8, cex = cex_legend)
+  mtext(text = "P [mm]", side = 2, line = 5.8, cex = cex_legend)
   
   # Temperature
   par(mar=c(0, 8, 1, 7.5), new = T)
@@ -235,9 +235,9 @@
        cex.axis = cex_fig, line = 0.7, lwd = 0)
   axis(4, at =  c(-0.5, 0, 0.5, 1, 1.5), las = 1, cex.axis = cex_axis)
   
-  legend(x = 6, y = 1.7, legend = c("annual precip", "30 year mean"), lty = c(1, 2),
+  legend(x = 6, y = 1.7, legend = c("annual P", "30 year mean"), lty = c(1, 2),
          col = c("blue", "steelblue3"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
-  legend(x = 9.5, y = 1.7, legend = c("annual mean temp", "30 year mean"), lty = c(1, 2), 
+  legend(x = 9.5, y = 1.7, legend = c(expression("annual T"[a]), "30 year mean"), lty = c(1, 2), 
          col = c("firebrick", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
   
   mtext(text = expression(Delta*'T'[a]*' [°C]'), side = 4, line = 6.5, cex = cex_legend)
@@ -318,7 +318,7 @@
   abline(h = 0)
   axis(3, at = seq(0.75, 13.9, length.out = 12), labels = month, cex.axis = cex_fig)
   axis(2, at = seq(-20, 40, 10), labels = c(-20, "", 0, "", 20, "", 40), las = 2, cex.axis = cex_axis)
-  mtext(text = expression(Delta*'precip'*' [mm]'), side = 2, line = 5, cex = cex_legend)
+  mtext(text = expression(Delta*'P'*' [mm]'), side = 2, line = 5, cex = cex_legend)
   
   ## figure for the 30year mean
   par(mar = c(1, 7, 0, 7.5))
@@ -336,7 +336,7 @@
   abline(h = c(50, 100, 150, 200, 250),lty = 3, col = "grey30")
   axis(2, at = seq(0, 250, 50), labels = c(0, "", 100, "", 200, ""), las = 2,
        cex.axis = cex_axis)
-  mtext(text = "precip [mm]", side = 2, line = 5, cex = cex_legend)
+  mtext(text = "P [mm]", side = 2, line = 5, cex = cex_legend)
   
   # air temp
   par(mar=c(0, 7, 0, 7.5), new = T)
@@ -392,7 +392,7 @@
   abline(h = 0)
   axis(3, at = seq(0.75, 17.5, length.out = 15), labels = df_weather_ss$year, cex.axis = cex_fig)
   axis(2, at = seq(-1000, 1000, 500), labels = seq(-1000, 1000, 500), las = 2, cex.axis = cex_axis)
-  mtext(text = expression(Delta*'precip'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
+  mtext(text = expression(Delta*'P'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
   
   ## figure for the 15 years
   # Precipitation
@@ -407,7 +407,7 @@
   text(x = 0.7, y = 2400, labels = "(b)", cex = cex_fig)
   axis(2, at = c(500, 1000, 1500, 2000, 2500), labels = c(500, 1000, 1500, 2000, 2500), las = 2,
        cex.axis = cex_axis)
-  mtext(text = "precip [mm]", side = 2, line = 5.8, cex = cex_legend)
+  mtext(text = "P [mm]", side = 2, line = 5.8, cex = cex_legend)
   
   # Temperature
   par(mar = c(1.5, 8, 0, 7.5), new = T)
@@ -433,9 +433,9 @@
        cex.axis = cex_fig, line = 0.7, lwd = 0)
   axis(4, at =  c(-1.5, -0.5, 0.5, 1.5), las = 1, cex.axis = cex_axis)
   
-  legend(x = 6, y = 1.7, legend = c("annual precip", "15 year mean"), lty = c(1, 2),
+  legend(x = 6, y = 1.7, legend = c("annual P", "15 year mean"), lty = c(1, 2),
          col = c("blue", "steelblue3"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
-  legend(x = 9.5, y = 1.7, legend = c("annual mean temp", "15 year mean"), lty = c(1, 2), 
+  legend(x = 9.5, y = 1.7, legend = c(expression("annual T"[a]), "15 year mean"), lty = c(1, 2), 
          col = c("firebrick", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
   
   mtext(text = expression(Delta*'T'[a]*' [°C]'), side = 4, line = 6.5, cex = cex_legend)
@@ -516,7 +516,7 @@
   abline(h = 0)
   axis(3, at = seq(0.75, 17.5, length.out = 15), labels = df_summer$year, cex.axis = cex_fig)
   axis(2, at = seq(-40, 40, 20), labels = seq(-40, 40, 20), las = 2, cex.axis = cex_axis)
-  mtext(text = expression(Delta*'precip'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
+  mtext(text = expression(Delta*'P'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
   
   ## figure for the 15 years
   # Precipitation
@@ -531,7 +531,7 @@
   text(x = 0.7, y = 70, labels = "(b)", cex = cex_fig)
   axis(2, at =  seq(0, 80, 20), labels =  seq(0, 80, 20), las = 2,
        cex.axis = cex_axis)
-  mtext(text = "precip [mm]", side = 2, line = 5.8, cex = cex_legend)
+  mtext(text = "P [mm]", side = 2, line = 5.8, cex = cex_legend)
   
   # Temperature
   par(mar=c(1.5, 8, 0, 7.5), new = T)
@@ -557,9 +557,9 @@
        cex.axis = cex_fig, line = 0.7, lwd = 0)
   axis(4, at =  seq(-1.5, 1.5, 1), las = 1, cex.axis = cex_axis)
   
-  legend(x = 6, y = 1.9, legend = c("summer precip", "15 year mean"), lty = c(1, 2),
+  legend(x = 6, y = 1.8, legend = c("summer P", "15 year mean"), lty = c(1, 2),
          col = c("blue", "steelblue3"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
-  legend(x = 9.5, y = 1.9, legend = c("summer temp", "15 year mean"), lty = c(1, 2), 
+  legend(x = 9.5, y = 1.8, legend = c(expression("summer T"[a]), "15 year mean"), lty = c(1, 2), 
          col = c("firebrick", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
   
   mtext(text = expression(Delta*'T'[a]*' [°C]'), side = 4, line = 6.5, cex = cex_legend)
@@ -622,7 +622,7 @@
   # Use bin indices, ii, to select color from vector of n-1 equally spaced colors
   colors_y_t <- colorRampPalette(c("lightblue", "white", "orangered"))(99)[ii_y_t]
   
-#### Summer temperature and precipitation ####
+#### Spring temperature and precipitation ####
   pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/Temp_prec_year_spring.pdf",
       family = "Times", width = 16, height = 8, bg = "white")
   
@@ -639,7 +639,7 @@
   abline(h = 0)
   axis(3, at = seq(0.75, 17.5, length.out = 15), labels = df_spring$year, cex.axis = cex_fig)
   axis(2, at = seq(-80, 80, 40), labels = seq(-80, 80, 40), las = 2, cex.axis = cex_axis)
-  mtext(text = expression(Delta*'precip'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
+  mtext(text = expression(Delta*'P'*' [mm]'), side = 2, line = 5.4, cex = cex_legend)
   
   ## figure for the 15 years
   # Precipitation
@@ -654,7 +654,7 @@
   text(x = 0.7, y = 180, labels = "(b)", cex = cex_fig)
   axis(2, at = seq(0, 200, 50), labels = seq(0, 200, 50), las = 2,
        cex.axis = cex_axis)
-  mtext(text = "precip [mm]", side = 2, line = 5.8, cex = cex_legend)
+  mtext(text = "P [mm]", side = 2, line = 5.8, cex = cex_legend)
   
   # Temperature
   par(mar = c(1.5, 8, 0, 7.5), new = T)
@@ -680,9 +680,9 @@
        cex.axis = cex_fig, line = 0.7, lwd = 0)
   axis(4, at =  seq(-2, 2, 1), las = 1, cex.axis = cex_axis)
   
-  legend(x = 6, y = 1.9, legend = c("spring precip", "15 year mean"), lty = c(1, 2),
+  legend(x = 6, y = 1.9, legend = c("spring P", "15 year mean"), lty = c(1, 2),
          col = c("blue", "steelblue3"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
-  legend(x = 9.5, y = 1.9, legend = c("spring soil temp", "15 year mean"), lty = c(1, 2), 
+  legend(x = 9.5, y = 1.9, legend = c(expression("spring T"[s]), "15 year mean"), lty = c(1, 2), 
          col = c("firebrick", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
   
   mtext(text = expression(Delta*'T'[s]*' [°C]'), side = 4, line = 6.5, cex = cex_legend)
