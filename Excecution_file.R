@@ -486,6 +486,4 @@
   
   save(df_results_boot_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_fert_gpp_m0s1_", 
                                                     format(Sys.time(), "%d.%m"), ".RData"))
-  summary(df_results_boot_fert_gpp_m0s1[[2]])
-  df_results_boot_fert_gpp_m0s1[[2]]$NEE_final_2 <- df_results_boot_fert_gpp_m0s1[[2]]$NEE_final
   
