@@ -237,7 +237,7 @@
   title("NEE")
   legend("topleft", legend = c("m0s1", "lee_1", "lee_day", "lee_night"), col = c("black", "red", "grey", "green"), 
          lty = c(1, 1, 1, 1), bty = "n", lwd = 1.5, cex = 1.5)
-  
+
   ## GPP
   plot(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", xlab = "year", 
        ylab = "g C m-2 y-1", ylim = c(1000, 2100))
@@ -1113,12 +1113,10 @@
 #### 5. Respiration and GPP - Fertilization ####
 #### ------------------------- ####
   ## load data ####
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/Fertilization/results_boots_fert_gpp_m0s1_28.05.RData")
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData")
+  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/Fertilization/results_boots_fert_gpp_m0s1_20.06.RData")
 
   ## create data.frame ####
   df_results_fert <- df_results_boot_fert_gpp_m0s1[[2]]
-  df_results <- df_results_boot_gpp_m0s1[[2]]
   # df_results_fert$Re_final_m0s1 <- df_results_fert_boot_gpp_m0s1[[2]]$Re_final
   # df_results_fert$GPP_final_m0s1 <- df_results_fert_boot_gpp_m0s1[[2]]$GPP_final
   # 
@@ -1128,22 +1126,24 @@
   df_results_fert$NEE_unfert <- df_results_fert$NEE_cor
   
   df_results_fert$NEE_unfert[which(is.na(df_results_fert$NEE_unfert))] <- 
-    -df_results_fert$GPP_final[which(is.na(df_results_fert$NEE_unfert))] + 
+    - df_results_fert$GPP_final[which(is.na(df_results_fert$NEE_unfert))] + 
     df_results_fert$Re_final[which(is.na(df_results_fert$NEE_unfert))]
   
   df_results_fert$GPP_fert <- df_results$GPP_final
   df_results_fert$GPP_fert_ci <- df_results$GPP_gap_filled_95.conf
   df_results_fert$Re_fert <- df_results$Re_final
   df_results_fert$Re_fert_ci <- df_results$Re_gap_filled_95.conf
-  df_results_fert$NEP_fert <- df_results$NEE_filled_m0s1
+  df_results_fert$NEE_fert <- df_results$NEE_filled_m0s1
   
   summary(df_results_fert)
   summary(df_results_fert$NEE_unfert)
-  summary(df_results_fert$NEP_fert)
+  summary(df_results_fert$NEE_fert)
+  hist(df_results_fert$GPP_final)
+  hist(df_results_fert$GPP_fert)
   
   ## exchange first years
   df_results_fert$NEE_unfert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
-    df_results_fert$NEP_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
+    df_results_fert$NEE_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
   
   df_results_fert$GPP_final[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
     df_results_fert$GPP_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
@@ -1161,10 +1161,10 @@
   df_results_fert_y <- df_results_fert %>%
     group_by(year) %>%
     summarize(# fert
-      NEE_fert_sum = fun.sum(NEP_fert),
+      NEE_fert_sum = fun.sum(NEE_fert),
       GPP_fert_sum = fun.sum(GPP_fert), 
       Re_fert_sum = fun.sum(Re_fert),
-      NEE_fert_ci = fun.error(NEP_fert),
+      NEE_fert_ci = fun.error(NEE_fert),
       GPP_fert_ci = fun.error(GPP_fert, GPP_fert_ci), 
       Re_fert_ci = fun.error(Re_fert, Re_fert_ci),
       # unfert
