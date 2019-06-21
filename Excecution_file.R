@@ -144,11 +144,11 @@
   # df_re_m0s1$GPP[which(df_re_m0s1$flag_night == 1)] <- 0
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin < 5)] <- 0
   
-  df_re_m0s1$GPP[which(df_re_m0s1$PPFDin > 5)] <- - 
-    df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin > 5)] + 
-    df_re_m0s1$Re_final[which(df_re_m0s1$PPFDin > 5)]
+  df_re_m0s1$GPP[which(df_re_m0s1$PPFDin >= 5)] <- - 
+    df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin >= 5)] + 
+    df_re_m0s1$Re_final[which(df_re_m0s1$PPFDin >= 5)]
   
-  # summary(df_re_m0s1$GPP)
+  # summary(df_re_m0s1)
   
   rm(df_results_boot_m0s1, df_results_boot_r0.1, df_results_boot_r1.1)
   #### ####
@@ -159,7 +159,7 @@
   
   # df_re_r1.1_day <- df_re_r1.1[which(df_re_r1.1$flag_night == 0 & df_re_r1.1$PPFDin > 5), ]
   # df_re_r0.1_day <- df_re_r0.1[which(df_re_r0.1$flag_night == 0 & df_re_r0.1$PPFDin > 5), ]
-  df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$PPFDin > 5), ]
+  df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$PPFDin >= 5), ]
   
   # df_re_r1.1_day <- df_re_r1.1_day[-which(is.na(df_re_r1.1_day$GPP)), ]
   # df_re_r0.1_day <- df_re_r0.1_day[-which(is.na(df_re_r0.1_day$GPP)), ]
@@ -239,7 +239,7 @@
   
   df_results_boot_gpp_m0s1[[2]]$NEE_final <- df_results_boot_gpp_m0s1[[2]]$NEE_cor
   df_results_boot_gpp_m0s1[[2]]$NEE_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] <- 
-    df_results_boot_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] - 
+    - df_results_boot_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] + 
     df_results_boot_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))]
   
   save(df_results_boot_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
@@ -286,8 +286,8 @@
     # df_re_season$GPP[which(df_re_season$flag_night == 1)] <- 0
     df_re_season$GPP[which(df_re_season$PPFDin < 5)] <- 0
     
-    df_re_season$GPP[which(df_re_season$PPFDin > 5)] <- - 
-      df_re_season$NEE_measure[which(df_re_season$PPFDin > 5)] + 
+    df_re_season$GPP[which(df_re_season$PPFDin > 5)] <-  
+      - df_re_season$NEE_measure[which(df_re_season$PPFDin > 5)] + 
       df_re_season$Re_final[which(df_re_season$PPFDin > 5)]
     
     df_re_season_day <- df_re_season[which(df_re_season$PPFDin > 5), ]
@@ -308,7 +308,7 @@
     
     df_results_boot_gpp_season[[i]][[2]]$NEE_final <- df_results_boot_gpp_season[[i]][[2]]$NEE_measure
     df_results_boot_gpp_season[[i]][[2]]$NEE_final[which(is.na(df_results_boot_gpp_season[[i]][[2]]$NEE_final))] <- 
-      df_results_boot_gpp_season[[i]][[2]]$GPP_final[which(is.na(df_results_boot_gpp_season[[i]][[2]]$NEE_final))] - 
+      - df_results_boot_gpp_season[[i]][[2]]$GPP_final[which(is.na(df_results_boot_gpp_season[[i]][[2]]$NEE_final))] + 
       df_results_boot_gpp_season[[i]][[2]]$Re_final[which(is.na(df_results_boot_gpp_season[[i]][[2]]$NEE_final))]
     
   }
@@ -373,7 +373,7 @@
     df_re_year$GPP[which(df_re_year$PPFDin < 5)] <- 0
     
     df_re_year$GPP[which(df_re_year$PPFDin > 5)] <- 
-      -df_re_year$NEE_measure[which(df_re_year$PPFDin > 5)] + 
+      - df_re_year$NEE_measure[which(df_re_year$PPFDin > 5)] + 
       df_re_year$Re_final[which(df_re_year$PPFDin > 5)]
     
     df_re_year_day <- df_re_year[which(df_re_year$PPFDin > 5), ]
@@ -391,18 +391,18 @@
     
     pred_analysis_gpp_year[[1]] <- df_re_year_day[, pred_model_gpp]
     
-    ## Respiration: model selection and predictor selection
+    ## GPP: model selection and predictor selection
     results_gpp_all_year[[i]] <- TargetFunBO(df_train = pred_analysis_gpp_year[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                                cluster = F, method_norm = "standarize", variable = "GPP")
     
-    ## Respiration: bootstrap
+    ## GPP: bootstrap
     df_results_boot_gpp_year[[i]] <- BootstrapPrediction(pre_predictor_results = pred_analysis_gpp_year, 
                                                            model_selection_results = results_gpp_all_year[[i]], 
                                                            complete_data = df_re_year, rep = 100, variable = "GPP")
     
     df_results_boot_gpp_year[[i]][[2]]$NEE_final <- df_results_boot_gpp_year[[i]][[2]]$NEE_cor
     df_results_boot_gpp_year[[i]][[2]]$NEE_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))] <- 
-      df_results_boot_gpp_year[[i]][[2]]$GPP_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))] - 
+      - df_results_boot_gpp_year[[i]][[2]]$GPP_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))] + 
       df_results_boot_gpp_year[[i]][[2]]$Re_final[which(is.na(df_results_boot_gpp_year[[i]][[2]]$NEE_final))]
   }
 
@@ -422,7 +422,7 @@
   
   df_mer_post_f <- df_merged
   df_mer_post_f$NEE_cor[which(as.numeric(format(df_mer_post_f$dt, "%Y")) %in% c(2007:2016))] <- NA
-  summary(df_mer_post_f$NEE_cor[which(as.numeric(format(df_mer_post_f$dt,"%Y")) %in% c(2007:2016))])
+  # summary(df_mer_post_f)#$NEE_cor[which(as.numeric(format(df_mer_post_f$dt,"%Y")) %in% c(2007:2016))])
   
   df_nig_post_f <- df_night_model[which(as.numeric(format(df_night_model$dt,"%Y")) %in% c(2007:2016)), ]
   
@@ -451,15 +451,15 @@
   # df_re_m0s1$GPP[which(df_re_m0s1$flag_night == 1)] <- 0
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin < 5)] <- 0
   
-  df_re_m0s1$GPP[which(df_re_m0s1$PPFDin > 5)] <- - 
-    df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin > 5)] + 
-    df_re_m0s1$Re_final[which(df_re_m0s1$PPFDin > 5)]
+  df_re_m0s1$GPP[which(df_re_m0s1$PPFDin >= 5)] <- - 
+    df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin >= 5)] + 
+    df_re_m0s1$Re_final[which(df_re_m0s1$PPFDin >= 5)]
   
-  df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$PPFDin > 5), ]
+  df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$PPFDin >= 5), ]
   df_re_m0s1_day <- df_re_m0s1_day[-which(is.na(df_re_m0s1_day$GPP)), ]
   
   summary(df_re_m0s1)
-  summary(df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin > 5)])
+  summary(df_re_m0s1$NEE_cor[which(df_re_m0s1$PPFDin >= 5)])
   
   ## Predictor Pre-Analysis GPP
   pred_analysis_fert_gpp_m0s1 <- TargetPreAnalysisPredictors(df_train = df_re_m0s1_day, cluster = F, 
@@ -481,7 +481,7 @@
   ## final gap filled NEE
   df_results_boot_fert_gpp_m0s1[[2]]$NEE_final <- df_results_boot_fert_gpp_m0s1[[2]]$NEE_cor
   df_results_boot_fert_gpp_m0s1[[2]]$NEE_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] <- 
-    df_results_boot_fert_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] - 
+    - df_results_boot_fert_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] + 
     df_results_boot_fert_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))]
   
   save(df_results_boot_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_fert_gpp_m0s1_", 
