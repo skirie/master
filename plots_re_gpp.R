@@ -1184,22 +1184,22 @@
   ## NEP 
   par(fig = c(0, 1, 0.6, 1), mar = c(5, 7, 3, 7), new = TRUE)
   plot(df_results_fert_y$NEE_fert_sum * -1 ~ df_results_fert_y$year, type = "l", xlab = "", 
-       ylab = "", ylim = c(-300, 500), xaxt = "n", axes = F, lwd = 3)
+       ylab = "", ylim = c(-500, 500), xaxt = "n", axes = F, lwd = 3)
   lines(df_results_fert_y$NEE_unfert_sum * -1 ~ df_results_fert_y$year, type = "l", lty = 1, lwd = 3, col = "red")
   points(df_results_fert_y$NEE_fert_sum * -1 ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
   points(df_results_fert_y$NEE_unfert_sum * -1 ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   axis(1, at = df_results_fert_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(-200, 500, 200), labels = seq(-200, 500, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(2, at = seq(-500, 500, 200), labels = seq(-500, 500, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
   axis(3, at = df_results_fert_y$year, labels = df_results_fert_y$year, cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(-200, 500, 200), labels = rep("", 4), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(4, at = seq(-500, 500, 200), labels = rep("", 6), las = 2, cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('NEP')*' (g C m' ^-2*' year' ^-1*')'), side = 2, line = 4.5, cex = cex_lab)
   
-  abline(h = seq(-400, 400, 200), lty = 3, col = "grey")
+  abline(h = seq(-500, 500, 200), lty = 3, col = "grey")
   abline(v = 2006, lty = 2, col = "black")
   abline(h = 0, lty = 3, col = "black")  
   text(x = 2001.8, y = 440, labels = "(a)", cex = cex_fig)
-  legend(x = 2008, y = 50, legend = c("With fertilization", "Without fertilization"), lty = c(1, 1), pch = c(1, 2),
+  legend(x = 2001.5, y = 440, legend = c("With fertilization", "Without fertilization"), lty = c(1, 1), pch = c(1, 2),
          col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
   par(new = T, mar = c(5, 7, 3, 7))
@@ -1208,7 +1208,7 @@
   ## GPP
   par(fig = c(0, 1, 0.3, 0.7), mar = c(5, 7, 3, 7), new = TRUE)
   plot(df_results_fert_y$GPP_fert_sum ~ df_results_fert_y$year, type = "l", xlab = "", 
-       ylab = "", ylim = c(1000, 2000), col = "black", xaxt = "n", axes = F, lwd = 3)
+       ylab = "", ylim = c(700, 2000), col = "black", xaxt = "n", axes = F, lwd = 3)
   lines(df_results_fert_y$GPP_fert_sum + df_results_fert_y$GPP_fert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
         ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
   lines(df_results_fert_y$GPP_fert_sum - df_results_fert_y$GPP_fert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
@@ -1224,12 +1224,12 @@
   points(df_results_fert_y$GPP_unfert_sum ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   axis(1, at = df_results_fert_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(1000, 2000, 200), labels = rep("", 6), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(2, at = seq(700, 2000, 200), labels = rep("", 7), las = 2, cex.axis = cex_axis, tck = -0.03)
   axis(3, at = df_results_fert_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(1000, 2000, 200), labels = seq(1000, 2000, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(4, at = seq(700, 2000, 200), labels = seq(700, 2000, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('GPP')*' (g C m' ^-2*' year' ^-1*')'), side = 4, line = 6, cex = cex_lab)
   
-  abline(h = seq(1000, 2000, 200), lty = 3, col = "grey")
+  abline(h = seq(700, 2000, 200), lty = 3, col = "grey")
   abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 1900, labels = "(b)", cex = cex_fig)
   # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(1, 1),
@@ -1359,5 +1359,9 @@
             "ms" = df_year$soil.m, "su_ms" = df_summer$ms,
             "ppfd" = df_year$ppfd, "s_ppfd" = df_spring$ppfd, 
             "prec" = df_year$prec, "sp_prec" = df_spring$prec, "su_prec" = df_summer$prec,
-            "Lwin" = df_year$LWin, "LWout" = df_year$LWout), method = "spearman")
+            "Lwin" = df_year$LWin, "LWout" = df_year$LWout,
+            "Re_dif" = c(df_results_y$Re_m0s1_sum - df_daytime$A_Re),
+            "GPP_dif" = c(df_results_y$GPP_m0s1_sum - df_daytime$A_GEP),
+            "NEP_dif" = c(-df_results_y$NEE_model_m0s1_sum - df_daytime$A_NEP),
+            "RE_quo" = c(df_results_y$Re_m0s1_sum / df_daytime$A_Re)), method = "spearman")
   
