@@ -2,12 +2,9 @@
 #### Code for Re,GPP and model selection plots ####
 #### ------------------------------------------- ####
   
-  ## packages
-  library(dplyr)
-  library(tidyr)
-  library(readr)
+  ## path ####
+  mypath <- getwd()
   
-
   ## packages ####
   library(tidyr)
   library(dplyr)
@@ -24,8 +21,8 @@
 #### 1. Respiration and GPP - Predictor Relevance ####
 #### ------------------------- ####
   ## load data ####
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_complete_gpp_m0s1_27.05.RData")
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/RE/final_3/results_complete_m0s1_08.04.RData")
+  load(paste0(mypath, "/RData/GPP/final_3/results_complete_gpp_m0s1_27.05.RData"))
+  load(paste0(mypath, "/RData/RE/final_3/results_complete_m0s1_08.04.RData"))
   
   ## creating target data.frames for plots ####
   names_gpp <- c(results_resp_all_b_gpp_m0s1[[3]]$best_preds_5$predictors, "full")
@@ -108,8 +105,8 @@
 #### ------------------------- ####
 #### results as one data.frame ####
   ## load data ####
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_complete_gpp_m0s1_27.05.RData")
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData")
+  load(paste0(mypath, "/RData/GPP/final_3/results_complete_gpp_m0s1_27.05.RData"))
+  load(paste0(mypath, "/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData"))
   
   ## Lee et al. 
   df_daytime <- read_delim("Daten/daytime_method_Annual.csv", 
@@ -285,7 +282,7 @@
   title("NEE")
   
   ## Plot PDF year ####
-  pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/NEE_year.pdf",
+  pdf("E:/Uni/05_Masterarbeit/Latex/Plots/NEE_year.pdf",
       family = "Times", width = 16, height = 12, bg = "white")
   
   par(fig = c(0, 1, 0.6, 1), mar = c(5, 7, 3, 7), new = TRUE)
@@ -300,17 +297,21 @@
   axis(4, at = seq(-200, 500, 200), labels = rep("", 4), las = 2, cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('NEP')*' (g C m' ^-2*' year' ^-1*')'), side = 2, line = 4.5, cex = cex_lab)
   
-  abline(h = seq(-400, 400, 200), lty = 3, col = "grey")
+  abline(h = seq(-400, 400, 200), lty = 2, lwd = 2, col = "grey")
   abline(v = 2006, lty = 2, col = "black")
-  abline(h = 0, lty = 3, col = "black")  
+  abline(h = 0, lty = 2, lwd = 2, col = "black")  
   text(x = 2001.8, y = 440, labels = "(a)", cex = cex_fig)
   legend(x = 2003, y = 500, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
          col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
-  lines(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, type = "l", lty = 1, lwd = 3, col = "black")
-  lines(df_daytime$A_NEP ~ df_results_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  points(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_daytime$A_NEP ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+  lines(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, type = "l", 
+        lty = 1, lwd = 3, col = "black")
+  lines(df_daytime$A_NEP ~ df_results_y$year, type = "l", 
+        lwd = 3, col = "red")
+  points(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year,
+         cex = cex_fig, lwd = 3)
+  points(df_daytime$A_NEP ~ df_results_y$year, 
+         cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   par(new = T, mar = c(5, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
@@ -326,21 +327,24 @@
   axis(4, at = seq(1000, 2000, 200), labels = seq(1000, 2000, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('GPP')*' (g C m' ^-2*' year' ^-1*')'), side = 4, line = 6, cex = cex_lab)
   
-  abline(h = seq(1000, 2000, 200), lty = 3, col = "grey")
+  abline(h = seq(1000, 2000, 200), lwd = 2, lty = 2, col = "grey")
   abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 1900, labels = "(b)", cex = cex_fig)
   # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(1, 1),
   #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
-  lines(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", xlab = "year", 
-        col = "black", lty = 1, lwd = 3)
-  lines(df_results_y$GPP_m0s1_sum + df_results_y$GPP_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
+  lines(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", 
+        col = "black", lwd = 3)
+  lines(df_results_y$GPP_m0s1_sum + df_results_y$GPP_m0s1_ci ~ df_results_y$year, 
         col = "black", lty = 2, lwd = 3)
-  lines(df_results_y$GPP_m0s1_sum - df_results_y$GPP_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
+  lines(df_results_y$GPP_m0s1_sum - df_results_y$GPP_m0s1_ci ~ df_results_y$year, 
         col = "black", lty = 2, lwd = 3)
-  lines(df_daytime$A_GEP ~ df_results_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  points(df_results_y$GPP_m0s1_sum ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_daytime$A_GEP ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+  lines(df_daytime$A_GEP ~ df_results_y$year, 
+        lwd = 3, col = "red")
+  points(df_results_y$GPP_m0s1_sum ~ df_results_y$year,
+         cex = cex_fig, lwd = 3)
+  points(df_daytime$A_GEP ~ df_results_y$year, 
+         cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   par(new = T, mar = c(5, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
@@ -350,28 +354,36 @@
   plot(df_results_y$Re_m0s1_sum ~ df_results_y$year, type = "l", xlab = "",
        ylab = "", ylim = c(1000, 2200), xaxt = "n", axes = F, lwd = 3)
   
-  axis(1, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(1, at = df_results_y$year, labels = df_results_y$year, cex.axis = cex_fig, line = 0.7, lwd = 0, tck = -0.03)
-  axis(2, at = seq(1000, 2200, 200), labels = seq(1000, 2200, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(1000, 2200, 200), labels = rep("", 7), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(1, at = df_results_y$year, labels = rep("", 15), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(1, at = df_results_y$year, labels = df_results_y$year, 
+       cex.axis = cex_fig, line = 0.7, lwd = 0, tck = -0.03)
+  axis(2, at = seq(1000, 2200, 200), labels = seq(1000, 2200, 200), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
+  axis(3, at = df_results_y$year, labels = rep("", 15), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(4, at = seq(1000, 2200, 200), labels = rep("", 7), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' year' ^-1*')'), side = 2, line = 4.5, cex = cex_lab)
   
-  abline(h = seq(1000, 2200, 200), lty = 3, col = "grey")
+  abline(h = seq(1000, 2200, 200), lwd = 2, lty = 2, col = "grey")
   abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 2100, labels = "(c)", cex = cex_fig)
   # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(2, 2),
   #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
-  lines(df_results_y$Re_m0s1_sum ~ df_results_y$year, type = "l", xlab = "year", 
-        col = "black", lty = 1, lwd = 3)
-  lines(df_results_y$Re_m0s1_sum + df_results_y$Re_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
+  lines(df_results_y$Re_m0s1_sum ~ df_results_y$year, type = "l", 
+        col = "black",  lwd = 3)
+  lines(df_results_y$Re_m0s1_sum + df_results_y$Re_m0s1_ci ~ df_results_y$year,
         col = "black", lty = 2, lwd = 3)
-  lines(df_results_y$Re_m0s1_sum - df_results_y$Re_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
+  lines(df_results_y$Re_m0s1_sum - df_results_y$Re_m0s1_ci ~ df_results_y$year, 
         col = "black", lty = 2, lwd = 3)
-  lines(df_daytime$A_Re ~ df_results_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  points(df_results_y$Re_m0s1_sum ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_daytime$A_Re ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+  lines(df_daytime$A_Re ~ df_results_y$year,
+        lwd = 3, col = "red")
+  points(df_results_y$Re_m0s1_sum ~ df_results_y$year, 
+         cex = cex_fig, lwd = 3)
+  points(df_daytime$A_Re ~ df_results_y$year, 
+         cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   par(new = T, mar = c(4, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))  
