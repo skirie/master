@@ -8,9 +8,9 @@
 
   ## path ##
   mypath <- getwd()
-  server_path <- "T:/Abschlussarbeiten/Masterarbeiten/WiSe2018-2019/Briegel_Ferdinand/R/"
-  ## dp token ##
-  # token <- readRDS(paste0(mypath,"/token.rds"))
+  
+  ### --- ### Please set here path for thesis folder ### ---- ###
+  path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
   
   ## functions ##
   source("Model_functions.R")
@@ -21,7 +21,7 @@
   use_condaenv("r-tensorflow")
   
   ## data ##
-  load(paste0(mypath, "/RData/df_model.RData"))
+  load(paste0(mypath, "/RData/Rawdata/df_model.RData"))
   #### ####
   
 #### ----------------------- ####
