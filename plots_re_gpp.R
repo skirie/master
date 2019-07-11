@@ -4,7 +4,10 @@
   
   ## path ####
   mypath <- getwd()
-  
+
+  ### --- ### Please set here path for thesis folder ### ---- ###
+  path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
+
   ## packages ####
   library(tidyr)
   library(dplyr)
@@ -21,21 +24,25 @@
 #### 1. Respiration and GPP - Predictor Relevance ####
 #### ------------------------- ####
   ## load data ####
-  load(paste0(mypath, "/RData/GPP/final_3/results_complete_gpp_m0s1_27.05.RData"))
-  load(paste0(mypath, "/RData/RE/final_3/results_complete_m0s1_08.04.RData"))
+  load(paste0(path, "Data_and_Programming/master/RData/GPP/results_complete_gpp_m0s1_13.06.RData"))
+  load(paste0(path, "Data_and_Programming/master/RData/RE/Final_model/results_complete_m0s1_08.04.RData"))
   
   ## creating target data.frames for plots ####
-  names_gpp <- c(results_resp_all_b_gpp_m0s1[[3]]$best_preds_5$predictors, "full")
+  ##  mse and r2 values extracted by hand - GPP
+  names_gpp <- c(results_resp_all_b_gpp_m0s1[[3]]$best_preds_5$predictors, "Ts1", "full")
   names_gpp[c(4,5)] <- c("Ms_main", "Ta")
   names_gpp <- paste0(c("","+ ","+ ","+ ","+ ", ""), names_gpp)
-  mse_gpp <- c(0.4882265, 0.3560248, 0.2263667, 0.1783279, 0.162448, 0.1513216)
-  r2_gpp <- c(0.51267406, 0.64505184, 0.77530181, 0.82298648, 0.8388429, 0.8495599)
+  
+  mse_gpp <- c(0.5663879 , 0.3988966 , 0.2949491 , 0.2830734 , 0.2897094, 0.2030991)
+  r2_gpp <- c(0.43551837, 0.60313034, 0.70744857, 0.71900228, 0.71258853, 0.79822407)
   
   df_pred_gpp <- data.frame(names_gpp, mse_gpp, r2_gpp)
   
+  ## mse and r2 values extracted by hand ## Re
   names_re <- c(results_resp_all_b_m0s1[[3]]$best_preds_5$predictors, "full")
   names_re[c(1,3)] <- c("Ts_1", "Ms_mean")
   names_re <- paste0(c("","+ ","+ ","+ ","+ ", ""), names_re)
+  
   mse_re <- c(5.119496, 4.880327, 4.902300, 4.945011, 4.858975, 4.740289)
   r2_re <- c(0.38354402, 0.41252898, 0.41067951, 0.40628517, 0.41557686, 0.4301256)
   
@@ -44,56 +51,62 @@
   ## Plots ####
   labels_1 <- c(expression("T"[s]*"_1"), expression("LW"[""%down%""]), expression(theta["_mean"]), 
               "year_ws_sin", "year_sa_sin", "full")
-  labels_2 <- c(expression("PPFD"[""%down%""]), expression("LW"[""%up%""]), expression("LW"[""%down%""]),
-                expression(theta["_main"]), expression("T"[a]), "full")
-  
-  pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/pred_selection.pdf",
-      family = "Times", width = 16, height = 8, bg = "white")
+  labels_2 <- c(expression("PPFD"[""%down%""]), expression(theta["_main"]), expression("LW"[""%down%""]),
+                expression("LW"[""%up%""]), expression("T"[s]*"_1"), "full")
+
+  pdf(pate0(path, "/Latex/Plots/pred_selection.pdf"),
+      width = 16, height = 8, bg = "white")
   
   par(mfrow = c(2, 1))
   par(mar = c(4, 7, 2 , 2))
   
   # plot
   barplot(df_pred_re$r2_re, axes = F, xaxt = 'n', beside = TRUE, 
-          las = 1, yaxt = 'n', xaxs = "i",
-          ylim =c(0, 1), space=c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7))
-  abline(h = seq(0, 1, .2), lty = 3, col = "grey30")
+          las = 1, yaxt = 'n', xaxs = "i", ylim = c(0, 1), 
+          space = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7))
+  
+  abline(h = seq(0, 1, .2), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(h = df_pred_re$r2_re[6], lty = 2, col = "black", lwd = 2)
+  
   axis(1, at = seq(0.7, 5.55, length.out = 5), labels = rep("", 5), cex.axis = cex_axis)
   axis(1, at = seq(0.7, 5.55, length.out = 5), labels = labels_1[-6], cex.axis = 2.4, line = 0.7, lwd = 0)
-  # axis(1, at = seq(0.7, 5.55, length.out = 5), labels = df_pred_re$names_re[-6], cex.axis = cex_axis, line = 0.7, lwd = 0)
   axis(1, at = 7.25, labels = "", cex.axis = cex_axis)
   axis(1, at = 7.25, labels = labels_1[6], line = 0.7, lwd = 0, cex.axis = 2.4)
-  #axis(1, at = 7.25, labels = df_pred_re$names_re[6], line = 0.7, lwd = 0, cex.axis = cex_axis)
   axis(2, at = seq(0, 1, .2), labels = seq(0, 1, .2), las = 2, cex.axis = cex_axis)
   axis(2, at = seq(0.1, 0.9, .2), labels = rep("", 5), las = 2, tck = -0.01)
+  
   mtext(text = expression('R'^2), side = 2, line = 4.5, cex = 2.7)
-  text(x = 0.5, y = 0.9, labels = expression("(a) R"[e]), cex = cex_fig)
+  text(x = 0.6, y = 0.9, labels = expression("(a) R"[e]), cex = cex_fig)
   
   barplot(df_pred_re$r2_re, axes = F, xaxt = 'n', beside = TRUE, 
-          las = 1, yaxt = 'n', xaxs = "i",
-          ylim =c(0, 1), space=c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7), add = T)
+          las = 1, yaxt = 'n', xaxs = "i", ylim = c(0, 1), 
+          space = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7), add = T)
   
   par(new = T, mar = c(4, 7, 2 , 2))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
   
   # plot  
   par(mar = c(4, 7, 2 , 2))
-  barplot(df_pred_gpp$r2_gpp, axes = F, xaxt = 'n', beside = TRUE, las = 1, yaxt = 'n', xaxs = "i",
-          ylim =c(0, 1), space=c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7))
-  abline(h = seq(0, 1, .2), lty = 3, col = "grey30")
+  barplot(df_pred_gpp$r2_gpp, axes = F, xaxt = 'n', beside = TRUE, las = 1, 
+          yaxt = 'n', xaxs = "i", ylim = c(0, 1), 
+          space = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7))
+  
+  abline(h = seq(0, 1, .2), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(h = df_pred_gpp$r2_gpp[6], lty = 2, col = "black", lwd = 2)
+  
   axis(1, at = seq(0.7, 5.55, length.out = 5), labels = rep("", 5), cex.axis = cex_axis)
   axis(1, at = seq(0.7, 5.55, length.out = 5), labels = labels_2[-6], cex.axis = 2.4, line = 0.7, lwd = 0)
   axis(1, at = 7.25, labels = "", cex.axis = cex_axis)
   axis(1, at = 7.25, labels = labels_2[6], line = 0.7, lwd = 0, cex.axis = 2.4)
   axis(2, at = seq(0, 1, .2), labels = seq(0, 1, .2), las = 2, cex.axis = cex_axis)
   axis(2, at = seq(0.1, 0.9, .2), labels = rep("", 5), las = 2, tck = -0.01)
-  mtext(text = expression('R'^2), side = 2, line = 4.5, cex = 2.7)
-  text(x = 0.5, y = 0.9, labels = "(b) GPP", cex = cex_fig)
   
-  barplot(df_pred_gpp$r2_gpp, axes = F, xaxt = 'n', beside = TRUE, las = 1, yaxt = 'n', xaxs = "i",
-          ylim =c(0, 1), space=c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7), add = T)
+  mtext(text = expression('R'^2), side = 2, line = 4.5, cex = 2.7)
+  text(x = 0.7, y = 0.9, labels = "(b) GPP", cex = cex_fig)
+  
+  barplot(df_pred_gpp$r2_gpp, axes = F, xaxt = 'n', beside = TRUE, las = 1, 
+          yaxt = 'n', xaxs = "i", ylim = c(0, 1), 
+          space = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.7), add = T)
   
   par(new = T, mar = c(4, 7, 2 , 2))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
@@ -105,28 +118,23 @@
 #### ------------------------- ####
 #### results as one data.frame ####
   ## load data ####
-  load(paste0(mypath, "/RData/GPP/final_3/results_complete_gpp_m0s1_27.05.RData"))
-  load(paste0(mypath, "/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData"))
+  load(paste0(path, "Data_and_Programming/master/RData/GPP/results_complete_gpp_m0s1_13.06.RData"))
+  load(paste0(path, "Data_and_Programming/master/RData/GPP/results_boots_gpp_m0s1_13.06.RData"))
   
   ## Lee et al. 
-  df_daytime <- read_delim("Daten/daytime_method_Annual.csv", 
+  df_daytime <- read_delim(paste0(path, "Data_and_Programming/master/Daten/daytime_method_Annual.csv"), 
                            ";", escape_double = FALSE, trim_ws = TRUE)
   
-  df_nighttime <- read_delim("Daten/Nighttime_method_Annual.csv", 
+  df_nighttime <- read_delim(paste0(path, "Data_and_Programming/master/Daten/Nighttime_method_Annual.csv"), 
                              ";", escape_double = FALSE, trim_ws = TRUE)
   
-  df_monthly <- read_delim("Daten/Monthly_C.csv", ";", escape_double = FALSE, 
+  df_monthly <- read_delim(paste0(path, "Data_and_Programming/master/Daten/Monthly_C.csv")
+                            , ";", escape_double = FALSE, 
                            locale = locale(decimal_mark = ",", grouping_mark = "."), 
                            trim_ws = TRUE)
   
   ## create data.frame ####
   df_results <- df_results_boot_gpp_m0s1[[2]]
-  # df_results$Re_final_m0s1 <- df_results_boot_gpp_m0s1[[2]]$Re_final
-  # df_results$GPP_final_m0s1 <- df_results_boot_gpp_m0s1[[2]]$GPP_final
-  # 
-  # df_results$Re_final_m0s1_ci <- df_results_boot_gpp_m0s1[[2]]$Re_gap_filled_95.conf
-  # df_results$GPP_final_m0s1_ci <- df_results_boot_gpp_m0s1[[2]]$GPP_gap_filled_95.conf
-  
   df_results$NEE_filled_m0s1 <- df_results$NEE_cor
   
   df_results$NEE_filled_m0s1[which(is.na(df_results$NEE_filled_m0s1))] <- 
@@ -135,6 +143,18 @@
   
   df_results$NEE_model_m0s1 <- -df_results$GPP_final + df_results$Re_final
   df_results$NEE_lee <- df_results$NEE
+  
+  ## NEE CI
+  df_results$NEE_ci <- NA
+  df_results$GPP_gap_filled_95.conf[is.na(df_results$GPP_gap_filled_95.conf)] <- 0
+  df_results$Re_gap_filled_95.conf[is.na(df_results$Re_gap_filled_95.conf)] <- 0
+  
+  df_results$NEE_ci[which(is.na(df_results$NEE_cor))] <- 
+    df_results$GPP_gap_filled_95.conf[which(is.na(df_results$NEE_cor))] + 
+    df_results$Re_gap_filled_95.conf[which(is.na(df_results$NEE_cor))]
+  
+  df_results$GPP_gap_filled_95.conf[which(df_results$GPP_gap_filled_95.conf == 0)] <- NA
+  df_results$Re_gap_filled_95.conf[which(df_results$Re_gap_filled_95.conf == 0)] <- NA
   
   summary(df_results)
   summary(df_results$NEE_cor)
@@ -167,11 +187,11 @@
               NEE_model_m0s1_sum = fun.sum(NEE_model_m0s1),
               GPP_m0s1_sum = fun.sum(GPP_final), 
               Re_m0s1_sum = fun.sum(Re_final),
-              NEE_model_m0s1_ci = fun.error(NEE_model_m0s1),
               GPP_m0s1_ci = fun.error(GPP_final, GPP_gap_filled_95.conf), 
               Re_m0s1_ci = fun.error(Re_final, Re_gap_filled_95.conf),
               # gap filled
               NEE_gapfilled_sum = fun.sum(NEE_filled_m0s1),
+              NEE_gapfilled_ci = fun.error(NEE_filled_m0s1, NEE_ci),
               # lee
               NEE_lee_sum = fun.sum(NEE_lee))
   
@@ -188,6 +208,7 @@
               Re_m0s1_ci = fun.error(Re_final, Re_gap_filled_95.conf),
               # gap filled
               NEE_gapfilled_sum = fun.sum(NEE_filled_m0s1),
+              NEE_gapfilled_ci = fun.error(NEE_filled_m0s1, NEE_ci),
               # lee
               NEE_lee_sum = fun.sum(NEE_lee))
   
@@ -213,6 +234,7 @@
               Re_m0s1_ci = mean(Re_m0s1_ci, na.rm = T),
               # gap filled
               NEE_gapfilled_sum = mean(NEE_gapfilled_sum, na.rm = T),
+              NEE_gapfilled_ci = mean(NEE_gapfilled_ci, na.rm = T),
               # lee
               Re_lee = mean(Re, na.rm = T),
               GPP_lee = mean(GPP, na.rm = T),
@@ -282,33 +304,44 @@
   title("NEE")
   
   ## Plot PDF year ####
-  pdf("E:/Uni/05_Masterarbeit/Latex/Plots/NEE_year.pdf",
-      family = "Times", width = 16, height = 12, bg = "white")
+  pdf(paste0(path, "/Latex/Plots/NEE_year.pdf"),
+      width = 16, height = 12, bg = "white")
   
   par(fig = c(0, 1, 0.6, 1), mar = c(5, 7, 3, 7), new = TRUE)
   # plot(NULL, xlim = df_results_y$year, ylim = c(-300, 500), type = "n", xlab = "", ylab = "", axes = FALSE)
   
   plot(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, type = "l", xlab = "", 
-       ylab = "", ylim = c(-300, 500), xaxt = "n", axes = F, lwd = 3)
+       ylab = "", ylim = c(-800, 810), xaxt = "n", axes = F, lwd = 3)
   
-  axis(1, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(-200, 500, 200), labels = seq(-200, 500, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_results_y$year, labels = df_results_y$year, cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(-200, 500, 200), labels = rep("", 4), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('NEP')*' (g C m' ^-2*' year' ^-1*')'), side = 2, line = 4.5, cex = cex_lab)
+  axis(1, at = df_results_y$year, labels = rep("", 15), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(2, at = seq(-800, 810, 400), labels = seq(-800, 810, 400), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
+  axis(3, at = df_results_y$year, labels = df_results_y$year, 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(4, at = seq(-800, 810, 400), labels = rep("", 5), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
   
-  abline(h = seq(-400, 400, 200), lty = 2, lwd = 2, col = "grey")
+  mtext(text = expression(bold('NEP')*' (g C m' ^-2*' year' ^-1*')'), 
+        side = 2, line = 4.5, cex = cex_lab)
+  
+  abline(h = seq(-800, 810, 400), lty = 3, col = "darkgrey", lwd = 2.5)
   abline(v = 2006, lty = 2, col = "black")
   abline(h = 0, lty = 2, lwd = 2, col = "black")  
-  text(x = 2001.8, y = 440, labels = "(a)", cex = cex_fig)
-  legend(x = 2003, y = 500, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
+  text(x = 2001.8, y = 740, labels = "(a)", cex = cex_fig)
+  legend(x = 2003, y = 900, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
          col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
-  lines(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, type = "l", 
-        lty = 1, lwd = 3, col = "black")
-  lines(df_daytime$A_NEP ~ df_results_y$year, type = "l", 
+  lines(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year,
+        lwd = 3, col = "black")
+  lines(df_results_y$NEE_gapfilled_sum * -1 + df_results_y$NEE_gapfilled_ci ~ df_results_y$year,
+        col = "black", lty = 2, lwd = 3)
+  lines(df_results_y$NEE_gapfilled_sum * -1 - df_results_y$NEE_gapfilled_ci ~ df_results_y$year,
+        col = "black", lty = 2, lwd = 3)
+  lines(df_daytime$A_NEP ~ df_results_y$year, 
         lwd = 3, col = "red")
-  points(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year,
+  
+  points(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, 
          cex = cex_fig, lwd = 3)
   points(df_daytime$A_NEP ~ df_results_y$year, 
          cex = cex_fig, lwd = 3, pch = 2, col = "red")
@@ -321,27 +354,33 @@
   plot(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", xlab = "", 
        ylab = "", ylim = c(1000, 2000), col = "black", xaxt = "n", axes = F, lwd = 3)
   
-  axis(1, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(1000, 2000, 200), labels = rep("", 6), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(1000, 2000, 200), labels = seq(1000, 2000, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('GPP')*' (g C m' ^-2*' year' ^-1*')'), side = 4, line = 6, cex = cex_lab)
+  axis(1, at = df_results_y$year, labels = rep("", 15), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(2, at = seq(1000, 2000, 200), labels = rep("", 6), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
+  axis(3, at = df_results_y$year, labels = rep("", 15), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(4, at = seq(1000, 2000, 200), labels = seq(1000, 2000, 200), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
   
-  abline(h = seq(1000, 2000, 200), lwd = 2, lty = 2, col = "grey")
+  mtext(text = expression(bold('GPP')*' (g C m' ^-2*' year' ^-1*')'), 
+        side = 4, line = 6, cex = cex_lab)
+  
+  abline(h = seq(1000, 2000, 200), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 1900, labels = "(b)", cex = cex_fig)
   # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(1, 1),
   #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
-  lines(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", 
+  lines(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", xlab = "year", 
         col = "black", lwd = 3)
-  lines(df_results_y$GPP_m0s1_sum + df_results_y$GPP_m0s1_ci ~ df_results_y$year, 
+  lines(df_results_y$GPP_m0s1_sum + df_results_y$GPP_m0s1_ci ~ df_results_y$year,
         col = "black", lty = 2, lwd = 3)
-  lines(df_results_y$GPP_m0s1_sum - df_results_y$GPP_m0s1_ci ~ df_results_y$year, 
+  lines(df_results_y$GPP_m0s1_sum - df_results_y$GPP_m0s1_ci ~ df_results_y$year,
         col = "black", lty = 2, lwd = 3)
   lines(df_daytime$A_GEP ~ df_results_y$year, 
         lwd = 3, col = "red")
-  points(df_results_y$GPP_m0s1_sum ~ df_results_y$year,
+  points(df_results_y$GPP_m0s1_sum ~ df_results_y$year, 
          cex = cex_fig, lwd = 3)
   points(df_daytime$A_GEP ~ df_results_y$year, 
          cex = cex_fig, lwd = 3, pch = 2, col = "red")
@@ -358,27 +397,27 @@
        cex.axis = cex_fig, tck = -0.03)
   axis(1, at = df_results_y$year, labels = df_results_y$year, 
        cex.axis = cex_fig, line = 0.7, lwd = 0, tck = -0.03)
-  axis(2, at = seq(1000, 2200, 200), labels = seq(1000, 2200, 200), las = 2, 
-       cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_results_y$year, labels = rep("", 15), 
-       cex.axis = cex_fig, tck = -0.03)
+  axis(2, at = seq(1000, 2200, 200), labels = seq(1000, 2200, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(3, at = df_results_y$year, labels = rep("", 15), cex.axis = 
+         cex_fig, tck = -0.03)
   axis(4, at = seq(1000, 2200, 200), labels = rep("", 7), las = 2, 
        cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' year' ^-1*')'), side = 2, line = 4.5, cex = cex_lab)
+  mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' year' ^-1*')'), 
+        side = 2, line = 4.5, cex = cex_lab)
   
-  abline(h = seq(1000, 2200, 200), lwd = 2, lty = 2, col = "grey")
+  abline(h = seq(1000, 2200, 200), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 2100, labels = "(c)", cex = cex_fig)
   # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(2, 2),
   #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
-  lines(df_results_y$Re_m0s1_sum ~ df_results_y$year, type = "l", 
-        col = "black",  lwd = 3)
+  lines(df_results_y$Re_m0s1_sum ~ df_results_y$year,
+        col = "black", lwd = 3)
   lines(df_results_y$Re_m0s1_sum + df_results_y$Re_m0s1_ci ~ df_results_y$year,
         col = "black", lty = 2, lwd = 3)
-  lines(df_results_y$Re_m0s1_sum - df_results_y$Re_m0s1_ci ~ df_results_y$year, 
+  lines(df_results_y$Re_m0s1_sum - df_results_y$Re_m0s1_ci ~ df_results_y$year,
         col = "black", lty = 2, lwd = 3)
-  lines(df_daytime$A_Re ~ df_results_y$year,
+  lines(df_daytime$A_Re ~ df_results_y$year, 
         lwd = 3, col = "red")
   points(df_results_y$Re_m0s1_sum ~ df_results_y$year, 
          cex = cex_fig, lwd = 3)
@@ -390,30 +429,43 @@
   dev.off()
   
   ## Plot PDF month ####
-  pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/NEE_month.pdf",
-      family = "Times", width = 16, height = 12, bg = "white")
+  pdf(paste0(path, "Latex/Plots/NEE_month.pdf"),
+      width = 16, height = 12, bg = "white")
   
   ## NEE 
   par(fig = c(0, 1, 0.6, 1), mar = c(5, 7, 3, 7), new = TRUE)
   plot(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, type = "l", xlab = "", 
-       ylab = "", ylim = c(-80, 90), xaxt = "n", axes = F, lwd = 3)
+       ylab = "", ylim = c(-80, 120), xaxt = "n", axes = F, lwd = 3)
 
-  axis(1, at = df_monthly_m$month, labels = rep("", 12), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(-80, 90, 40), labels = seq(-80, 80, 40), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_monthly_m$month, labels = month, cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(-80, 90, 40), labels = rep("", 5), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('NEP')*' (g C m' ^-2*' month' ^-1*')'), side = 2, line = 4.45, cex = cex_lab)
+  axis(1, at = df_monthly_m$month, labels = rep("", 12), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(2, at = seq(-80, 120, 40), labels = seq(-80, 120, 40), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
+  axis(3, at = df_monthly_m$month, labels = month, cex.axis = 
+         cex_fig, tck = -0.03)
+  axis(4, at = seq(-80, 120, 40), labels = rep("", 6), las = 2, cex.axis = 
+         cex_axis, tck = -0.03)
+  mtext(text = expression(bold('NEP')*' (g C m' ^-2*' month' ^-1*')'), 
+        side = 2, line = 4.45, cex = cex_lab)
   
-  abline(h = seq(-80, 80, 40), lty = 3, col = "grey")
-  abline(h = 0, lty = 3)
-  text(x = 1, y = 70, labels = "(a)", cex = cex_fig)
-  legend(x = 9.5, y = 80, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
+  abline(h = seq(-80, 120, 40), lty = 3, lwd = 2.5, col = "darkgrey")
+  abline(h = 0, lty = 2, lwd = 2)
+  text(x = 1, y = 110, labels = "(a)", cex = cex_fig)
+  legend(x = 9.5, y = 120, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
          col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
-  lines(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, type = "l", lty = 1, lwd = 3, col = "black")
-  lines(df_monthly_m$NEP_lee ~ df_monthly_m$month, type = "l", lty = 1, lwd = 3, col = "red")
-  points(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_monthly_m$NEP_lee ~ df_monthly_m$month, xlab = NA, ylab = NA, cex = cex_fig, pch = 2, lwd = 3, col = "red")
+  lines(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, 
+        lwd = 3, col = "black")
+  lines(df_monthly_m$NEE_gapfilled_sum * -1 + df_monthly_m$NEE_gapfilled_ci ~ df_monthly_m$month, 
+        col = "black", lty = 2, lwd = 3)
+  lines(df_monthly_m$NEE_gapfilled_sum * -1 - df_monthly_m$NEE_gapfilled_ci ~ df_monthly_m$month, 
+        col = "black", lty = 2, lwd = 3)
+  lines(df_monthly_m$NEP_lee ~ df_monthly_m$month, 
+        lwd = 3, col = "red")
+  points(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, 
+         cex = cex_fig, lwd = 3)
+  points(df_monthly_m$NEP_lee ~ df_monthly_m$month, 
+         cex = cex_fig, pch = 2, lwd = 3, col = "red")
   
   par(new = T, mar = c(5, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
@@ -423,23 +475,32 @@
   plot(df_monthly_m$GPP_m0s1_sum ~ df_monthly_m$month, type = "l", xlab = "", 
        ylab = "", ylim = c(0, 300), col = "black", xaxt = "n", axes = F, lwd = 3)
 
-  axis(1, at = df_monthly_m$month, labels = rep("", 12), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(0, 300, 50), labels = rep("", 7), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_monthly_m$month, labels = rep("", 12), cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(0, 300, 50), labels = seq(0, 300, 50), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('GPP')*' (g C m' ^-2*' month' ^-1*')'), side = 4, line = 5.55, cex = cex_lab)
+  axis(1, at = df_monthly_m$month, labels = rep("", 12), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(2, at = seq(0, 300, 50), labels = rep("", 7), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
+  axis(3, at = df_monthly_m$month, labels = rep("", 12), cex.axis = 
+         cex_fig, tck = -0.03)
+  axis(4, at = seq(0, 300, 50), labels = seq(0, 300, 50), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
+  mtext(text = expression(bold('GPP')*' (g C m' ^-2*' month' ^-1*')'), 
+        side = 4, line = 5.55, cex = cex_lab)
   
-  abline(h = seq(0, 300, 50), lty = 3, col = "grey")
+  abline(h = seq(0, 300, 50), lty = 3, lwd = 2.5, col = "darkgrey")
   text(x = 1, y = 280, labels = "(b)", cex = cex_fig)
   
-  lines(df_monthly_m$GPP_m0s1_sum ~ df_monthly_m$month, type = "l", col = "black", lwd = 3, lty = 1)
-  lines(df_monthly_m$GPP_m0s1_sum + df_monthly_m$GPP_m0s1_ci ~ df_monthly_m$month, type = "l", 
+  lines(df_monthly_m$GPP_m0s1_sum ~ df_monthly_m$month, 
+        col = "black", lwd = 3)
+  lines(df_monthly_m$GPP_m0s1_sum + df_monthly_m$GPP_m0s1_ci ~ df_monthly_m$month, 
         col = "black", lty = 2, lwd = 3)
-  lines(df_monthly_m$GPP_m0s1_sum - df_monthly_m$GPP_m0s1_ci ~ df_monthly_m$month, type = "l", 
+  lines(df_monthly_m$GPP_m0s1_sum - df_monthly_m$GPP_m0s1_ci ~ df_monthly_m$month, 
         col = "black", lty = 2, lwd = 3)
-  lines(df_monthly_m$GPP_lee ~ df_monthly_m$month, type = "l", col = "red", lwd = 3)
-  points(df_monthly_m$GPP_m0s1_sum ~ df_monthly_m$month, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "black")
-  points(df_monthly_m$GPP_lee ~ df_monthly_m$month, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+  lines(df_monthly_m$GPP_lee ~ df_monthly_m$month, 
+        col = "red", lwd = 3)
+  points(df_monthly_m$GPP_m0s1_sum ~ df_monthly_m$month, 
+         cex = cex_fig, lwd = 3, col = "black")
+  points(df_monthly_m$GPP_lee ~ df_monthly_m$month, 
+         cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   par(new = T, mar = c(5, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
@@ -449,134 +510,50 @@
   plot(df_monthly_m$Re_m0s1_sum ~ df_monthly_m$month, type = "l", xlab = "", lty = 1,
        ylab = "", ylim = c(0, 300), col = "black", xaxt = "n", axes = F, lwd = 3)
 
-  axis(1, at = df_monthly_m$month, labels = rep("", 12), cex.axis = cex_fig, tck = -0.03)
-  axis(1, at = df_monthly_m$month, labels = month, cex.axis = cex_fig, line = 0.7, lwd = 0, tck = -0.03)
-  axis(2, at = seq(0, 300, 50), labels = seq(0, 300, 50), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_monthly_m$month, labels = rep("", 12), cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(0, 300, 50), labels = rep("", 7), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' month' ^-1*')'), side = 2, line = 4.45, cex = cex_lab)
+  axis(1, at = df_monthly_m$month, labels = rep("", 12), 
+       cex.axis = cex_fig, tck = -0.03)
+  axis(1, at = df_monthly_m$month, labels = month, cex.axis = 
+         cex_fig, line = 0.7, lwd = 0, tck = -0.03)
+  axis(2, at = seq(0, 300, 50), labels = seq(0, 300, 50), las = 2, 
+       cex.axis = cex_axis, tck = -0.03)
+  axis(3, at = df_monthly_m$month, labels = rep("", 12), cex.axis = 
+         cex_fig, tck = -0.03)
+  axis(4, at = seq(0, 300, 50), labels = rep("", 7), las = 2, cex.axis = 
+         cex_axis, tck = -0.03)
+  mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' month' ^-1*')'), 
+        side = 2, line = 4.45, cex = cex_lab)
   
-  abline(h = seq(0, 300, 50), lty = 3, col = "grey")
+  abline(h = seq(0, 300, 50), lty = 3, lwd = 2.5, col = "darkgrey")
   text(x = 1, y = 280, labels = "(c)", cex = cex_fig)
   
-  lines(df_monthly_m$Re_m0s1_sum ~ df_monthly_m$month, type = "l", col = "black", lty = 1, lwd = 3)
-  lines(df_monthly_m$Re_m0s1_sum + df_monthly_m$Re_m0s1_ci ~ df_monthly_m$month, type = "l", 
+  lines(df_monthly_m$Re_m0s1_sum ~ df_monthly_m$month, 
+        col = "black", lwd = 3)
+  lines(df_monthly_m$Re_m0s1_sum + df_monthly_m$Re_m0s1_ci ~ df_monthly_m$month,
         col = "black", lty = 2, lwd = 3)
-  lines(df_monthly_m$Re_m0s1_sum - df_monthly_m$Re_m0s1_ci ~ df_monthly_m$month, type = "l", 
+  lines(df_monthly_m$Re_m0s1_sum - df_monthly_m$Re_m0s1_ci ~ df_monthly_m$month, 
         col = "black", lty = 2, lwd = 3)
-  lines(df_monthly_m$Re_lee ~ df_monthly_m$month, type = "l", col = "red", lty = 1, lwd = 3)
-  points(df_monthly_m$Re_m0s1_sum ~ df_monthly_m$month, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "black")
-  points(df_monthly_m$Re_lee ~ df_monthly_m$month, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+  lines(df_monthly_m$Re_lee ~ df_monthly_m$month, 
+        col = "red", lwd = 3)
+  points(df_monthly_m$Re_m0s1_sum ~ df_monthly_m$month, 
+         cex = cex_fig, lwd = 3, col = "black")
+  points(df_monthly_m$Re_lee ~ df_monthly_m$month, 
+         cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   par(new = T, mar = c(4, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
   
   dev.off()
-  
   
 #### ------------------------- ##
 #### 2. Model selection ##
 #### ------------------------- ##  
   
   
-#### 16 year plot ####
-  ## 
-  df_results_day <- df_results %>%
-    group_by(year, month) %>%
-    summarize(airT = mean(airT, na.rm = T), 
-              precip = sum(Precip, na.rm = T),
-              soil_m = mean(Soil.moisture_main, na.rm = T),
-              nep = fun.sum(NEE_model_m0s1),
-              re = fun.sum(Re_final_m0s1),
-              gpp = fun.sum(GPP_final_m0s1))
-  
-  df_results_day$day <- 15
-  df_results_day$dt <- as.POSIXct(paste0(df_results_day$year, "-", df_results_day$month, "-", df_results_day$day), format = "%Y-%m-%e", tz = "America/Vancouver")
-  
-  dev.off()
-  par(fig = c(0, 1, 0.7, 1), mar = c(5, 7, 3, 7), new = TRUE)
-  plot(df_results_day$airT * -1 ~ df_results_day$dt, type = "l", xlab = "", 
-       ylab = "", ylim = c(-40, 40), xaxt = "n", axes = F, lwd = 3)
-  
-  axis(1, at = df_results_day$dt, cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(-200, 500, 200), labels = seq(-200, 500, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_results_y$year, labels = df_results_y$year, cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(-200, 500, 200), labels = rep("", 4), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('NEP')*' (g C m' ^-2*' y' ^-1*')'), side = 2, line = 5, cex = cex_lab)
-  
-  abline(h = seq(-400, 400, 200), lty = 3, col = "grey")
-  abline(v = 2006, lty = 2, col = "black")
-  abline(h = 0, lty = 3, col = "black")  
-  text(x = 2001.8, y = 440, labels = "(a)", cex = cex_fig)
-  legend(x = 2003, y = 500, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
-         col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
-  
-  par(new = T, mar = c(5, 7, 3, 7))
-  plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
-  
-  ## GPP
-  par(fig = c(0, 1, 0.3, 0.7), mar = c(5, 7, 3, 7), new = TRUE)
-  plot(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", xlab = "", 
-       ylab = "", ylim = c(1000, 2000), col = "black", xaxt = "n", axes = F, lwd = 3)
-  lines(df_results_y$GPP_m0s1_sum + df_results_y$GPP_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
-  lines(df_results_y$GPP_m0s1_sum - df_results_y$GPP_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
-  lines(df_daytime$A_GEP ~ df_results_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  points(df_results_y$GPP_m0s1_sum ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_daytime$A_GEP ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
-  
-  axis(1, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(1000, 2000, 200), labels = rep("", 6), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(1000, 2000, 200), labels = seq(1000, 2000, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('GPP')*' (g C m' ^-2*' y' ^-1*')'), side = 4, line = 6.5, cex = cex_lab)
-  
-  abline(h = seq(1000, 2000, 200), lty = 3, col = "grey")
-  abline(v = 2006, lty = 2, col = "black")
-  text(x = 2001.8, y = 1900, labels = "(b)", cex = cex_fig)
-  # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(1, 1),
-  #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
-  
-  par(new = T, mar = c(5, 7, 3, 7))
-  plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
-  
-  ## Re 
-  par(fig = c(0, 1, 0, 0.4), mar = c(4, 7, 3, 7), new = TRUE)
-  plot(df_results_y$Re_m0s1_sum ~ df_results_y$year, type = "l", xlab = "",
-       ylab = "", ylim = c(1000, 2000), xaxt = "n", axes = F, lwd = 3)
-  lines(df_results_y$Re_m0s1_sum + df_results_y$Re_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
-  lines(df_results_y$Re_m0s1_sum - df_results_y$Re_m0s1_ci ~ df_results_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
-  lines(df_daytime$A_Re ~ df_results_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  points(df_results_y$Re_m0s1_sum ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_daytime$A_Re ~ df_results_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
-  
-  axis(1, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(1, at = df_results_y$year, labels = df_results_y$year, cex.axis = cex_fig, line = 0.7, lwd = 0, tck = -0.03)
-  axis(2, at = seq(1000, 2000, 200), labels = seq(1000, 2000, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
-  axis(3, at = df_results_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(1000, 2000, 200), labels = rep("", 6), las = 2, cex.axis = cex_axis, tck = -0.03)
-  mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' y' ^-1*')'), side = 2, line = 5, cex = cex_lab)
-  
-  abline(h = seq(1000, 2000, 200), lty = 3, col = "grey")
-  abline(v = 2006, lty = 2, col = "black")
-  text(x = 2001.8, y = 1900, labels = "(c)", cex = cex_fig)
-  # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(2, 2),
-  #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
-  
-  par(new = T, mar = c(4, 7, 3, 7))
-  plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
-  
-  dev.off()
-  
-  
 #### ------------------------- ####
 #### 3. Respiration and GPP - Seasonal predictor change ####
 #### ------------------------- ####
   ## load data ####
-    load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/results_full_season_26.04.RData")
+    load(paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Temporal_variability/results_full_season_26.04.RData"))
     
   ## Respiration: list with predictor and ranking ####
     ## target data.frame with predictors and months for ranking
@@ -657,8 +634,8 @@
     label_legend <- c(expression("T"[s]), expression("T"[a]), expression("LW"[""%down%""]), 
                       expression(theta), "year_sa_sin")
     
-    pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/Re_pred_month.pdf",
-        family = "Times", width = 16, height = 8, bg = "white")
+    pdf(paste0(path, "Latex/Plots/Re_pred_month.pdf"),
+        width = 16, height = 8, bg = "white")
     
     ## r2
     par(fig = c(0, 1, 0.7, 1))
@@ -667,14 +644,14 @@
          yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
 
     text(x = 0.8, y = 0.35, labels = "(a)", cex = cex_fig)
-    abline(h = seq(0, 0.4, 0.1), lty = 3, col = "grey70")
+    abline(h = seq(0, 0.4, 0.1), lty = 3, lwd = 2.5, col = "darkgrey")
     abline(h = 0)
     axis(3, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_fig)
     axis(4, at = seq(0, 0.4, 0.1), labels = rep("", 5), las = 2, cex.axis = cex_axis)
     axis(4, at = seq(0, 0.4, 0.2), labels = seq(0, 0.4, 0.2), las = 2, cex.axis = cex_axis)
     mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
     
-    lines(r_2$r_1 ~ c(1:12), lty = 1, lwd = 2.5)
+    lines(r_2$r_1 ~ c(1:12), lwd = 2.5)
     points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
     lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
     points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
@@ -689,7 +666,7 @@
     plot(df_3$Tsoil[1:12] ~ c(1:12), type = "l", ylim = rev(range(c(0,11))), col = "cyan", lwd = 2.5, xaxt = 'n', xlab = "", 
          ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
-    abline(h = seq(1, 11, 1), lty = 3, col = "grey70")
+    abline(h = seq(1, 11, 1), lty = 3, lwd = 2.5, col = "darkgrey")
     text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
     axis(1, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_axis)
     axis(2, at = seq(1, 11, length.out = 11), labels = 1:11, cex.axis = cex_axis, las = 2)
@@ -788,8 +765,8 @@
     label_legend <- c(expression("PPFD"[""%down%""]), expression("LW"[""%up%""]), expression("LW"[""%down%""]), 
                       expression(theta), expression("T"[s]))
     
-    pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/GPP_pred_month.pdf",
-        family = "Times", width = 16, height = 8, bg = "white")
+    pdf(paste0(path, "Latex/Plots/GPP_pred_month.pdf"),
+        width = 16, height = 8, bg = "white")
     
     ## r2
     par(fig = c(0, 1, 0.7, 1))
@@ -798,13 +775,13 @@
          yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
 
     text(x = 0.7, y = 0.9, labels = "(a)", cex = cex_fig)
-    abline(h = seq(0, 1, 0.2), lty = 3, col = "grey70")
+    abline(h = seq(0, 1, 0.2), lty = 3, lwd = 2.5, col = "darkgrey")
     abline(h = 0)
     axis(3, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_fig)
     axis(4, at = seq(0, 1, 0.2), labels = seq(0, 1, 0.2), las = 2, cex.axis = cex_axis)
     mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
     
-    lines(r_2$r_1 ~ c(1:12), lty = 1, lwd = 2.5)
+    lines(r_2$r_1 ~ c(1:12), lwd = 2.5)
     points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
     lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
     points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
@@ -821,7 +798,7 @@
     text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
     axis(1, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_axis)
     axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
-    abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
+    abline(h = seq(1, 13, 1), lty = 3, lwd = 2.5, col = "darkgrey")
     
     lines(df_3$PPFDin[1:12] ~ c(1:12), col = "green", lwd = 2.5)
     points(df_3$PPFDin[1:12] ~ c(1:12), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "green")
@@ -847,7 +824,7 @@
 #### 4. Respiration and GPP - Annual predictor change ####
 #### ------------------------- ####
   ## load data ####
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/results_full_year_06.06.RData")
+  load(paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Temporal_variability/results_full_year_06.06.RData"))
   
   ## Respiration: list with predictor and ranking ####
   ## target data.frame with predictors and months for ranking
@@ -931,8 +908,8 @@
   label_legend <- c(expression("T"[s]), expression(theta), expression("LW"[""%down%""]), 
                    "year_sa_sin", "year_sa_sin")
   
-  pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/Re_pred_year.pdf",
-      family = "Times", width = 16, height = 8, bg = "white")
+  pdf(paste0(path, "05_Masterarbeit/Latex/Plots/Re_pred_year.pdf"),
+      width = 16, height = 8, bg = "white")
   
   ## r2
   par(fig = c(0, 1, 0.7, 1))
@@ -941,7 +918,7 @@
        yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
 
   text(x = 0.7, y = 0.5, labels = "(a)", cex = cex_fig)
-  abline(h = seq(0, 0.6, 0.2), lty = 3, col = "grey70")
+  abline(h = seq(0, 0.6, 0.2), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(h = 0)
   axis(3, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_fig)
   axis(4, at = seq(0, 0.6, 0.2), labels = seq(0, 0.6, 0.2), las = 2, cex.axis = cex_axis)
@@ -961,7 +938,7 @@
   plot(df_3$Ts1[1:14] ~ c(1:14), type = "l", ylim = rev(range(c(0,13))), col = "cyan", lwd = 2.5, xaxt = 'n', xlab = "", 
        ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
-  abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
+  abline(h = seq(1, 13, 1), lty = 3, lwd = 2.5, col = "darkgrey")
   text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
   axis(1, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
@@ -1065,8 +1042,8 @@
   label_legend <- c(expression("PPFD"[""%down%""]), expression("LW"[""%down%""]), expression("LW"[""%up%""]), 
                    expression(theta), expression("T"[s]))
   
-  pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/GPP_pred_year.pdf",
-      family = "Times", width = 16, height = 8, bg = "white")
+  pdf(paste0(path, "Latex/Plots/GPP_pred_year.pdf"),
+      width = 16, height = 8, bg = "white")
   
   ## r2
   par(fig = c(0, 1, 0.7, 1))
@@ -1075,7 +1052,7 @@
        yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
   
   text(x = 0.7, y = 0.9, labels = "(a)", cex = cex_fig)
-  abline(h = seq(0, 1, 0.2), lty = 3, col = "grey70")
+  abline(h = seq(0, 1, 0.2), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(h = 0)
   axis(3, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_fig)
   axis(4, at = seq(0, 1, 0.2), labels = seq(0, 1, 0.2), las = 2, cex.axis = cex_axis)
@@ -1095,7 +1072,7 @@
   plot(df_3$PPFDin[1:14] ~ c(1:14), type = "l", ylim = rev(range(c(0,13))), col = "green", lwd = 2.5, xaxt = 'n', xlab = "", 
        ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
-  abline(h = seq(1, 13, 1), lty = 3, col = "grey70")
+  abline(h = seq(1, 13, 1), lty = 3, lwd = 2.5, col = "darkgrey")
   text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
   axis(1, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
@@ -1125,7 +1102,7 @@
 #### 5. Respiration and GPP - Fertilization ####
 #### ------------------------- ####
   ## load data ####
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/Temporal_variability_and_fertilization/Fertilization/results_boots_fert_gpp_m0s1_20.06.RData")
+  load(paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Fertilization/GPP/results_boots_fert_gpp_m0s1_21.06.RData"))
 
   ## create data.frame ####
   df_results_fert <- df_results_boot_fert_gpp_m0s1[[2]]
@@ -1135,17 +1112,43 @@
   # df_results_fert$Re_final_m0s1_ci <- df_results_fert_boot_gpp_m0s1[[2]]$Re_gap_filled_95.conf
   # df_results_fert$GPP_final_m0s1_ci <- df_results_fert_boot_gpp_m0s1[[2]]$GPP_gap_filled_95.conf
   
+  ## calculate unfertilizied NEP
   df_results_fert$NEE_unfert <- df_results_fert$NEE_cor
   
   df_results_fert$NEE_unfert[which(is.na(df_results_fert$NEE_unfert))] <- 
     - df_results_fert$GPP_final[which(is.na(df_results_fert$NEE_unfert))] + 
     df_results_fert$Re_final[which(is.na(df_results_fert$NEE_unfert))]
   
+  # NEE confidence intervall
+  df_results_fert$NEE_unfert_ci <- NA
+  df_results_fert$GPP_gap_filled_95.conf[is.na(df_results_fert$GPP_gap_filled_95.conf)] <- 0
+  df_results_fert$Re_gap_filled_95.conf[is.na(df_results_fert$Re_gap_filled_95.conf)] <- 0
+  
+  df_results_fert$NEE_unfert_ci[which(is.na(df_results_fert$NEE_cor))] <- 
+    df_results_fert$GPP_gap_filled_95.conf[which(is.na(df_results_fert$NEE_cor))] + 
+    df_results_fert$Re_gap_filled_95.conf[which(is.na(df_results_fert$NEE_cor))]
+  
+  df_results_fert$GPP_gap_filled_95.conf[which(df_results_fert$GPP_gap_filled_95.conf == 0)] <- NA
+  df_results_fert$Re_gap_filled_95.conf[which(df_results_fert$Re_gap_filled_95.conf == 0)] <- NA
+  
+  ## calculate fertilizied NEP 
   df_results_fert$GPP_fert <- df_results$GPP_final
   df_results_fert$GPP_fert_ci <- df_results$GPP_gap_filled_95.conf
   df_results_fert$Re_fert <- df_results$Re_final
   df_results_fert$Re_fert_ci <- df_results$Re_gap_filled_95.conf
   df_results_fert$NEE_fert <- df_results$NEE_filled_m0s1
+  
+  ## NEE CI
+  df_results_fert$NEE_fert_ci <- NA
+  df_results_fert$GPP_fert_ci[is.na(df_results_fert$GPP_fert_ci)] <- 0
+  df_results_fert$Re_fert_ci[is.na(df_results_fert$Re_fert_ci)] <- 0
+  
+  df_results_fert$NEE_fert_ci[which(is.na(df_results$NEE_cor))] <- 
+    df_results_fert$GPP_fert_ci[which(is.na(df_results$NEE_cor))] + 
+    df_results_fert$Re_fert_ci[which(is.na(df_results$NEE_cor))]
+  
+  df_results_fert$GPP_fert_ci[which(df_results_fert$GPP_fert_ci == 0)] <- NA
+  df_results_fert$Re_fert_ci[which(df_results_fert$Re_fert_ci == 0)] <- NA
   
   summary(df_results_fert)
   summary(df_results_fert$NEE_unfert)
@@ -1153,21 +1156,21 @@
   hist(df_results_fert$GPP_final)
   hist(df_results_fert$GPP_fert)
   
-  ## exchange first years
-  df_results_fert$NEE_unfert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
-    df_results_fert$NEE_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
-  
-  df_results_fert$GPP_final[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
-    df_results_fert$GPP_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
-  
-  df_results_fert$GPP_gap_filled_95.conf[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
-    df_results_fert$GPP_fert_ci[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
-  
-  df_results_fert$Re_final[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
-    df_results_fert$Re_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
-  
-  df_results_fert$Re_gap_filled_95.conf[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
-    df_results_fert$Re_fert_ci[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
+  # ## exchange first years
+  # df_results_fert$NEE_unfert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
+  #   df_results_fert$NEE_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
+  # 
+  # df_results_fert$GPP_final[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
+  #   df_results_fert$GPP_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
+  # 
+  # df_results_fert$GPP_gap_filled_95.conf[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
+  #   df_results_fert$GPP_fert_ci[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
+  # 
+  # df_results_fert$Re_final[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
+  #   df_results_fert$Re_fert[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
+  # 
+  # df_results_fert$Re_gap_filled_95.conf[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))] <- 
+  #   df_results_fert$Re_fert_ci[which(as.numeric(format(df_results_fert$dt,"%Y")) %in% c(2001:2006))]
     
   ## annual values and sums ####
   df_results_fert_y <- df_results_fert %>%
@@ -1176,42 +1179,52 @@
       NEE_fert_sum = fun.sum(NEE_fert),
       GPP_fert_sum = fun.sum(GPP_fert), 
       Re_fert_sum = fun.sum(Re_fert),
-      NEE_fert_ci = fun.error(NEE_fert),
+      NEE_fert_ci = fun.error(NEE_fert, NEE_fert_ci),
       GPP_fert_ci = fun.error(GPP_fert, GPP_fert_ci), 
       Re_fert_ci = fun.error(Re_fert, Re_fert_ci),
       # unfert
       NEE_unfert_sum = fun.sum(NEE_unfert),
       GPP_unfert_sum = fun.sum(GPP_final), 
       Re_unfert_sum = fun.sum(Re_final),
-      NEE_unfert_ci = fun.error(NEE_unfert),
+      NEE_unfert_ci = fun.error(NEE_unfert, NEE_unfert_ci),
       GPP_unfert_ci = fun.error(GPP_final, GPP_gap_filled_95.conf), 
       Re_unfert_ci = fun.error(Re_final, Re_gap_filled_95.conf))
   
   df_results_fert_y <- df_results_fert_y[-16, ]
   
   ## Plot PDF year ####
-  pdf("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Latex/Plots/NEE_fert.pdf",
-      family = "Times", width = 16, height = 12, bg = "white")
+  pdf(paste0(path, "Latex/Plots/NEE_fert.pdf"),
+      width = 16, height = 12, bg = "white")
   
   ## NEP 
   par(fig = c(0, 1, 0.6, 1), mar = c(5, 7, 3, 7), new = TRUE)
   plot(df_results_fert_y$NEE_fert_sum * -1 ~ df_results_fert_y$year, type = "l", xlab = "", 
-       ylab = "", ylim = c(-500, 500), xaxt = "n", axes = F, lwd = 3)
-  lines(df_results_fert_y$NEE_unfert_sum * -1 ~ df_results_fert_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  points(df_results_fert_y$NEE_fert_sum * -1 ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_results_fert_y$NEE_unfert_sum * -1 ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+       ylab = "", ylim = c(-1500, 1000), xaxt = "n", axes = F, lwd = 3)
+  lines(df_results_fert_y$NEE_fert_sum * -1 + df_results_fert_y$NEE_fert_ci ~ df_results_fert_y$year,
+        col = "black", lty = 2, lwd = 3)
+  lines(df_results_fert_y$NEE_fert_sum * -1 - df_results_fert_y$NEE_fert_ci ~ df_results_fert_y$year, 
+        col = "black", lty = 2, lwd = 3)
+  
+  lines(df_results_fert_y$NEE_unfert_sum * -1 ~ df_results_fert_y$year, lwd = 3, col = "red")
+  lines(df_results_fert_y$NEE_unfert_sum * -1 + df_results_fert_y$NEE_unfert_ci ~ df_results_fert_y$year, 
+        col = "red", lty = 2, lwd = 3)
+  lines(df_results_fert_y$NEE_unfert_sum * -1 - df_results_fert_y$NEE_unfert_ci ~ df_results_fert_y$year,
+        col = "red", lty = 2, lwd = 3)
+  
+  points(df_results_fert_y$NEE_fert_sum * -1 ~ df_results_fert_y$year, cex = cex_fig, lwd = 3)
+  points(df_results_fert_y$NEE_unfert_sum * -1 ~ df_results_fert_y$year, cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   axis(1, at = df_results_fert_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
-  axis(2, at = seq(-500, 500, 200), labels = seq(-500, 500, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(2, at = seq(-1500, 1000, 500), labels = seq(-1500, 1000, 500), las = 2, cex.axis = cex_axis, tck = -0.03)
   axis(3, at = df_results_fert_y$year, labels = df_results_fert_y$year, cex.axis = cex_fig, tck = -0.03)
-  axis(4, at = seq(-500, 500, 200), labels = rep("", 6), las = 2, cex.axis = cex_axis, tck = -0.03)
+  axis(4, at = seq(-1500, 1000, 500), labels = rep("", 6), las = 2, cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('NEP')*' (g C m' ^-2*' year' ^-1*')'), side = 2, line = 4.5, cex = cex_lab)
   
-  abline(h = seq(-500, 500, 200), lty = 3, col = "grey")
+  abline(h = seq(-1500, 1000, 500), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(v = 2006, lty = 2, col = "black")
-  abline(h = 0, lty = 3, col = "black")  
-  text(x = 2001.8, y = 440, labels = "(a)", cex = cex_fig)
-  legend(x = 2001.5, y = 440, legend = c("With fertilization", "Without fertilization"), lty = c(1, 1), pch = c(1, 2),
+  abline(h = 0, lty = 2, lwd = 2, col = "black")  
+  text(x = 2001.8, y = 940, labels = "(a)", cex = cex_fig)
+  legend(x = 2001.5, y = -740, legend = c("With fertilization", "Without fertilization"), lty = c(1, 1), pch = c(1, 2),
          col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
   par(new = T, mar = c(5, 7, 3, 7))
@@ -1221,19 +1234,19 @@
   par(fig = c(0, 1, 0.3, 0.7), mar = c(5, 7, 3, 7), new = TRUE)
   plot(df_results_fert_y$GPP_fert_sum ~ df_results_fert_y$year, type = "l", xlab = "", 
        ylab = "", ylim = c(700, 2000), col = "black", xaxt = "n", axes = F, lwd = 3)
-  lines(df_results_fert_y$GPP_fert_sum + df_results_fert_y$GPP_fert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
-  lines(df_results_fert_y$GPP_fert_sum - df_results_fert_y$GPP_fert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
+  lines(df_results_fert_y$GPP_fert_sum + df_results_fert_y$GPP_fert_ci ~ df_results_fert_y$year, 
+        col = "black", lty = 2, lwd = 3)
+  lines(df_results_fert_y$GPP_fert_sum - df_results_fert_y$GPP_fert_ci ~ df_results_fert_y$year, 
+        col = "black", lty = 2, lwd = 3)
   
-  lines(df_results_fert_y$GPP_unfert_sum ~ df_results_fert_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  lines(df_results_fert_y$GPP_unfert_sum + df_results_fert_y$GPP_unfert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "red", lty = 2, lwd = 3)
-  lines(df_results_fert_y$GPP_unfert_sum - df_results_fert_y$GPP_unfert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "red", lty = 2, lwd = 3)
+  lines(df_results_fert_y$GPP_unfert_sum ~ df_results_fert_y$year, lwd = 3, col = "red")
+  lines(df_results_fert_y$GPP_unfert_sum + df_results_fert_y$GPP_unfert_ci ~ df_results_fert_y$year, 
+        col = "red", lty = 2, lwd = 3)
+  lines(df_results_fert_y$GPP_unfert_sum - df_results_fert_y$GPP_unfert_ci ~ df_results_fert_y$year, 
+        col = "red", lty = 2, lwd = 3)
   
-  points(df_results_fert_y$GPP_fert_sum ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_results_fert_y$GPP_unfert_sum ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+  points(df_results_fert_y$GPP_fert_sum ~ df_results_fert_y$year, cex = cex_fig, lwd = 3)
+  points(df_results_fert_y$GPP_unfert_sum ~ df_results_fert_y$year, cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   axis(1, at = df_results_fert_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
   axis(2, at = seq(700, 2000, 200), labels = rep("", 7), las = 2, cex.axis = cex_axis, tck = -0.03)
@@ -1241,12 +1254,10 @@
   axis(4, at = seq(700, 2000, 200), labels = seq(700, 2000, 200), las = 2, cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('GPP')*' (g C m' ^-2*' year' ^-1*')'), side = 4, line = 6, cex = cex_lab)
   
-  abline(h = seq(700, 2000, 200), lty = 3, col = "grey")
+  abline(h = seq(700, 2000, 200), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 1900, labels = "(b)", cex = cex_fig)
-  # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(1, 1),
-  #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
-  
+ 
   par(new = T, mar = c(5, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
   
@@ -1254,19 +1265,19 @@
   par(fig = c(0, 1, 0, 0.4), mar = c(4, 7, 3, 7), new = TRUE)
   plot(df_results_fert_y$Re_fert_sum ~ df_results_fert_y$year, type = "l", xlab = "",
        ylab = "", ylim = c(1000, 2400), xaxt = "n", axes = F, lwd = 3)
-  lines(df_results_fert_y$Re_fert_sum + df_results_fert_y$Re_fert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
-  lines(df_results_fert_y$Re_fert_sum - df_results_fert_y$Re_fert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "black", lty = 2, lwd = 3)
+  lines(df_results_fert_y$Re_fert_sum + df_results_fert_y$Re_fert_ci ~ df_results_fert_y$year,
+        col = "black", lty = 2, lwd = 3)
+  lines(df_results_fert_y$Re_fert_sum - df_results_fert_y$Re_fert_ci ~ df_results_fert_y$year, 
+        col = "black", lty = 2, lwd = 3)
   
-  lines(df_results_fert_y$Re_unfert_sum ~ df_results_fert_y$year, type = "l", lty = 1, lwd = 3, col = "red")
-  lines(df_results_fert_y$Re_unfert_sum + df_results_fert_y$Re_unfert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "red", lty = 2, lwd = 3)
-  lines(df_results_fert_y$Re_unfert_sum - df_results_fert_y$Re_unfert_ci ~ df_results_fert_y$year, type = "l", xlab = "year", 
-        ylab = "g C m-2 y-1", col = "red", lty = 2, lwd = 3)
+  lines(df_results_fert_y$Re_unfert_sum ~ df_results_fert_y$year, lwd = 3, col = "red")
+  lines(df_results_fert_y$Re_unfert_sum + df_results_fert_y$Re_unfert_ci ~ df_results_fert_y$year,  
+        col = "red", lty = 2, lwd = 3)
+  lines(df_results_fert_y$Re_unfert_sum - df_results_fert_y$Re_unfert_ci ~ df_results_fert_y$year, 
+        col = "red", lty = 2, lwd = 3)
   
-  points(df_results_fert_y$Re_fert_sum ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3)
-  points(df_results_fert_y$Re_unfert_sum ~ df_results_fert_y$year, xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, pch = 2, col = "red")
+  points(df_results_fert_y$Re_fert_sum ~ df_results_fert_y$year, cex = cex_fig, lwd = 3)
+  points(df_results_fert_y$Re_unfert_sum ~ df_results_fert_y$year, cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
   axis(1, at = df_results_fert_y$year, labels = rep("", 15), cex.axis = cex_fig, tck = -0.03)
   axis(1, at = df_results_fert_y$year, labels = df_results_fert_y$year, cex.axis = cex_fig, line = 0.7, lwd = 0, tck = -0.03)
@@ -1275,11 +1286,9 @@
   axis(4, at = seq(1000, 2400, 200), labels = rep("", 8), las = 2, cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' year' ^-1*')'), side = 2, line = 4.5, cex = cex_lab)
   
-  abline(h = seq(1000, 2400, 200), lty = 3, col = "grey")
+  abline(h = seq(1000, 2400, 200), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 2300, labels = "(c)", cex = cex_fig)
-  # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(2, 2),
-  #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
   par(new = T, mar = c(4, 7, 3, 7))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
@@ -1290,7 +1299,7 @@
 #### 6. Respiration and GPP - Correlation Matrix ####
 #### ------------------------- ####
   ## load data ####
-  load("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/master/RData/GPP/final_3/results_boots_gpp_m0s1_11.06.RData")
+  load(paste0(path, "Data_and_Programming/master/RData/GPP/results_boots_gpp_m0s1_13.06.RData"))
   df_results <- df_results_boot_gpp_m0s1[[2]]
   
   ## aggreagate data ####
