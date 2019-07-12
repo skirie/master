@@ -1,6 +1,12 @@
 #### ------------------------------------------- ##
 #### Functions for modeling trace gas emissions with ANNs ##
 #### ------------------------------------------- ##
+  
+  # all necessary function for the model selection process are in this file. There is no need to change anything.
+  # 
+  # 
+  # author: Ferdinand Briegel
+  # last_update: 12.07.2019
 
 #### ----------------------- ##
 #### 0 - Package Function  ##

@@ -1,16 +1,25 @@
-#### ------------------------------------------- ####
-#### Modellierung von Treibhausgasen mittels Neuralen Netzwerken ####
-#### ------------------------------------------- ####
+#### ------------------------------------------- ##
+#### Data Preprocessing of the raw data ##
+#### ------------------------------------------- ##
   
-#### ------------------------------------- ####
-  ## 0 - load data ####
-#### ------------------------------------- ####
+  # This file preprocess the raw data. This R file preprocesses the raw data. This basically means, the data gets checked, 
+  # additional predictors are created, plausibility tests are conducted and gaps of predictors gets filled by interpolation 
+  # and linear regressions. 
+  # 
+  # 
+  # author: Ferdinand Briegel
+  # last_update: 12.07.2019
+
+#### ----------------------- ####
+#### 0 - load data ####
+#### ----------------------- ####
   
   ## path ####
   mypath <- getwd()
+  path <- substr(mypath, 1, nchar(mypath)-27)
   
   ### --- ### Please set here path for thesis folder ### ---- ###
-  path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
+  # path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
   
   ## Flux Data ####
   df_raw_o <- read.csv(paste0(path, "Data_and_Programming/master/Daten/ANN_rawdata_ver2.csv"))
@@ -23,9 +32,9 @@
   
   ####  ####
   
-#### ------------------------------------- ####
-  ## 1 - add time ####
-#### ------------------------------------- ####
+#### ----------------------- ####
+#### 1 - add time ####
+#### ----------------------- ####
   
   ## First change "NaN" to NA
   ## NaN to NA ####
@@ -45,9 +54,9 @@
 
   ####  ####
   
-#### ------------------------------------- ####
-  ## 2 - First check of raw data ####
-#### ------------------------------------- ####  
+#### ----------------------- ####
+#### 2 - First check of raw data ####
+#### ----------------------- ####  
   
   ## expand df_comox to halfhour intervall ####
   dt <- paste0(substr(as.character(df_comox$date_time_local), 1, 14), "30:00")
@@ -70,9 +79,9 @@
 
   ####  ####
   
-#### ------------------------------------- ####
-  ## 3 - Creating additional predictors ####
-#### ------------------------------------- ####  
+#### ----------------------- ####
+#### 3 - Creating additional predictors ####
+#### ----------------------- ####  
   
   ## Hours since last precipitation event ####
   # summary(df_raw_2$Precip)
@@ -150,9 +159,9 @@
   ## Fractional year ####
   ####  ####
   
-#### ------------------------------------- ####
-  ## 4 - Plausibilitytests ####
-#### ------------------------------------- #### 
+#### ----------------------- ####
+#### 4 - Plausibilitytests ####
+#### ----------------------- #### 
 
   df_raw_3 <- df_raw_2
   ## Tair -20 - 40 ####
@@ -198,9 +207,9 @@
   df_raw_3$WindSpeed[which(df_raw_3$WindSpeed < 0)] <- NA
   ####  ####
 
-#### ------------------------------------- ####
-  ## 5 - Fill gaps of predictors ####
-#### ------------------------------------- ####   
+#### ----------------------- ####
+#### 5 - Fill gaps of predictors ####
+#### ----------------------- ####   
   
   ## function for detecting location and size of gaps ####
   DetectGaps <- function(df, maxsize = 12){
@@ -672,9 +681,9 @@
   # summary(df_merged)
   #### ####
 
-#### ------------------------------------- ####
-  ## 6 - Calculate SWin, mean TS, mean MS and fill gaps ####
-#### ------------------------------------- ####   
+#### ----------------------- ####
+#### 6 - Calculate SWin, mean TS, mean MS and fill gaps ####
+#### ----------------------- ####   
   
   ## Short wave in ####
   df_merged$SWin <- df_merged$Rnet - (df_merged$LWin - df_merged$LWout) + df_merged$SWout
@@ -703,9 +712,9 @@
   
   #### ####
   
-#### ------------------------------------- ####
-  ## 7 - Prepare Data for Respiration Model ####
-#### ------------------------------------- ####  
+#### ----------------------- ####
+#### 7 - Prepare Data for Respiration Model ####
+#### ----------------------- ####  
   
   ## u* correction ####
   # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
@@ -741,9 +750,9 @@
   rm(df_night, df_day, df_night_pred, df_night_pred_PPFD, df_pred, df_comox_2, df_raw_2, df_raw_3)
   #### ####
   
-#### ------------------------------------- ####
-  ## 8 - Save data ####
-#### ------------------------------------- ####  
+#### ----------------------- ####
+#### 8 - Save data ####
+#### ----------------------- ####  
   
   ## save ####
   save(df_merged, file = c(paste0(path, "Data_and_Programming/master/RData/Rawdata/df_model.RData")))

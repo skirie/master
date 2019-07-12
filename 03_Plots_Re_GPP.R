@@ -1,12 +1,22 @@
-#### ------------------------------------------- ####
-#### Code for Re,GPP and model selection plots ####
-#### ------------------------------------------- ####
+#### ------------------------------------------- ##
+#### Code for Re,GPP and model selection plots ##
+#### ------------------------------------------- ##
   
+  # This file produces all plots related to the NEE partitioning process.
+  # 
+  # 
+  # author: Ferdinand Briegel
+  # last_update: 12.07.2019
+  
+#### ----------------------- ####
+#### 0 - set path and load packages ####
+#### ----------------------- ####
   ## path ####
   mypath <- getwd()
-
+  path <- substr(mypath, 1, nchar(mypath)-27)
+  
   ### --- ### Please set here path for thesis folder ### ---- ###
-  path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
+  # path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
 
   ## packages ####
   library(tidyr)

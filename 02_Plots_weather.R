@@ -1,12 +1,22 @@
 #### ------------------------------------------- ##
 #### Code for weather plots ##
 #### ------------------------------------------- ##
-
+  
+  # This file produces weather plots of the study period. 
+  # 
+  # 
+  # author: Ferdinand Briegel
+  # last_update: 12.07.2019
+  
+#### ----------------------- ####
+#### 0 - set path and load packages ####
+#### ----------------------- ####
   ## path ####
   mypath <- getwd()
+  path <- substr(mypath, 1, nchar(mypath)-27)
   
   ### --- ### Please set here path for thesis folder ### ---- ###
-  path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
+  # path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
 
   ## packages ####
   library(dplyr)
@@ -16,7 +26,7 @@
 #### ----------------------- ####
 #### 1 - Weather Plots Comox  ####
 #### ----------------------- ####
-#### load data ####  
+  ## load data ####  
   df_comox <- read.csv(paste0(path, "Data_and_Programming/master/Daten/weatherstats_comox_hourly.csv"))
   df_comox_prec <- read_table2(paste0(path, "Data_and_Programming/master/Daten/Mappe2.csv"), 
                                col_names = FALSE)
@@ -33,7 +43,7 @@
   
   df_comox_prec$month_n <- 12:1
   
-#### aggregate and sum / mean ####
+  ## aggregate and sum / mean ####
   df_comox$year  <- as.integer(substr(as.character(df_comox$date_time_local), 1, 4))
   
   # aggregate by year
@@ -61,7 +71,7 @@
   
   df_weather_c_m <- cbind(df_weather_c_m, "prec" = df_weather_c_m_p$prec)
   
-#### comox normals ####
+  ## comox normals ####
   date <- c(1:12)
   mean_t <- c(3.9, 4.3, 6.1, 8.8, 12.4, 15.5, 18.0, 17.9, 14.5, 9.5, 5.7, 3.5)	
   mean_p <- c(159.1, 107.8, 95.7, 64.4, 45.6, 42.8, 26.7, 29.2, 41.8, 122.7, 191.9, 168.9)
@@ -73,14 +83,14 @@
   df_weather_c_y$dif_p <- df_weather_c_y$prec - 1153.6
   df_weather_c_m$dif_p <- df_weather_c_m$prec - normals$mean_p
   
-#### define cex for plots ####
+  ## define cex for plots ####
   cex_fig = 3
   cex_axis = 2.7
   cex_lab = 1.5
   cex_legend <- 2
   familiy_fig = "Times"
   
-#### Colors ####
+  ## Colors ####
   ## colors precipitation
   ii_y_p <- cut(df_weather_c_y$dif_p, breaks = seq(-550, 550, len = 100), 
               include.lowest = TRUE)
@@ -261,7 +271,7 @@
 #### 2 - Weather Plots Study site  ####
 #### ----------------------- ####
   
-#### load data ####  
+  ## load data ####  
   load(paste0(path, "Data_and_Programming/master/RData/Rawdata/df_model.RData"))
   
   # aggregate by year
@@ -279,18 +289,18 @@
     summarize(mean_t = mean(airT, na.rm = TRUE),
               sum_p = sum(Precip, na.rm = T))
 
-#### comox normals ####
+  ## comox normals ####
   df_weather_ss$dif_t <- df_weather_ss$mean_t - mean(df_weather_ss$mean_t)
   df_weather_ss$dif_p <- df_weather_ss$sum_p - mean(df_weather_ss$sum_p)
   
-#### define cex for plots ####
+  ## define cex for plots ####
   cex_fig = 3
   cex_axis = 2.7
   cex_lab = 1.5
   cex_legend <- 2
   familiy_fig = "Times"
   
-#### Colors ####
+  ## Colors ####
   ## colors precipitation
   ii_y_p <- cut(df_weather_ss$dif_p, breaks = seq(-900, 900, len = 100), 
                 include.lowest = TRUE)
@@ -465,12 +475,12 @@
 #### 3 - Weather Plots Study site - Summer ####
 #### ----------------------- ####
   
-#### load data ####
+  ## load data ####
   load(paste0(path, "Data_and_Programming/master/RData/GPP/results_boots_gpp_m0s1_13.06.RData"))
   
   df_results <- df_results_boot_gpp_m0s1[[2]]
   
-#### aggregate and sum / mean ####
+  ## aggregate and sum / mean ####
   df_month <- df_results %>%
     group_by(year, month) %>%
     summarize(# m0s1
@@ -498,7 +508,7 @@
   df_summer$dif_p <- df_summer$prec - mean(df_summer$prec)
   df_summer$dif_t <- df_summer$Ta - mean(df_summer$Ta)
   
-#### Colors ####
+  ## Colors ####
   ## colors precipitation
   ii_y_p <- cut(df_summer$dif_p, breaks = seq(-40, 40, len = 100), 
                 include.lowest = TRUE)
@@ -590,12 +600,12 @@
 #### 4 - Weather Plots Study site - Spring ####
 #### ----------------------- ####
   
-#### load data ####
+  ## load data ####
   load(paste0(path, "/Data_and_Programming/master/RData/GPP/results_boots_gpp_m0s1_13.06.RData"))
   
   df_results <- df_results_boot_gpp_m0s1[[2]]
   
-#### aggregate and sum / mean ####
+  ## aggregate and sum / mean ####
   df_month <- df_results %>%
     group_by(year, month) %>%
     summarize(# m0s1
@@ -623,7 +633,7 @@
   df_spring$dif_p <- df_spring$prec - mean(df_spring$prec)
   df_spring$dif_ts <- df_spring$Ts - mean(df_spring$Ts)
   
-#### Colors ####
+  ## Colors ####
   ## colors precipitation
   ii_y_p <- cut(df_spring$dif_p, breaks = seq(-80, 80, len = 100), 
                 include.lowest = TRUE)
