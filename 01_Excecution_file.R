@@ -13,7 +13,7 @@
   path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
   
   ## functions ##
-  source("Model_functions.R")
+  source("05_Model_functions.R")
   
   ## Packages ##
   packages <- c("keras", "ggplot2", "Metrics", "httpuv", "rdrop2", "mlrMBO", "corrplot", "rgenoud", "betareg", "MASS")
@@ -21,15 +21,25 @@
   use_condaenv("r-tensorflow")
   
   ## data ##
-  load(paste0(mypath, "/RData/Rawdata/df_model.RData"))
+  load(paste0(path, "Data_and_Programming/master/RData/Rawdata/df_model.RData")) 
+  # if not availabe, uncomment line 32 ("CheckData()") and run it. This will execeut the preprocess script
   #### ####
   
 #### ----------------------- ####
-#### 1.2 Check for preprocessed data  ####
+#### 1.2 Check for preprocessed data and ustar correction ####
 #### ----------------------- ####
   
   # CheckData()
   #### ####
+  
+  ## u* star correction (default of function is 0.19, has to be changed) 
+  ustar_ <- 0.19
+  
+  list_corrected <- UStarCorrection(data= df_merged, ustar = ustar_)
+  df_merged <- list_corrected[[1]]
+  df_night_model <- list_corrected[[2]]
+  
+  rm(ustar_, list_corrected)
   
 #### ----------------------- ####
 #### 2.1 Respiration: Predictor pre analysis ####
@@ -43,13 +53,13 @@
   pred_analysis_r0.1_c <- TargetPreAnalysisPredictors(df_train = df_night_model, cluster = T, method_norm = "range_0_1")
   pred_analysis_m0s1_c <- TargetPreAnalysisPredictors(df_train = df_night_model, cluster = T, method_norm = "standarize")
   
-  save(pred_analysis_r1.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_r1.1.RData"))
-  save(pred_analysis_r0.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_r0.1.RData"))
-  save(pred_analysis_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_m0s1.RData"))
+  save(pred_analysis_r1.1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_pred_pre_analysis_r1.1.RData"))
+  save(pred_analysis_r0.1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_pred_pre_analysis_r0.1.RData"))
+  save(pred_analysis_m0s1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_pred_pre_analysis_m0s1.RData"))
   
-  save(pred_analysis_r1.1_c, file = paste0(mypath, "/RData/results_pred_pre_analysis_r1.1_c.RData"))
-  save(pred_analysis_r0.1_c, file = paste0(mypath, "/RData/results_pred_pre_analysis_r0.1_c.RData"))
-  save(pred_analysis_m0s1_c, file = paste0(mypath, "/RData/results_pred_pre_analysis_m0s1_c.RData"))
+  save(pred_analysis_r1.1_c, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_pred_pre_analysis_r1.1_c.RData"))
+  save(pred_analysis_r0.1_c, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_pred_pre_analysis_r0.1_c.RData"))
+  save(pred_analysis_m0s1_c, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_pred_pre_analysis_m0s1_c.RData"))
   #### ####
   
 #### ----------------------- #####
@@ -70,13 +80,13 @@
   results_resp_all_b_m0s1_c <- TargetFunBO(df_train = pred_analysis_m0s1_c[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                          cluster = T, method_norm = "standarize")
   
-  save(results_resp_all_b_r1.1, file = paste0(mypath, "/RData/results_complete_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(results_resp_all_b_r0.1, file = paste0(mypath, "/RData/results_complete_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(results_resp_all_b_m0s1, file = paste0(mypath, "/RData/results_complete_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_r1.1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_r0.1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_m0s1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
-  save(results_resp_all_b_r1.1_c, file = paste0(mypath, "/RData/results_complete_r1.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(results_resp_all_b_r0.1_c, file = paste0(mypath, "/RData/results_complete_r0.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(results_resp_all_b_m0s1_c, file = paste0(mypath, "/RData/results_complete_m0s1_c_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_r1.1_c, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_r1.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_r0.1_c, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_r0.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_m0s1_c, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_m0s1_c_", format(Sys.time(), "%d.%m"), ".RData"))
   #### ####
   
 #### ----------------------- ####
@@ -104,13 +114,13 @@
   #                                             complete_data = df_merged, rep = 100)
   # 
   # 
-  # save(df_results_boot_r1.1, file =   paste0(mypath, "/RData/results_boots_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  # save(df_results_boot_r0.1, file =   paste0(mypath, "/RData/results_boots_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(df_results_boot_m0s1, file =   paste0(mypath, "/RData/results_boots_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_r1.1, file =   paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_boots_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_r0.1, file =   paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_boots_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(df_results_boot_m0s1, file =   paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_boots_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   
-  # save(df_results_boot_r1.1_c, file =   paste0(mypath, "/RData/results_boots_r1.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
-  # save(df_results_boot_r0.1_c, file =   paste0(mypath, "/RData/results_boots_r0.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
-  # save(df_results_boot_m0s1_c, file =   paste0(mypath, "/RData/results_boots_m0s1_c_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_r1.1_c, file =   paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_boots_r1.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_r0.1_c, file =   paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_boots_r0.1_c_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_m0s1_c, file =   paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_boots_m0s1_c_", format(Sys.time(), "%d.%m"), ".RData"))
   #### ####
   
 #### ----------------------- ####
@@ -119,29 +129,26 @@
   
   # df_re_r1.1 <- df_results_boot_r1.1[[2]]
   # df_re_r1.1$GPP <- NA
-  # df_re_r1.1$GPP[which(df_re_r1.1$flag_night == 1)] <- 0
   # df_re_r1.1$GPP[which(df_re_r1.1$PPFDin < 5)] <- 0
   # 
-  # df_re_r1.1$GPP[which(df_re_r1.1$flag_night == 0 & df_re_r1.1$PPFDin > 5)] <- - 
-  #   df_re_r1.1$NEE_measure[which(df_re_r1.1$flag_night == 0 & df_re_r1.1$PPFDin > 5)] + 
-  #   df_re_r1.1$Re_final[which(df_re_r1.1$flag_night == 0 & df_re_r1.1$PPFDin > 5)]
+  # df_re_r1.1$GPP[which(df_re_r1.1$PPFDin >= 5)] <- - 
+  #   df_re_r1.1$NEE_measure[which(df_re_r1.1$PPFDin >= 5)] + 
+  #   df_re_r1.1$Re_final[which(df_re_r1.1$PPFDin >= 5)]
   # 
   # # summary(df_re_r1.1$GPP)
   # 
   # df_re_r0.1 <- df_results_boot_r0.1[[2]]
   # df_re_r0.1$GPP <- NA
-  # df_re_r0.1$GPP[which(df_re_r0.1$flag_night == 1)] <- 0
   # df_re_r0.1$GPP[which(df_re_r0.1$PPFDin < 5)] <- 0
   # 
-  # df_re_r0.1$GPP[which(df_re_r0.1$flag_night == 0 & df_re_r0.1$PPFDin > 5)] <- - 
-  #   df_re_r0.1$NEE_measure[which(df_re_r0.1$flag_night == 0 & df_re_r0.1$PPFDin > 5)] + 
-  #   df_re_r0.1$Re_final[which(df_re_r0.1$flag_night == 0 & df_re_r0.1$PPFDin > 5)]
+  # df_re_r0.1$GPP[which(df_re_r0.1$PPFDin >= 5)] <- - 
+  #   df_re_r0.1$NEE_measure[which(df_re_r0.1$PPFDin >= 5)] + 
+  #   df_re_r0.1$Re_final[which(df_re_r0.1$PPFDin >= 5)]
   
   # summary(df_re_r0.1$GPP)
   
   df_re_m0s1 <- df_results_boot_m0s1[[2]]
   df_re_m0s1$GPP <- NA
-  # df_re_m0s1$GPP[which(df_re_m0s1$flag_night == 1)] <- 0
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin < 5)] <- 0
   
   df_re_m0s1$GPP[which(df_re_m0s1$PPFDin >= 5)] <- - 
@@ -157,8 +164,8 @@
 #### 3.2 GPP: Gap filling GPP ####
 #### ----------------------- #### 
   
-  # df_re_r1.1_day <- df_re_r1.1[which(df_re_r1.1$flag_night == 0 & df_re_r1.1$PPFDin > 5), ]
-  # df_re_r0.1_day <- df_re_r0.1[which(df_re_r0.1$flag_night == 0 & df_re_r0.1$PPFDin > 5), ]
+  # df_re_r1.1_day <- df_re_r1.1[which(df_re_r1.1$PPFDin >= 5), ]
+  # df_re_r0.1_day <- df_re_r0.1[which(df_re_r0.1$PPFDin >= 5), ]
   df_re_m0s1_day <- df_re_m0s1[which(df_re_m0s1$PPFDin >= 5), ]
   
   # df_re_r1.1_day <- df_re_r1.1_day[-which(is.na(df_re_r1.1_day$GPP)), ]
@@ -177,9 +184,9 @@
   pred_analysis_gpp_m0s1 <- TargetPreAnalysisPredictors(df_train = df_re_m0s1_day, cluster = F, 
                                                         method_norm = "standarize", variable = "GPP")
   
-  # save(pred_analysis_gpp_r1.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_r1.1.RData"))
-  # save(pred_analysis_gpp_r0.1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_r0.1.RData"))
-  save(pred_analysis_gpp_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_gpp_m0s1.RData"))
+  # save(pred_analysis_gpp_r1.1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_pred_pre_analysis_gpp_r1.1.RData"))
+  # save(pred_analysis_gpp_r0.1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_pred_pre_analysis_gpp_r0.1.RData"))
+  save(pred_analysis_gpp_m0s1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_pred_pre_analysis_gpp_m0s1.RData"))
   #### ####
   
 #### ----------------------- ####
@@ -193,9 +200,9 @@
   results_resp_all_b_gpp_m0s1 <- TargetFunBO(df_train = pred_analysis_gpp_m0s1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
                                              cluster = F, method_norm = "standarize", variable = "GPP")
   
-  # save(results_resp_all_b_gpp_r1.1, file = paste0(mypath, "/RData/results_complete_gpp_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  # save(results_resp_all_b_gpp_r0.1, file = paste0(mypath, "/RData/results_complete_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  save(results_resp_all_b_gpp_m0s1, file = paste0(mypath, "/RData/results_complete_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(results_resp_all_b_gpp_r1.1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_complete_gpp_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(results_resp_all_b_gpp_r0.1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_complete_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_gpp_m0s1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_complete_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   #### ####
   
 #### ----------------------- ####
@@ -215,9 +222,6 @@
                                                   complete_data = df_re_m0s1, 
                                                   rep = 100, variable = "GPP")
   
-  # save(df_results_boot_gpp_r1.1, file = paste0(mypath, "/RData/results_boots_gpp_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  # save(df_results_boot_gpp_r0.1, file = paste0(mypath, "/RData/results_boots_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
-  
   # summary(df_results_boot_gpp_r1.1[[2]])
   # summary(df_results_boot_gpp_r0.1[[2]])
   # summary(df_results_boot_gpp_m0s1[[2]])
@@ -229,12 +233,12 @@
   # ## final gap filled NEE
   # df_results_boot_gpp_r1.1[[2]]$NEE_final <- df_results_boot_gpp_r1.1[[2]]$NEE_measure
   # df_results_boot_gpp_r1.1[[2]]$NEE_final[which(is.na(df_results_boot_gpp_r1.1[[2]]$NEE_final))] <- 
-  #   df_results_boot_gpp_r1.1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_r1.1[[2]]$NEE_final))] - 
+  #   - df_results_boot_gpp_r1.1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_r1.1[[2]]$NEE_final))] + 
   #   df_results_boot_gpp_r1.1[[2]]$Re_final[which(is.na(df_results_boot_gpp_r1.1[[2]]$NEE_final))]
   # 
   # df_results_boot_gpp_r0.1[[2]]$NEE_final <- df_results_boot_gpp_r0.1[[2]]$NEE_measure
   # df_results_boot_gpp_r0.1[[2]]$NEE_final[which(is.na(df_results_boot_gpp_r0.1[[2]]$NEE_final))] <- 
-  #   df_results_boot_gpp_r0.1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_r0.1[[2]]$NEE_final))] - 
+  #   - df_results_boot_gpp_r0.1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_r0.1[[2]]$NEE_final))] + 
   #   df_results_boot_gpp_r0.1[[2]]$Re_final[which(is.na(df_results_boot_gpp_r0.1[[2]]$NEE_final))]
   
   df_results_boot_gpp_m0s1[[2]]$NEE_final <- df_results_boot_gpp_m0s1[[2]]$NEE_cor
@@ -242,7 +246,9 @@
     - df_results_boot_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))] + 
     df_results_boot_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_gpp_m0s1[[2]]$NEE_final))]
   
-  save(df_results_boot_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_gpp_r1.1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_boots_gpp_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  # save(df_results_boot_gpp_r0.1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_boots_gpp_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
+  save(df_results_boot_gpp_m0s1, file = paste0(path, "Data_and_Programming/master/RData/GPP/results_boots_gpp_m0s1_", format(Sys.time(), "%d.%m"), ".RData"))
   #### ####
   
 #### ----------------------- ####
@@ -286,11 +292,11 @@
     # df_re_season$GPP[which(df_re_season$flag_night == 1)] <- 0
     df_re_season$GPP[which(df_re_season$PPFDin < 5)] <- 0
     
-    df_re_season$GPP[which(df_re_season$PPFDin > 5)] <-  
-      - df_re_season$NEE_measure[which(df_re_season$PPFDin > 5)] + 
-      df_re_season$Re_final[which(df_re_season$PPFDin > 5)]
+    df_re_season$GPP[which(df_re_season$PPFDin >= 5)] <-  
+      - df_re_season$NEE_measure[which(df_re_season$PPFDin >= 5)] + 
+      df_re_season$Re_final[which(df_re_season$PPFDin >= 5)]
     
-    df_re_season_day <- df_re_season[which(df_re_season$PPFDin > 5), ]
+    df_re_season_day <- df_re_season[which(df_re_season$PPFDin >= 5), ]
     df_re_season_day <- df_re_season_day[-which(is.na(df_re_season_day$GPP)), ]
     
     ## GPP: Predictor pre analysis
@@ -315,16 +321,15 @@
 
   save(pred_analysis_season, results_resp_all_season, df_results_boot_season, pred_analysis_gpp_season, 
        results_gpp_all_season, df_results_boot_gpp_season, 
-       file = paste0(mypath, "/RData/results_full_season_", format(Sys.time(), "%d.%m"), ".RData"))
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Temporal_variability/results_full_season_", 
+                     format(Sys.time(), "%d.%m"), ".RData"))
   
   #### ####
   
 #### ----------------------- ####
 #### 5. Moving Window over Years: Model Selection for an moving window of 4 years ####
 #### ----------------------- ####
-  
-  load(paste0(mypath, "/RData/df_model.RData"))
-  
+
   years_ <- unique(as.numeric(format(df_merged$dt, "%Y")))
   years_ <- years_[-1]
   
@@ -372,11 +377,11 @@
     # df_re_year$GPP[which(df_re_year$flag_night == 1)] <- 0
     df_re_year$GPP[which(df_re_year$PPFDin < 5)] <- 0
     
-    df_re_year$GPP[which(df_re_year$PPFDin > 5)] <- 
-      - df_re_year$NEE_measure[which(df_re_year$PPFDin > 5)] + 
-      df_re_year$Re_final[which(df_re_year$PPFDin > 5)]
+    df_re_year$GPP[which(df_re_year$PPFDin >= 5)] <- 
+      - df_re_year$NEE_measure[which(df_re_year$PPFDin >= 5)] + 
+      df_re_year$Re_final[which(df_re_year$PPFDin >= 5)]
     
-    df_re_year_day <- df_re_year[which(df_re_year$PPFDin > 5), ]
+    df_re_year_day <- df_re_year[which(df_re_year$PPFDin >= 5), ]
     df_re_year_day <- df_re_year_day[-which(is.na(df_re_year_day$GPP)), ]
     
     ## GPP: Predictor pre analysis
@@ -408,7 +413,8 @@
 
   save(pred_analysis_year, results_resp_all_year, df_results_boot_year, pred_analysis_gpp_year, 
        results_gpp_all_year, df_results_boot_gpp_year, 
-       file = paste0(mypath, "/RData/results_full_year_", format(Sys.time(), "%d.%m"), ".RData"))
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Temporal_variability/results_full_year_", 
+                     format(Sys.time(), "%d.%m"), ".RData"))
 
   #### ####
 
@@ -428,20 +434,23 @@
   
   ## Predictor Pre-Analysis Re
   pred_analysis_fert_m0s1 <- TargetPreAnalysisPredictors(df_train = df_nig_f, cluster = F, method_norm = "standarize")
-  save(pred_analysis_fert_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_fert_m0s1.RData"))
+  save(pred_analysis_fert_m0s1, 
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Fertilization/results_pred_pre_analysis_fert_m0s1.RData"))
   
   ## Bayesian Optimization and predictor Analysis Re
   results_resp_all_b_fert_m0s1 <- TargetFunBO(df_train = pred_analysis_fert_m0s1[[1]], path = mypath, 
                                               opt.batch = T, ANN = "seq", cluster = F, method_norm = "standarize")
-  save(results_resp_all_b_fert_m0s1, file = paste0(mypath, "/RData/results_complete_fert_m0s1_", 
-                                                   format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_fert_m0s1, 
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Fertilization/results_complete_fert_m0s1_", 
+                     format(Sys.time(), "%d.%m"), ".RData"))
   
   ## Bootstrap Re
   df_results_boot_fert_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_fert_m0s1, 
                                               model_selection_results = results_resp_all_b_fert_m0s1, 
                                               complete_data = df_mer_post_f, rep = 100)
-  save(df_results_boot_fert_m0s1, file = paste0(mypath, "/RData/results_boots_fert_m0s1_", 
-                                                format(Sys.time(), "%d.%m"), ".RData"))
+  save(df_results_boot_fert_m0s1, 
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Fertilization/results_boots_fert_m0s1_", 
+       format(Sys.time(), "%d.%m"), ".RData"))
   
   # summary(df_results_boot_fert_m0s1[[2]])
   
@@ -464,13 +473,15 @@
   ## Predictor Pre-Analysis GPP
   pred_analysis_fert_gpp_m0s1 <- TargetPreAnalysisPredictors(df_train = df_re_m0s1_day, cluster = F, 
                                                              method_norm = "standarize", variable = "GPP")
-  save(pred_analysis_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_pred_pre_analysis_fert_gpp_m0s1.RData"))
+  save(pred_analysis_fert_gpp_m0s1, 
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Fertilization/results_pred_pre_analysis_fert_gpp_m0s1.RData"))
   
   ## Bayesian Optimization and predictor Analysis GPP
   results_resp_all_b_fert_gpp_m0s1 <- TargetFunBO(df_train = pred_analysis_fert_gpp_m0s1[[1]], path = mypath, opt.batch = T, 
                                                   ANN = "seq", cluster = F, method_norm = "standarize", variable = "GPP")
-  save(results_resp_all_b_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_complete_fert_gpp_m0s1_", 
-                                                       format(Sys.time(), "%d.%m"), ".RData"))
+  save(results_resp_all_b_fert_gpp_m0s1, 
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Fertilization/results_complete_fert_gpp_m0s1_", 
+       format(Sys.time(), "%d.%m"), ".RData"))
   
   ## Bootstrap GPP
   df_results_boot_fert_gpp_m0s1 <- BootstrapPrediction(pre_predictor_results = pred_analysis_fert_gpp_m0s1, 
@@ -484,6 +495,7 @@
     - df_results_boot_fert_gpp_m0s1[[2]]$GPP_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))] + 
     df_results_boot_fert_gpp_m0s1[[2]]$Re_final[which(is.na(df_results_boot_fert_gpp_m0s1[[2]]$NEE_final))]
   
-  save(df_results_boot_fert_gpp_m0s1, file = paste0(mypath, "/RData/results_boots_fert_gpp_m0s1_", 
-                                                    format(Sys.time(), "%d.%m"), ".RData"))
+  save(df_results_boot_fert_gpp_m0s1, 
+       file = paste0(path, "Data_and_Programming/master/RData/Temporal_variability_and_fertilization/Fertilization/results_boots_fert_gpp_m0s1_", 
+       format(Sys.time(), "%d.%m"), ".RData"))
   

@@ -6,19 +6,20 @@
   ## 0 - load data ####
 #### ------------------------------------- ####
   
-  ## load data ##
   ## path ####
-  #setwd("C:/Users/ferdinand.briegel/Desktop/05_Masterarbeit/Daten_und_Auswertung/Auswertung")
   mypath <- getwd()
   
+  ### --- ### Please set here path for thesis folder ### ---- ###
+  path <- "O:/Master/SoSe_2019/Briegel-Ferdinand-2/Thesis_Ferdinand_Briegel/"
+  
   ## Flux Data ####
-  df_raw_o <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver2.csv"))
-  df_raw <- read.csv(paste0(mypath, "/Daten/ANN_rawdata_ver3.csv"))
+  df_raw_o <- read.csv(paste0(path, "Data_and_Programming/master/Daten/ANN_rawdata_ver2.csv"))
+  df_raw <- read.csv(paste0(path, "Data_and_Programming/master/Daten/ANN_rawdata_ver3.csv"))
   
   df_raw_2 <- cbind(df_raw, "ustar" = df_raw_o$ustar, "NEE_measure" = df_raw_o$NEE_measure)
   
   ## Weather data from Comox airport ####
-  df_comox <- read.csv(paste0(mypath, "/Daten/weatherstats_comox_hourly.csv"))
+  df_comox <- read.csv(paste0(path, "Data_and_Programming/master/Daten/weatherstats_comox_hourly.csv"))
   
   ####  ####
   
@@ -691,13 +692,14 @@
   
   # hist(df_merged$SWin)  
   rm(df_swin_gaps)
+  
   ## mean TS ####
   df_merged$TS_mean <- apply(df_merged[, 8:13], 1, mean, na.rm = T)
   # summary(df_merged$TS_mean)
   
   ## mean MS ####
   df_merged$MS_mean <- apply(df_merged[, 15:18], 1, mean, na.rm = T)
-  #s ummary(df_merged$MS_mean)
+  # summary(df_merged$MS_mean)
   
   #### ####
   
@@ -705,44 +707,36 @@
   ## 7 - Prepare Data for Respiration Model ####
 #### ------------------------------------- ####  
   
-  df_merged$NEE_cor <- df_merged$NEE_measure
-  df_merged$NEE_cor[which(df_merged$ustar < 0.19)] <- NA 
+  ## u* correction ####
+  # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
+  # df_merged$NEE_cor_u19 <- df_merged$NEE_measure
+  # df_merged$NEE_cor_u16 <- df_merged$NEE_measure
+  # df_merged$NEE_cor_u19[which(df_merged$ustar < 0.19)] <- NA 
+  # df_merged$NEE_cor_u16[which(df_merged$ustar < 0.16)] <- NA 
 
   ## Extract Night and Day Data  / night data with PPFDin < 5####
-  df_night <- df_merged[which(df_merged$PPFDin < 5), ]
-  df_day <- df_merged[which(df_merged$PPFDin >= 5), ]
-  
-  # u* correction 
-  # Jassal et al. 2009: 0.19 | Krishnan et al. 2009: 0.16 | Jassal et al. 2010: 0.19 
-  # df_night$NEE_cor[df_night$ustar < 0.19] <- NA
+  # df_night <- df_merged[which(df_merged$PPFDin < 5), ]
+  # df_day <- df_merged[which(df_merged$PPFDin >= 5), ]
   
   # data frame for model
-  df_night_model <-  df_night[!is.na(df_night$NEE_cor), ]
+  # df_night_model <- df_night[!is.na(df_night$NEE_cor), ]
+  # df_night_pred <- df_night[is.na(df_night$NEE_cor), ]
   
-  # data frame for NEE perdiction
-  # df_night_pred <-  df_night[is.na(df_night$NEE_cor), ]
-  
-  df_pred <- rbind(df_day, df_night_pred_PPFD, df_night_pred)
-  df_pred_complete <- df_pred[is.na(df_pred$NEE_cor), ]
+  # # data frame for NEE perdiction
+  # df_pred <- rbind(df_day, df_night_pred_PPFD, df_night_pred)
+  # df_pred_complete <- df_pred[is.na(df_pred$NEE_cor), ]
   
   # summary(df_pred)
   
-  df_night_model <- df_night_model[, -c(2:7, 31, 38:40, 44)]
-  df_pred_complete <- df_pred_complete[, -c(2:7, 31, 38:40, 44)]
+  # df_night_model <- df_night_model[, -c(2:7, 31, 38:40, 44)]
+  # df_pred_complete <- df_pred_complete[, -c(2:7, 31, 38:40, 44)]
   
   # summary(df_night_model$NEE_cor)
-  # sum(is.na(df_night$NEE_cor)) / nrow(df_night) ## 78 % gaps
-  
-  ## data frame with NNE != NA ####
-  ## and without precip, pressure, lw, sw, co2
-  
-  # summary(df_night_model)
-  # summary(df_pred_complete)
   
   # sort by date
-  df_merged <- df_merged[order(df_merged$dt),]
-  df_night_model <- df_night_model[order(df_night_model$dt), ]
-  df_pred_complete <- df_pred_complete[order(df_pred_complete$dt), ]
+  # df_merged <- df_merged[order(df_merged$dt),]
+  # df_night_model <- df_night_model[order(df_night_model$dt), ]
+  # df_pred_complete <- df_pred_complete[order(df_pred_complete$dt), ]
   
   rm(df_night, df_day, df_night_pred, df_night_pred_PPFD, df_pred, df_comox_2, df_raw_2, df_raw_3)
   #### ####
@@ -752,5 +746,5 @@
 #### ------------------------------------- ####  
   
   ## save ####
-  save(df_night_model, df_pred_complete, df_merged, file = c(paste0(mypath, "/RData/df_model.RData")))
+  save(df_merged, file = c(paste0(path, "Data_and_Programming/master/RData/Rawdata/df_model.RData")))
   

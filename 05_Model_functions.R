@@ -36,6 +36,24 @@ CheckData <- function(){
   }
 }
 
+## Does the ustar correction and gives back a list of the complete data and night time model data
+UStarCorrection <- function(data, ustar = 0.19) {
+  
+  data$NEE_cor <- data$NEE_measure
+  data$NEE_cor[which(data$ustar < ustar)] <- NA 
+  
+  ## Extract Night and Day Data  / night data with PPFDin < 5####
+  df_night <- data[which(data$PPFDin < 5), ]
+  # data frame for model
+  df_night_model <- df_night[!is.na(df_night$NEE_cor), ]
+  
+  # sort by date
+  data <- data[order(data$dt),]
+  df_night_model <- df_night_model[order(df_night_model$dt), ]
+  
+  return(list(data, df_night_model))
+}
+
 #### ----------------------- ##
 #### 2 - Pre analysis Predictors ##
 #### ----------------------- ##
@@ -83,29 +101,24 @@ PreAnalysisPredictors <- function(df_train, params){
 ## Predictor preanalysis target data frame ##
 TargetPreAnalysisPredictors <- function(df_train, cluster = T, method_norm = "range_1_1", 
                                         batchsize = 30, units = 40, layer = 2, variable = "NEE_cor"){
-  names_soil_t <- c("Ts1", "Ts2", "Ts3")#, "Ts4", "Ts5", "Ts6", "TS_mean")
-  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3")#, "Soil.moisture4", "Soil.moisture_main", "MS_mean")
-  # names_rad <- c("SWin", "PPFDin")
+  names_soil_t <- c("Ts1", "Ts2", "Ts3", "Ts4", "Ts5", "Ts6", "TS_mean")
+  names_soil_m <- c("Soil.moisture1", "Soil.moisture2", "Soil.moisture3", "Soil.moisture4", "Soil.moisture_main", "MS_mean")
   
   names_ <- colnames(df_train)
   w_soil_t <- which(names_ %in% names_soil_t)
   w_soil_m <- which(names_ %in% names_soil_m)
-  # w_rad <- which(names_ %in% names_rad)
   
   params <- ParamsFun(layer = layer, batchsize = batchsize, units = units, cluster = cluster, method_norm = method_norm,
                       variable = variable)
   
   res_soil_t <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_t, ncol(df_train))], params = params)
   res_soil_m <- PreAnalysisPredictors(df_train = df_train[,c(w_soil_m, ncol(df_train))], params = params)
-  # res_rad <- PreAnalysisPredictors(df_train = df_train[,c(w_rad, ncol(df_train))], params = params)
   
   print(res_soil_t)
   print(res_soil_m)
-  # print(res_rad)
   
   pred_t <-  as.character(res_soil_t$predictors[which(res_soil_t$mse_n == min(res_soil_t$mse_n))])
   pred_m <-  as.character(res_soil_m$predictors[which(res_soil_m$mse_n == min(res_soil_m$mse_n))])
-  # pred_rad <-  as.character(res_rad$predictors[which(res_rad$mse == min(res_rad$mse))])
   
   if (variable == "NEE_cor"){
     pred_model <- c(pred_t, pred_m, c("airT", "RH", "LWin", "LWout", "h_last_precip", "precip_30d", 
@@ -145,8 +158,8 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
     df_results_ms <- rbind(df_results_ms, results_)
     all_mae_history <- rbind(all_mae_history, mae_history)
   }
-  save(df_results_ms, all_mae_history, file = c(paste0(path, "/RData/results_model_", layer, "l_", 
-                                                       format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData")))
+  # save(df_results_ms, all_mae_history, file = c(paste0(path, "/RData/results_model_", layer, "l_", 
+                                                       # format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData")))
   
   ## Best Model (Layers & Nodes)
   params <- BestModelSelection(df_results = df_results_ms, params = params, type = "nodes")
@@ -155,7 +168,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
   df_results_pa <- RunModel.PredictorAnalysis(df_train = df_train, params = params)
   params <- BestModelSelection(df_results = df_results_pa, params = params, type = "pred")
   
-  save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
+  # save(df_results_pa, params, file = paste0(path, "/RData/results_pred_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
   
   ## best model structur for best predictor Subset ####
   df_train_best <- df_train[, c(params$best_preds_full$predictors, colnames(df_train)[ncol(df_train)])]
@@ -170,7 +183,7 @@ TargetFunGrid <- function(df_train, batchsize = c(30,60,90), k = 5, epochs = 200
     results_2 <- RunModel.GridOpt(df_train = df_train_best, params = params)
     df_results_pa_ms <- rbind(df_results_pa_ms, results_2)
   }
-  save(df_results_pa_ms, file = paste0(path, "/RData/results_p_m_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
+  # save(df_results_pa_ms, file = paste0(path, "/RData/results_p_m_", format(Sys.time(), "%Y-%m-%d_%H-%M"), ".RData"))
   
   return(list(df_results_ms, df_results_pa, df_results_pa_ms, params))
 }
@@ -243,15 +256,6 @@ ParamsFun <- function(batchsize = 100, k = 5, epochs = 200, optimizer = "adam", 
   params[["method_norm"]] <- method_norm
   params[["variable"]] <- variable
   
-  # if (variable == "NEE_cor"){
-  #   params[["layer"]] <- layer
-  #   params[["Nmin"]] <- Nmin
-  #   params[["Nmax"]] <- Nmax
-  # } else if (variable == "GPP"){
-  #   params[["layer"]] <- 4L
-  #   params[["Nmin"]] <- Nmin
-  #   params[["Nmax"]] <- 150L
-  # }
   return(params)
 }
 
@@ -392,12 +396,12 @@ BestModelSelection <- function(df_results, params, type){
     str_full <- strsplit(as.character(df_results$predictors[w_best]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_full"]] <- list("predictors" = str_full, "model" = df_results[w_best, ]) 
     
-    w_best_5 <- which(df_results$mse_bs[df_results$level <= 5] == min(df_results$mse_bs[df_results$level <= 5], na.rm = T))
-    #w_best_12 <- which(df_results$mse_bs[df_results$level <= 12] == min(df_results$mse_bs[df_results$level <= 12], na.rm = T))
+    w_best_5 <- which(df_results$mse_bs[df_results$level < 5] == min(df_results$mse_bs[df_results$level < 5], na.rm = T))
+    # w_best_12 <- which(df_results$mse_bs[df_results$level <= 12] == min(df_results$mse_bs[df_results$level <= 12], na.rm = T))
     str_5 <- strsplit(as.character(df_results$predictors[w_best_5]), "+", fixed = TRUE)[[1]][-1]
-    #str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
+    # str_12 <- strsplit(as.character(df_results$predictors[w_best_12]), "+", fixed = TRUE)[[1]][-1]
     params[["best_preds_5"]] <- list("predictors" = str_5, "model" = df_results[w_best_5, ]) 
-    #params[["best_preds_12"]] <- list("predictors" = str_12, "model" = df_results[w_best_12,])
+    # params[["best_preds_12"]] <- list("predictors" = str_12, "model" = df_results[w_best_12,])
   }
   return(params)
 }
@@ -490,7 +494,6 @@ RunModel.BayesianOpt <- function(df_train, params, ANN = "seq"){
     params[["layer"]] <- layer
     
     cat("Model: # Layer:", layer, " # units:", units, "\n")
-    #model <- BuildModel(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
     if (ANN == "seq"){
       results_ <- ComputeModel(df_train = df_train, params = params, type = "full")  
     } else if (ANN == "LSTM"){
@@ -509,7 +512,7 @@ RunModel.BayesianOpt <- function(df_train, params, ANN = "seq"){
   surr.km <- makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
   
   ## objective Function
-  obj.fun <- makeSingleObjectiveFunction(name = "svm.tuning",
+  obj.fun <- makeSingleObjectiveFunction(name = "svm.tuning", # random name
                                         fn = nn_fit_bayes,
                                         par.set = par.set,
                                         has.simple.signature = FALSE,
@@ -523,7 +526,6 @@ RunModel.BayesianOpt <- function(df_train, params, ANN = "seq"){
   ctrl <- makeMBOControl()
   ctrl <- setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
   ctrl <- setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
-  #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
   
   res_ <- mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
   
@@ -551,7 +553,6 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
     params[["batchsize"]] <- batch
     
     cat("Model: # Layer:", layer, " # units:", units, " # batchsize:", batch, "\n")
-    #model <- BuildModel(df_train = df_train, layer = layer, optimizer = params[["optimizer"]], units = units, lr = params[["lr"]])
     if (ANN == "seq"){
       results_ <- ComputeModel(df_train = df_train, params = params, type = "full")  
     } else if (ANN == "LSTM"){
@@ -578,7 +579,7 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
   surr.km <- makeLearner("regr.km", predict.type = "se", covtype = "matern5_2", control = list(trace = FALSE))
   
   ## objective Function
-  obj.fun <- makeSingleObjectiveFunction(name = "svm.tuning",
+  obj.fun <- makeSingleObjectiveFunction(name = "svm.tuning", # random name
                                          fn = nn_fit_bayes,
                                          par.set = par.set,
                                          has.simple.signature = FALSE,
@@ -592,7 +593,6 @@ RunModel.BayesianOpt.B <- function(df_train, params, ANN = "seq"){
   ctrl <- makeMBOControl()
   ctrl <- setMBOControlTermination(ctrl, iters = params[["iters_bo"]])
   ctrl <- setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
-  #ctrl = setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
   
   res_ <- mbo(obj.fun, design = des, learner = surr.km, control = ctrl, show.info = T)
   
@@ -1131,7 +1131,7 @@ BootstrapPrediction <- function(pre_predictor_results, model_selection_results, 
     # train data
     df_final_train <- pre_predictor_results[[1]][, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
   } else if(variable == "GPP"){
-    # Extract Day Data and PPFDin > 5 
+    # Extract Day Data and PPFDin >= 5 
     df_day <- complete_data[which(complete_data$PPFDin >= 5), ]
     df_final_pred <- df_day[which(is.na(df_day$GPP)), ]
     df_final_pred_2 <- df_final_pred[, c(model_selection_results[[3]]$best_preds_full$predictors, variable)]
