@@ -82,7 +82,7 @@
   # results_resp_all_b_r0.1 <- TargetFunBO(df_train = pred_analysis_r0.1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
   #                                          cluster = F, method_norm = "range_0_1")
   results_resp_all_b_m0s1 <- TargetFunBO(df_train = pred_analysis_m0s1[[1]], path = mypath, opt.batch = T, ANN = "seq", 
-                                           cluster = F, method_norm = "standarize")
+                                           cluster = F, method_norm = "standarize") # path is nor used, since data saveing is not activated in the function
   
   # save(results_resp_all_b_r1.1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_r1.1_", format(Sys.time(), "%d.%m"), ".RData"))
   # save(results_resp_all_b_r0.1, file = paste0(path, "Data_and_Programming/master/RData/RE/Datapreparation_methods/results_complete_r0.1_", format(Sys.time(), "%d.%m"), ".RData"))
