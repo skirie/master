@@ -6,7 +6,7 @@
   # 
   # 
   # author: Ferdinand Briegel
-  # last_update: 12.07.2019
+  # last_update: 12.07.2019 
   
 #### ----------------------- ####
 #### 0 - set path and load packages ####
@@ -63,9 +63,12 @@
               "year_ws_sin", "year_sa_sin", "full")
   labels_2 <- c(expression("PPFD"[""%down%""]), expression(theta["_main"]), expression("LW"[""%down%""]),
                 expression("LW"[""%up%""]), expression("T"[s]*"_1"), "full")
-
-  pdf(pate0(path, "/Latex/Plots/pred_selection.pdf"),
-      width = 16, height = 8, bg = "white")
+  
+  ## plot
+  # pdf(pate0(path, "/Latex/Plots/pred_selection.pdf"),
+  #     width = 16, height = 8, bg = "white")
+  tiff(paste0(path, "Latex/Plots/pred_selection.tiff"),
+       width = 16, height = 8, bg = "white", units = 'in', res = 400)
   
   par(mfrow = c(2, 1))
   par(mar = c(4, 7, 2 , 2))
@@ -314,10 +317,12 @@
   title("NEE")
   
   ## Plot PDF year ####
-  pdf(paste0(path, "/Latex/Plots/NEE_year.pdf"),
-      width = 16, height = 12, bg = "white")
+  # pdf(paste0(path, "/Latex/Plots/NEE_year.pdf"),
+  #     width = 16, height = 12, bg = "white")
+  tiff(paste0(path, "Latex/Plots/NEE_year.tiff"),
+       width = 16, height = 12, bg = "white", units = 'in', res = 400)
   
-  par(fig = c(0, 1, 0.6, 1), mar = c(5, 7, 3, 7), new = TRUE)
+  par(fig = c(0, 1, 0.6, 1), mar = c(5, 8, 3, 8), new = TRUE)
   # plot(NULL, xlim = df_results_y$year, ylim = c(-300, 500), type = "n", xlab = "", ylab = "", axes = FALSE)
   
   plot(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year, type = "l", xlab = "", 
@@ -333,13 +338,13 @@
        cex.axis = cex_axis, tck = -0.03)
   
   mtext(text = expression(bold('NEP')*' (g C m' ^-2*' year' ^-1*')'), 
-        side = 2, line = 4.5, cex = cex_lab)
+        side = 2, line = 5.5, cex = cex_lab)
   
   abline(h = seq(-800, 810, 400), lty = 3, col = "darkgrey", lwd = 2.5)
-  abline(v = 2006, lty = 2, col = "black")
+  # abline(v = 2006, lty = 2, col = "black")
   abline(h = 0, lty = 2, lwd = 2, col = "black")  
   text(x = 2001.8, y = 740, labels = "(a)", cex = cex_fig)
-  legend(x = 2003, y = 900, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
+  legend(x = 2002, y = 920, legend = c("ANN", "Lee et al. 2020"), lty = c(1, 1), pch = c(1, 2),
          col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
   lines(df_results_y$NEE_gapfilled_sum * -1 ~ df_results_y$year,
@@ -356,11 +361,11 @@
   points(df_daytime$A_NEP ~ df_results_y$year, 
          cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
-  par(new = T, mar = c(5, 7, 3, 7))
+  par(new = T, mar = c(5, 8, 3, 8))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
   
   ## GPP
-  par(fig = c(0, 1, 0.3, 0.7), mar = c(5, 7, 3, 7), new = TRUE)
+  par(fig = c(0, 1, 0.3, 0.7), mar = c(5, 8, 3, 8), new = TRUE)
   plot(df_results_y$GPP_m0s1_sum ~ df_results_y$year, type = "l", xlab = "", 
        ylab = "", ylim = c(1000, 2000), col = "black", xaxt = "n", axes = F, lwd = 3)
   
@@ -374,10 +379,10 @@
        cex.axis = cex_axis, tck = -0.03)
   
   mtext(text = expression(bold('GPP')*' (g C m' ^-2*' year' ^-1*')'), 
-        side = 4, line = 6, cex = cex_lab)
+        side = 4, line = 7, cex = cex_lab)
   
   abline(h = seq(1000, 2000, 200), lty = 3, lwd = 2.5, col = "darkgrey")
-  abline(v = 2006, lty = 2, col = "black")
+  # abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 1900, labels = "(b)", cex = cex_fig)
   # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(1, 1),
   #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
@@ -395,11 +400,11 @@
   points(df_daytime$A_GEP ~ df_results_y$year, 
          cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
-  par(new = T, mar = c(5, 7, 3, 7))
+  par(new = T, mar = c(5, 8, 3, 8))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
   
   ## Re 
-  par(fig = c(0, 1, 0, 0.4), mar = c(4, 7, 3, 7), new = TRUE)
+  par(fig = c(0, 1, 0, 0.4), mar = c(4, 8, 3, 8), new = TRUE)
   plot(df_results_y$Re_m0s1_sum ~ df_results_y$year, type = "l", xlab = "",
        ylab = "", ylim = c(1000, 2200), xaxt = "n", axes = F, lwd = 3)
   
@@ -413,10 +418,10 @@
   axis(4, at = seq(1000, 2200, 200), labels = rep("", 7), las = 2, 
        cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' year' ^-1*')'), 
-        side = 2, line = 4.5, cex = cex_lab)
+        side = 2, line = 5.5, cex = cex_lab)
   
   abline(h = seq(1000, 2200, 200), lty = 3, lwd = 2.5, col = "darkgrey")
-  abline(v = 2006, lty = 2, col = "black")
+  # abline(v = 2006, lty = 2, col = "black")
   text(x = 2001.8, y = 2100, labels = "(c)", cex = cex_fig)
   # legend(x = 2002, y = 2050, legend = c("GPP", expression("R"[e])), lty = c(2, 2),
   #        col = c("green", "darkgrey"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
@@ -434,16 +439,18 @@
   points(df_daytime$A_Re ~ df_results_y$year, 
          cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
-  par(new = T, mar = c(4, 7, 3, 7))
+  par(new = T, mar = c(4, 8, 3, 8))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))  
   dev.off()
   
   ## Plot PDF month ####
-  pdf(paste0(path, "Latex/Plots/NEE_month.pdf"),
-      width = 16, height = 12, bg = "white")
+  # pdf(paste0(path, "Latex/Plots/NEE_month.pdf"),
+  #     width = 16, height = 12, bg = "white")
+  tiff(paste0(path, "Latex/Plots/NEE_month.tiff"),
+       width = 16, height = 12, bg = "white", units = 'in', res = 400)
   
   ## NEE 
-  par(fig = c(0, 1, 0.6, 1), mar = c(5, 7, 3, 7), new = TRUE)
+  par(fig = c(0, 1, 0.6, 1), mar = c(5, 8, 3, 8), new = TRUE)
   plot(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, type = "l", xlab = "", 
        ylab = "", ylim = c(-80, 120), xaxt = "n", axes = F, lwd = 3)
 
@@ -456,12 +463,12 @@
   axis(4, at = seq(-80, 120, 40), labels = rep("", 6), las = 2, cex.axis = 
          cex_axis, tck = -0.03)
   mtext(text = expression(bold('NEP')*' (g C m' ^-2*' month' ^-1*')'), 
-        side = 2, line = 4.45, cex = cex_lab)
+        side = 2, line = 5.45, cex = cex_lab)
   
   abline(h = seq(-80, 120, 40), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(h = 0, lty = 2, lwd = 2)
   text(x = 1, y = 110, labels = "(a)", cex = cex_fig)
-  legend(x = 9.5, y = 120, legend = c("ANN", "Lee et al."), lty = c(1, 1), pch = c(1, 2),
+  legend(x = 8, y = 120, legend = c("ANN", "Lee et al. 2020"), lty = c(1, 1), pch = c(1, 2),
          col = c("black", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
   
   lines(df_monthly_m$NEE_gapfilled_sum * -1 ~ df_monthly_m$month, 
@@ -477,11 +484,11 @@
   points(df_monthly_m$NEP_lee ~ df_monthly_m$month, 
          cex = cex_fig, pch = 2, lwd = 3, col = "red")
   
-  par(new = T, mar = c(5, 7, 3, 7))
+  par(new = T, mar = c(5, 8, 3, 8))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
 
   ## GPP
-  par(fig = c(0, 1, 0.3, 0.7), mar = c(5, 7, 3, 7), new = TRUE)
+  par(fig = c(0, 1, 0.3, 0.7), mar = c(5, 8, 3, 8), new = TRUE)
   plot(df_monthly_m$GPP_m0s1_sum ~ df_monthly_m$month, type = "l", xlab = "", 
        ylab = "", ylim = c(0, 300), col = "black", xaxt = "n", axes = F, lwd = 3)
 
@@ -494,7 +501,7 @@
   axis(4, at = seq(0, 300, 50), labels = seq(0, 300, 50), las = 2, 
        cex.axis = cex_axis, tck = -0.03)
   mtext(text = expression(bold('GPP')*' (g C m' ^-2*' month' ^-1*')'), 
-        side = 4, line = 5.55, cex = cex_lab)
+        side = 4, line = 6.55, cex = cex_lab)
   
   abline(h = seq(0, 300, 50), lty = 3, lwd = 2.5, col = "darkgrey")
   text(x = 1, y = 280, labels = "(b)", cex = cex_fig)
@@ -512,11 +519,11 @@
   points(df_monthly_m$GPP_lee ~ df_monthly_m$month, 
          cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
-  par(new = T, mar = c(5, 7, 3, 7))
+  par(new = T, mar = c(5, 8, 3, 8))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
 
   ## Re 
-  par(fig = c(0, 1, 0, 0.4), mar = c(4, 7, 3, 7), new = TRUE)
+  par(fig = c(0, 1, 0, 0.4), mar = c(4, 8, 3, 8), new = TRUE)
   plot(df_monthly_m$Re_m0s1_sum ~ df_monthly_m$month, type = "l", xlab = "", lty = 1,
        ylab = "", ylim = c(0, 300), col = "black", xaxt = "n", axes = F, lwd = 3)
 
@@ -531,7 +538,7 @@
   axis(4, at = seq(0, 300, 50), labels = rep("", 7), las = 2, cex.axis = 
          cex_axis, tck = -0.03)
   mtext(text = expression(bold('R'[e])*' (g C m' ^-2*' month' ^-1*')'), 
-        side = 2, line = 4.45, cex = cex_lab)
+        side = 2, line = 5.45, cex = cex_lab)
   
   abline(h = seq(0, 300, 50), lty = 3, lwd = 2.5, col = "darkgrey")
   text(x = 1, y = 280, labels = "(c)", cex = cex_fig)
@@ -549,7 +556,7 @@
   points(df_monthly_m$Re_lee ~ df_monthly_m$month, 
          cex = cex_fig, lwd = 3, pch = 2, col = "red")
   
-  par(new = T, mar = c(4, 7, 3, 7))
+  par(new = T, mar = c(4, 8, 3, 8))
   plot(0, yaxt = "n", xaxt = "n", ylab = NA , xlab = NA, ylim = c(-2, -1))
   
   dev.off()
@@ -641,32 +648,33 @@
     
   xtable::xtable(r_2)
   ## Respiration: Plot ####
-    label_legend <- c(expression("T"[s]), expression("T"[a]), expression("LW"[""%down%""]), 
-                      expression(theta), "year_sa_sin")
+    label_legend <- c(expression(italic("T")[italic(s)]), expression(italic("T"[a])), expression(italic("LW"[""%down%""])), 
+                      expression(italic(theta)[italic(s)]), expression(italic("year_sa_sin")))
     
-    pdf(paste0(path, "Latex/Plots/Re_pred_month.pdf"),
-        width = 16, height = 8, bg = "white")
-    
+    # pdf(paste0(path, "Latex/Plots/Re_pred_month.pdf"),
+    #     width = 16, height = 8, bg = "white")
+    tiff(paste0(path, "Latex/Plots/Re_pred_month.tiff"),
+         width = 16, height = 8, bg = "white", units = 'in', res = 400)
     ## r2
     par(fig = c(0, 1, 0.7, 1))
     par(mar = c(0, 5, 3, 5.5))
     plot(r_2$r_1 ~ c(1:12), ylim = c(0, 0.4), xlim = c(0.5, 12.5), type = "l", axes = F, xaxt = 'n', 
          yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
 
-    text(x = 0.8, y = 0.35, labels = "(a)", cex = cex_fig)
+    text(x = 0.75, y = 0.35, labels = "(a)", cex = cex_fig)
     abline(h = seq(0, 0.4, 0.1), lty = 3, lwd = 2.5, col = "darkgrey")
     abline(h = 0)
     axis(3, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_fig)
     axis(4, at = seq(0, 0.4, 0.1), labels = rep("", 5), las = 2, cex.axis = cex_axis)
     axis(4, at = seq(0, 0.4, 0.2), labels = seq(0, 0.4, 0.2), las = 2, cex.axis = cex_axis)
-    mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+    mtext(text = expression(bolditalic("R"^"2")), side = 4, line = 4.45, cex = cex_legend)
     
     lines(r_2$r_1 ~ c(1:12), lwd = 2.5)
     points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
     lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
     points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
     
-    legend(x = 0.5, y = 0.16, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+    legend(x = 0.5, y = 0.16, legend = c("single predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
            col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
     
     ## rank
@@ -674,10 +682,10 @@
     par(fig = c(0, 1, 0, 0.7), new = TRUE)
     par(mar = c(2.5, 5, 0, 5.5))
     plot(df_3$Tsoil[1:12] ~ c(1:12), type = "l", ylim = rev(range(c(0,11))), col = "cyan", lwd = 2.5, xaxt = 'n', xlab = "", 
-         ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
+         ylab = expression(bold("Ranking")), cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
     abline(h = seq(1, 11, 1), lty = 3, lwd = 2.5, col = "darkgrey")
-    text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
+    text(x = 0.8, y = 0.3, labels = "(b)", cex = cex_fig)
     axis(1, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_axis)
     axis(2, at = seq(1, 11, length.out = 11), labels = 1:11, cex.axis = cex_axis, las = 2)
     
@@ -772,11 +780,14 @@
   }
   
   ## GPP: Plot ####
-    label_legend <- c(expression("PPFD"[""%down%""]), expression("LW"[""%up%""]), expression("LW"[""%down%""]), 
-                      expression(theta), expression("T"[s]))
+    label_legend <- c(expression(italic("PPFD"[""%down%""])), expression(italic("LW"[""%up%""])), 
+                      expression(italic("LW"[""%down%""])), expression(italic(theta[s])), 
+                      expression(italic("T"[s])))
     
-    pdf(paste0(path, "Latex/Plots/GPP_pred_month.pdf"),
-        width = 16, height = 8, bg = "white")
+    # pdf(paste0(path, "Latex/Plots/GPP_pred_month.pdf"),
+    #     width = 16, height = 8, bg = "white")
+    tiff(paste0(path, "Latex/Plots/GPP_pred_month.tiff"),
+         width = 16, height = 8, bg = "white", units = 'in', res = 400)
     
     ## r2
     par(fig = c(0, 1, 0.7, 1))
@@ -784,28 +795,28 @@
     plot(r_2$r_1 ~ c(1:12), ylim = c(0, 1), xlim = c(0.5, 12.5), type = "l", axes = F, xaxt = 'n', 
          yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
 
-    text(x = 0.7, y = 0.9, labels = "(a)", cex = cex_fig)
+    text(x = 0.75, y = 0.9, labels = "(a)", cex = cex_fig)
     abline(h = seq(0, 1, 0.2), lty = 3, lwd = 2.5, col = "darkgrey")
     abline(h = 0)
     axis(3, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_fig)
     axis(4, at = seq(0, 1, 0.2), labels = seq(0, 1, 0.2), las = 2, cex.axis = cex_axis)
-    mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+    mtext(text = expression(bolditalic("R"^"2")), side = 4, line = 4.5, cex = cex_legend)
     
     lines(r_2$r_1 ~ c(1:12), lwd = 2.5)
     points(r_2$r_1 ~ c(1:12), cex = cex_fig, lwd = 2)
     lines(r_2$r_5 ~ c(1:12), lty = 2, lwd = 2.5)
     points(r_2$r_5 ~ c(1:12), cex = cex_fig, lwd = 2)
         
-    legend(x = 0.5, y = 0.45, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+    legend(x = 0.5, y = 0.45, legend = c("single predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
            col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
     
     ## ranking
     par(fig = c(0, 1, 0, 0.7), new = TRUE)
     par(mar = c(2.5, 5, 0, 5.5))
     plot(df_3$PPFDin[1:12] ~ c(1:12), type = "l", ylim = rev(range(c(0,13))), col = "green", lwd = 2.5, xaxt = 'n', xlab = "", 
-         ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
+         ylab = expression(bold("Ranking")), cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
-    text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
+    text(x = 0.8, y = 0.3, labels = "(b)", cex = cex_fig)
     axis(1, at = seq(1, 12, length.out = 12), labels = month, cex.axis = cex_axis)
     axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
     abline(h = seq(1, 13, 1), lty = 3, lwd = 2.5, col = "darkgrey")
@@ -915,11 +926,13 @@
   }
   
   ## Respiration: Plot ####
-  label_legend <- c(expression("T"[s]), expression(theta), expression("LW"[""%down%""]), 
-                   "year_sa_sin", "year_sa_sin")
+  label_legend <- c(expression(italic("T"[s])), expression(italic(theta[s])), expression(italic("LW"[""%down%""])), 
+                    expression(italic("year_sa_sin")), expression(italic("year_ws_sin")))
   
-  pdf(paste0(path, "05_Masterarbeit/Latex/Plots/Re_pred_year.pdf"),
-      width = 16, height = 8, bg = "white")
+  # pdf(paste0(path, "05_Masterarbeit/Latex/Plots/Re_pred_year.pdf"),
+  #     width = 16, height = 8, bg = "white")
+  tiff(paste0(path, "Latex/Plots/Re_pred_year.tiff"),
+       width = 16, height = 8, bg = "white", units = 'in', res = 400)
   
   ## r2
   par(fig = c(0, 1, 0.7, 1))
@@ -927,29 +940,29 @@
   plot(r_2$r_1 ~ c(1:14), ylim = c(0, 0.6), xlim = c(0.5, 14.5), type = "l", axes = F, xaxt = 'n', 
        yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
 
-  text(x = 0.7, y = 0.5, labels = "(a)", cex = cex_fig)
+  text(x = 0.8, y = 0.5, labels = "(a)", cex = cex_fig)
   abline(h = seq(0, 0.6, 0.2), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(h = 0)
   axis(3, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_fig)
   axis(4, at = seq(0, 0.6, 0.2), labels = seq(0, 0.6, 0.2), las = 2, cex.axis = cex_axis)
-  mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+  mtext(text = expression(bolditalic("R"^"2")), side = 4, line = 4.5, cex = cex_legend)
   
   lines(r_2$r_1 ~ c(1:14), lty = 1, lwd = 2.5)
   points(r_2$r_1 ~ c(1:14), cex = cex_fig, lwd = 2)
   lines(r_2$r_5 ~ c(1:14), lty = 2, lwd = 2.5)
   points(r_2$r_5 ~ c(1:14), cex = cex_fig, lwd = 2)
   
-  legend(x = 0.5, y = 0.3, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+  legend(x = 0.5, y = 0.3, legend = c("single predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
          col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
   
   ## ranking
   par(fig = c(0, 1, 0, 0.7), new = TRUE)
   par(mar = c(2.5, 5, 0, 5.5))
   plot(df_3$Ts1[1:14] ~ c(1:14), type = "l", ylim = rev(range(c(0,13))), col = "cyan", lwd = 2.5, xaxt = 'n', xlab = "", 
-       ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
+       ylab = expression(bold("Ranking")), cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
   abline(h = seq(1, 13, 1), lty = 3, lwd = 2.5, col = "darkgrey")
-  text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
+  text(x = 0.8, y = 0.3, labels = "(b)", cex = cex_fig)
   axis(1, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
   
@@ -1049,11 +1062,14 @@
   }
   
   ## GPP: Plot ####
-  label_legend <- c(expression("PPFD"[""%down%""]), expression("LW"[""%down%""]), expression("LW"[""%up%""]), 
-                   expression(theta), expression("T"[s]))
+  label_legend <- c(expression(italic("PPFD"[""%down%""])), expression(italic("LW"[""%down%""])), 
+                    expression(italic("LW"[""%up%""])), expression(italic(theta[s])), 
+                    expression(italic("T"[s])))
   
-  pdf(paste0(path, "Latex/Plots/GPP_pred_year.pdf"),
-      width = 16, height = 8, bg = "white")
+  # pdf(paste0(path, "Latex/Plots/GPP_pred_year.pdf"),
+  #     width = 16, height = 8, bg = "white")
+  tiff(paste0(path, "Latex/Plots/GPP_pred_year.tiff"),
+       width = 16, height = 8, bg = "white", units = 'in', res = 400)
   
   ## r2
   par(fig = c(0, 1, 0.7, 1))
@@ -1061,29 +1077,29 @@
   plot(r_2$r_1 ~ c(1:14), ylim = c(0, 1), xlim = c(0.5, 14.5), type = "l", axes = F, xaxt = 'n', 
        yaxt = 'n', xaxs = "i", xlab = "", ylab = "", lwd = 2.5)
   
-  text(x = 0.7, y = 0.9, labels = "(a)", cex = cex_fig)
+  text(x = 0.8, y = 0.9, labels = "(a)", cex = cex_fig)
   abline(h = seq(0, 1, 0.2), lty = 3, lwd = 2.5, col = "darkgrey")
   abline(h = 0)
   axis(3, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_fig)
   axis(4, at = seq(0, 1, 0.2), labels = seq(0, 1, 0.2), las = 2, cex.axis = cex_axis)
-  mtext(text = expression("R"^2), side = 4, line = 4.4, cex = cex_legend)
+  mtext(text = expression(bolditalic("R"^"2")), side = 4, line = 4.5, cex = cex_legend)
   
   lines(r_2$r_1 ~ c(1:14), lty = 1, lwd = 2.5)
   points(r_2$r_1 ~ c(1:14), cex = cex_fig, lwd = 2)
   lines(r_2$r_5 ~ c(1:14), lty = 2, lwd = 2.5)
   points(r_2$r_5 ~ c(1:14), cex = cex_fig, lwd = 2)
   
-  legend(x = 0.5, y = 0.45, legend = c("one predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
+  legend(x = 0.5, y = 0.45, legend = c("single predictor", "five predictors"), lty = c(1, 2), pch = c(1, 1),
          col = c("black", "black"), bg = F, bty = "n", cex = 2.5, lwd = 3, ncol = 2)
   
   ## ranking
   par(fig = c(0, 1, 0, 0.7), new = TRUE)
   par(mar = c(2.5, 5, 0, 5.5))
   plot(df_3$PPFDin[1:14] ~ c(1:14), type = "l", ylim = rev(range(c(0,13))), col = "green", lwd = 2.5, xaxt = 'n', xlab = "", 
-       ylab = "Ranking", cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
+       ylab = expression(bold("Ranking")), cex.axis = cex_axis, cex.lab = cex_lab, yaxt = 'n')
 
   abline(h = seq(1, 13, 1), lty = 3, lwd = 2.5, col = "darkgrey")
-  text(x = 0.8, y = 0.6, labels = "(b)", cex = cex_fig)
+  text(x = 0.75, y = 0.3, labels = "(b)", cex = cex_fig)
   axis(1, at = seq(1, 14, length.out = 14), labels = df_3$Years[1:14], cex.axis = cex_axis)
   axis(2, at = seq(1, 13, length.out = 13), labels = 1:13, cex.axis = cex_axis, las = 2)
   
@@ -1098,7 +1114,7 @@
   lines(df_3$Ts1[1:14] ~ c(1:14), col = "cyan", lwd = 2.5)
   points(df_3$Ts1[1:14] ~ c(1:14), xlab = NA, ylab = NA, cex = cex_fig, lwd = 3, col = "cyan")
   
-  legend(x = 3, y = 11.5, legend = label_legend, lty = 1, pch = 1, ncol = 5, 
+  legend(x = 2.9, y = 11.5, legend = label_legend, lty = 1, pch = 1, ncol = 5, 
          col = c("green", "black", "grey", "brown", "cyan"), bg = F, bty = "n", cex = 2.4, lwd = c(3))
   
   ## box 
