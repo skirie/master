@@ -163,9 +163,9 @@
   lines(df_weather_c_m$mean_t, lty = 2, col = "red", lwd = 3)
   points(df_weather_c_m$mean_t, cex = cex_fig, lwd = 3, col = "red")
   
-  legend(x = 0.6, y = 22, legend = c("15 year mean"), lty = c(2), pch = 1,
+  legend(x = 0.6, y = 22, legend = c("15-year mean"), lty = c(2), pch = 1,
          col = c("blue"), bg = F, bty = "n", cex = cex_axis, lwd = c(3))
-  legend(x = 3.1, y = 22, legend = c("30 year mean", "15 year mean"), lty = c(1, 2), pch = c(1, 1),
+  legend(x = 3.1, y = 22, legend = c("30-year mean", "15-year mean"), lty = c(1, 2), pch = c(1, 1),
          col = c("firebrick", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
   
   axis(4, at = seq(0, 20, 5), labels = seq(0, 20, 5), las = 2,  cex.axis = cex_axis)
@@ -199,6 +199,8 @@
   #     width = 16, height = 8, bg = "white")
   year_mean <- seq(0.75, 17.5, length.out = 15)
   month <- (1.946429 - 0.75) / 12
+  label_top <- df_weather_c_y$year
+  label_top[seq(1, 15, 2)] <- NA
   
   tiff(paste0(path, "Latex/Plots/Temp_prec_year.tiff"),
        width = 16, height = 8, bg = "white", units = 'in', res = 400)
@@ -214,7 +216,7 @@
   text(x = 0.5, y = 400, labels = "(a)", cex = cex_fig)
   abline(h = seq(-400, 500, 200), lty = 3, col = "grey30")
   abline(h = 0)
-  axis(3, at = seq(0.75, 17.5, length.out = 15), labels = df_weather_c_y$year, cex.axis = cex_fig)
+  axis(3, at = seq(0.75, 17.5, length.out = 15), labels = label_top, cex.axis = cex_fig)
   axis(2, at = seq(-400, 500, 200), labels = seq(-400, 500, 200), las = 2, cex.axis = cex_axis)
   mtext(text = expression(Delta*bolditalic('P')*' (mm)'), side = 2, line = 5.4, cex = cex_legend)
   
@@ -272,9 +274,9 @@
   rect(xleft = year_mean[9], ybottom = -0.85, xright = year_mean[11] - (3*month), 
        ytop = -0.65, col = rgb(0, 0, 1, 0.3))
   
-  legend(x = 6, y = 1.7, legend = c(expression("annual "~italic("P")), "30 year mean"), lty = c(1, 2), pch = c(1, NA),
+  legend(x = 6, y = 1.7, legend = c(expression("annual "~italic("P")), "30-year mean"), lty = c(1, 2), pch = c(1, NA),
          col = c("blue", "steelblue3"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
-  legend(x = 9.5, y = 1.7, legend = c(expression("annual "~italic("T"[a])), "30 year mean"), lty = c(1, 2), 
+  legend(x = 9.5, y = 1.7, legend = c(expression("annual "~italic("T"[a])), "30-year mean"), lty = c(1, 2), 
          col = c("firebrick", "red"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3), pch = c(1, NA))
   
   mtext(text = expression(Delta*bolditalic('T'[a])*' (°C)'), side = 4, line = 8, cex = cex_legend)
