@@ -317,10 +317,10 @@
   title("NEE")
   
   ## Plot PDF year ####
-  # pdf(paste0(path, "/Latex/Plots/NEE_year.pdf"),
-  #     width = 16, height = 12, bg = "white")
-  tiff(paste0(path, "Latex/Plots/NEE_year.tiff"),
-       width = 16, height = 12, bg = "white", units = 'in', res = 400)
+  pdf(paste0(path, "/Latex/Plots/NEE_year.pdf"),
+      width = 16, height = 12, bg = "white")
+  # tiff(paste0(path, "Latex/Plots/NEE_year.tiff"),
+  #      width = 16, height = 12, bg = "white", units = 'in', res = 400)
   
   par(fig = c(0, 1, 0.6, 1), mar = c(5, 8, 3, 8), new = TRUE)
   # plot(NULL, xlim = df_results_y$year, ylim = c(-300, 500), type = "n", xlab = "", ylab = "", axes = FALSE)
@@ -444,10 +444,10 @@
   dev.off()
   
   ## Plot PDF month ####
-  # pdf(paste0(path, "Latex/Plots/NEE_month.pdf"),
-  #     width = 16, height = 12, bg = "white")
-  tiff(paste0(path, "Latex/Plots/NEE_month.tiff"),
-       width = 16, height = 12, bg = "white", units = 'in', res = 400)
+  pdf(paste0(path, "Latex/Plots/NEE_month.pdf"),
+      width = 16, height = 12, bg = "white")
+  # tiff(paste0(path, "Latex/Plots/NEE_month.tiff"),
+       # width = 16, height = 12, bg = "white", units = 'in', res = 400)
   
   ## NEE 
   par(fig = c(0, 1, 0.6, 1), mar = c(5, 8, 3, 8), new = TRUE)
@@ -648,13 +648,13 @@
     
   xtable::xtable(r_2)
   ## Respiration: Plot ####
-    label_legend <- c(expression(italic("T")[italic(s)]), expression(italic("T"[a])), expression(italic("LW"[""%down%""])), 
-                      expression(italic(theta)[italic(s)]), expression(italic("year_sa_sin")))
+    label_legend <- c(expression(italic("T")[s]), expression(italic("T")[a]), expression(italic("LW"[""%down%""])), 
+                      expression(italic(theta)[s]), expression(italic("year_sa_sin")))
     
-    # pdf(paste0(path, "Latex/Plots/Re_pred_month.pdf"),
-    #     width = 16, height = 8, bg = "white")
-    tiff(paste0(path, "Latex/Plots/Re_pred_month.tiff"),
-         width = 16, height = 8, bg = "white", units = 'in', res = 400)
+    pdf(paste0(path, "Latex/Plots/Re_pred_month.pdf"),
+        width = 16, height = 8, bg = "white")
+    # tiff(paste0(path, "Latex/Plots/Re_pred_month.tiff"),
+    #      width = 16, height = 8, bg = "white", units = 'in', res = 400)
     ## r2
     par(fig = c(0, 1, 0.7, 1))
     par(mar = c(0, 5, 3, 5.5))
@@ -780,9 +780,9 @@
   }
   
   ## GPP: Plot ####
-    label_legend <- c(expression(italic("PPFD"[""%down%""])), expression(italic("LW"[""%up%""])), 
-                      expression(italic("LW"[""%down%""])), expression(italic(theta[s])), 
-                      expression(italic("T"[s])))
+    label_legend <- c(expression(italic("Q")), expression(italic("LW"[""%up%""])), 
+                      expression(italic("LW"[""%down%""])), expression(italic(theta)[s]), 
+                      expression(italic("T")[s]))
     
     # pdf(paste0(path, "Latex/Plots/GPP_pred_month.pdf"),
     #     width = 16, height = 8, bg = "white")
@@ -926,13 +926,13 @@
   }
   
   ## Respiration: Plot ####
-  label_legend <- c(expression(italic("T"[s])), expression(italic(theta[s])), expression(italic("LW"[""%down%""])), 
+  label_legend <- c(expression(italic("T")[s]), expression(theta[s]), expression(italic("LW"[""%down%""])), 
                     expression(italic("year_sa_sin")), expression(italic("year_ws_sin")))
   
-  # pdf(paste0(path, "05_Masterarbeit/Latex/Plots/Re_pred_year.pdf"),
-  #     width = 16, height = 8, bg = "white")
-  tiff(paste0(path, "Latex/Plots/Re_pred_year.tiff"),
-       width = 16, height = 8, bg = "white", units = 'in', res = 400)
+  pdf(paste0(path, "Latex/Plots/Re_pred_year.pdf"),
+      width = 16, height = 8, bg = "white")
+  # tiff(paste0(path, "Latex/Plots/Re_pred_year.tiff"),
+  #      width = 16, height = 8, bg = "white", units = 'in', res = 400)
   
   ## r2
   par(fig = c(0, 1, 0.7, 1))
@@ -1062,9 +1062,9 @@
   }
   
   ## GPP: Plot ####
-  label_legend <- c(expression(italic("PPFD"[""%down%""])), expression(italic("LW"[""%down%""])), 
-                    expression(italic("LW"[""%up%""])), expression(italic(theta[s])), 
-                    expression(italic("T"[s])))
+  label_legend <- c(expression(italic("Q")), expression(italic("LW"[""%down%""])), 
+                    expression(italic("LW"[""%up%""])), expression(italic(theta)[s]), 
+                    expression(italic("T")[s]))
   
   # pdf(paste0(path, "Latex/Plots/GPP_pred_year.pdf"),
   #     width = 16, height = 8, bg = "white")
