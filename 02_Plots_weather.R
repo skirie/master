@@ -115,8 +115,12 @@
   
 #### Plots ####
   ## Monthly temperature and precipitation ####
-  tiff(paste0(path, "Latex/Plots/Temp_prec_month.tiff"),
-      width = 16, height = 8, bg = "white", units = 'in', res = 400)
+  
+  pdf(paste0(path, "Latex/Plots/Temp_prec_month.pdf"),
+       width = 16, height = 8, bg = "white")
+  
+  # tiff(paste0(path, "Latex/Plots/Temp_prec_month.tiff"),
+  #     width = 16, height = 8, bg = "white", units = 'in', res = 400)
 
   par(mfrow = c(3, 1))
 
@@ -202,8 +206,11 @@
   label_top <- df_weather_c_y$year
   label_top[seq(1, 15, 2)] <- NA
   
-  tiff(paste0(path, "Latex/Plots/Temp_prec_year.tiff"),
-       width = 16, height = 8, bg = "white", units = 'in', res = 400)
+  pdf(paste0(path, "Latex/Plots/Temp_prec_year.pdf"),
+      width = 16, height = 8, bg = "white")
+  
+  # tiff(paste0(path, "Latex/Plots/Temp_prec_year.tiff"),
+  #      width = 16, height = 8, bg = "white", units = 'in', res = 400)
   
   par(mfrow = c(3, 1))
   
@@ -251,7 +258,7 @@
   par(mar = c(5, 9, 0, 9))
   barplot(df_weather_c_y$dif_t, beside = TRUE, axes = F, xaxt = 'n', 
           las = 1, col = colors_y_t, yaxt ='n', cex.names = 1.3, 
-          xaxs = "i", ylab = NA, ylim = c(-0.9, 1.5))
+          xaxs = "i", ylab = NA, ylim = c(-1.5, 1.5))
   
   text(x = 0.5, y = 1.3, labels = "(c)", cex = cex_fig)
   abline(h = c(-0.5, 0, 0.5, 1, 1.5), lty = 3, col = "grey30")
@@ -261,18 +268,20 @@
        cex.axis = cex_fig, line = 0.7, lwd = 0)
   axis(4, at =  c(-0.5, 0, 0.5, 1, 1.5), las = 1, cex.axis = cex_axis)
   
-  rect(xleft = year_mean[1], ybottom = -0.85, xright = year_mean[2] - (4*month), 
-       ytop = -0.65, col = rgb(1, 0, 0, 0.3))
-  rect(xleft = year_mean[3] + month, ybottom = -0.85, xright = year_mean[4] - (4*month), 
-       ytop = -0.65, col = rgb(1, 0, 0, 0.3))
-  rect(xleft = year_mean[8] + month, ybottom = -0.85, xright = year_mean[9] - (3*month), 
-       ytop = -0.65, col = rgb(1, 0, 0, 0.3))
-  rect(xleft = year_mean[13] + (4*month), ybottom = -0.85, xright = year_mean[15] - month, 
-       ytop = -0.65, col = rgb(1, 0, 0, 0.3))
-  rect(xleft = year_mean[6] + month, ybottom = -0.85, xright = year_mean[7], 
-       ytop = -0.65, col = rgb(0, 0, 1, 0.3))
-  rect(xleft = year_mean[9], ybottom = -0.85, xright = year_mean[11] - (3*month), 
-       ytop = -0.65, col = rgb(0, 0, 1, 0.3))
+  
+  text(x = 0.5, y = -1.1, labels = "(d)", cex = cex_fig)
+  rect(xleft = year_mean[1], ybottom = -1.45, xright = year_mean[2] - (4*month), 
+       ytop = -1.2, col = rgb(1, 0, 0, 0.3))
+  rect(xleft = year_mean[3] + month, ybottom = -1.45, xright = year_mean[4] - (4*month), 
+       ytop = -1.2, col = rgb(1, 0, 0, 0.3))
+  rect(xleft = year_mean[8] + month, ybottom = -1.45, xright = year_mean[9] - (3*month), 
+       ytop = -1.2, col = rgb(1, 0, 0, 0.3))
+  rect(xleft = year_mean[13] + (4*month), ybottom = -1.45, xright = year_mean[15] - month, 
+       ytop = -1.2, col = rgb(1, 0, 0, 0.3))
+  rect(xleft = year_mean[6] + month, ybottom = -1.45, xright = year_mean[7], 
+       ytop = -1.2, col = rgb(0, 0, 1, 0.3))
+  rect(xleft = year_mean[9], ybottom = -1.45, xright = year_mean[11] - (3*month), 
+       ytop = -1.2, col = rgb(0, 0, 1, 0.3))
   
   legend(x = 6, y = 1.7, legend = c(expression("annual "~italic("P")), "30-year mean"), lty = c(1, 2), pch = c(1, NA),
          col = c("blue", "steelblue3"), bg = F, bty = "n", cex = cex_axis, lwd = c(3, 3))
